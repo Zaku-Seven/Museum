@@ -74,6 +74,11 @@ public class ArtPickup : MonoBehaviour
             return;
         }
 
+        if (MuseumJournalController.Instance != null && MuseumJournalController.Instance.IsOpen)
+        {
+            return;
+        }
+
         if (MuseumInput.InteractPressedThisFrame())
         {
             TryPickupFromRaycast();

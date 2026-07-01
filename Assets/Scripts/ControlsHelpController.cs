@@ -18,7 +18,8 @@ public class ControlsHelpController : MonoBehaviour
         "Click — place/drop     Q — throw\n" +
         "Right-click — undo     Esc — pause\n" +
         "WASD — move            Space — jump\n" +
-        "Shift — sprint         Tab — inspect art\n\n" +
+        "Shift — sprint         Tab — inspect art\n" +
+        "J — collection log (pause → Collection)\n\n" +
         "GAMEPAD\n" +
         "A — pick up    B — throw    X — place    Y — undo\n" +
         "LB / RB — stack item    Start — pause\n" +

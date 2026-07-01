@@ -89,6 +89,12 @@ public static class MuseumInput
         return Gamepad.current != null && Gamepad.current.selectButton.isPressed;
     }
 
+    /// <summary>J — toggle collection journal (pause → Collection for gamepad).</summary>
+    public static bool JournalPressedThisFrame()
+    {
+        return Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame;
+    }
+
     /// <summary>Mouse wheel Y, or gamepad bumpers / d-pad for stack selection.</summary>
     public static float StackScrollDelta()
     {

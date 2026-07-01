@@ -41,7 +41,7 @@ only accepts a painting of its required wing:
 
 Filling every mount in a section completes its `GallerySection`: frames **glow blue**, a **center banner** announces completion (e.g. `Modern (South) wing complete!`), and the HUD progress line reads e.g. `Modern (North): 3/3 hung - done`.
 
-While carrying, the **wing guide** (top-left, green) shows how many open mounts remain for that wing.
+While carrying, the **wing guide** (top-left, green) shows how many open mounts remain for that wing. A **compass** above the crosshair points to the nearest valid mount. Hold **Tab** / **View** to inspect art lore. Press **J** (or pause → **Collection**) for the full curator log. A **progress bar** under the objective tracks overall completion. Valid mounts show a **placement ghost** when you aim at them.
 
 Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Impressionist (West)** = west. **Modern (North)** = original north-wall mounts (3 frames).
 
@@ -60,6 +60,7 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Space / **L3** (stick click) | Jump |
 | Shift / **LT** (hold) | Sprint |
 | Tab / **View** (hold) | Inspect painting or mount |
+| **J** | Collection journal (pause → **Collection** on gamepad) |
 | Esc / **Start** (gamepad) | Pause / resume (Settings, Controls, New Game) |
 
 **Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.

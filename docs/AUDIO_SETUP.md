@@ -19,6 +19,8 @@ All gameplay audio hooks are **null-safe** until you assign clips in the Inspect
 | Museum Win Clip | Entire museum complete |
 | Undo Clip | Undo last hang |
 | Throw Clip | Throw painting (Q / B) |
+| Jump Clip | Jump (Space / L3) |
+| Land Clip | Landing after a fall |
 | Stage Clip | Painting snaps onto sorting table |
 | Ui Click Clip | Menu button clicks (via `MuseumUiActions`) |
 

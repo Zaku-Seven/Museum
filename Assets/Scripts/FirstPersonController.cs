@@ -131,6 +131,11 @@ public class FirstPersonController : MonoBehaviour
             return true;
         }
 
+        if (MuseumJournalController.Instance != null && MuseumJournalController.Instance.IsOpen)
+        {
+            return true;
+        }
+
         return false;
     }
 

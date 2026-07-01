@@ -21,13 +21,14 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text objectiveText;
     [SerializeField] private Text wingGuideText;
     [SerializeField] private Text inspectText;
+    [SerializeField] private Image progressFillImage;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private Text winText;
 
     [Header("Hints")]
     [Tooltip("Constant hint shown at the top of the screen.")]
     [SerializeField] private string hintMessage =
-        "E — pick up  ·  Shift/LT — sprint  ·  Tab/View — inspect  ·  Q/B — throw  ·  Esc/Start — pause  ·  Space/L3 — jump";
+        "E — pick up  ·  Shift/LT — sprint  ·  Tab — inspect  ·  J — journal  ·  Q/B — throw  ·  Esc — pause";
 
     [Header("Completion banner")]
     [SerializeField] private float bannerDuration = 4f;
@@ -119,6 +120,13 @@ public class InteractionHUD : MonoBehaviour
             string inspect = artPickup.GetInspectLine();
             inspectText.text = inspect;
             inspectText.enabled = !string.IsNullOrEmpty(inspect);
+        }
+
+        if (progressFillImage != null)
+        {
+            float progress = MuseumHangProgress.Completion01;
+            progressFillImage.fillAmount = progress;
+            progressFillImage.enabled = progress > 0.001f && !(MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete);
         }
 
         if (stackText != null)

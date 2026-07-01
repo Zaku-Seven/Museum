@@ -34,6 +34,7 @@ public static class MuseumSceneValidator
             errors += RequireComponent<ArtPickup>(cameraObject, report);
             errors += RequireComponent<InteractionHUD>(cameraObject, report);
             errors += RequireComponent<MountAimHighlighter>(cameraObject, report);
+            warnings += WarnIfMissing<MountPlacementGhost>(cameraObject, report, "MountPlacementGhost");
 
             Transform holdPoint = cameraObject.transform.Find("HoldPoint");
             if (holdPoint == null)
@@ -55,6 +56,25 @@ public static class MuseumSceneValidator
             warnings += WarnIfMissing<MainMenuController>(player, report, "MainMenuController");
             warnings += WarnIfMissing<MuseumStatistics>(player, report, "MuseumStatistics");
             warnings += WarnIfMissing<FootstepController>(player, report, "FootstepController");
+            warnings += WarnIfMissing<JumpLandAudio>(player, report, "JumpLandAudio");
+        }
+
+        if (Object.FindFirstObjectByType<MuseumJournalController>() == null)
+        {
+            report.AppendLine("WARN: MuseumJournalController missing (re-run Setup Museum Gameplay).");
+            warnings++;
+        }
+
+        GameObject cameraObject = GameObject.Find("PlayerCamera");
+        if (cameraObject != null)
+        {
+            warnings += WarnIfMissing<MountPlacementGhost>(cameraObject, report, "MountPlacementGhost");
+        }
+
+        GameObject player = GameObject.Find("Player");
+        if (player != null)
+        {
+            warnings += WarnIfMissing<WingCompassHud>(player, report, "WingCompassHud");
         }
 
         GameObject hudCanvas = GameObject.Find("InteractionHUD");

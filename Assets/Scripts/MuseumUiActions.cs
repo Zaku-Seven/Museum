@@ -77,6 +77,18 @@ public class MuseumUiActions : MonoBehaviour
         ControlsHelpController.Instance?.Open();
     }
 
+    public void OpenCollectionJournal()
+    {
+        MuseumAudioDirector audio = FindFirstObjectByType<MuseumAudioDirector>();
+        audio?.PlayUiClick();
+        MuseumJournalController.Instance?.OpenFromPause();
+    }
+
+    public void CloseJournal()
+    {
+        MuseumJournalController.Instance?.Close();
+    }
+
     public void CloseControlsHelp()
     {
         MuseumAudioDirector audio = FindFirstObjectByType<MuseumAudioDirector>();

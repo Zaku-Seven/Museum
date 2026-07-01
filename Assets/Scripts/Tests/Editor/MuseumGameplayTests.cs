@@ -198,6 +198,62 @@ public class MuseumGameplayTests
     }
 
     [Test]
+    public void NearestMountFinder_PicksClosestAcceptingMount()
+    {
+        var nearMountObject = new GameObject("NearMount");
+        var farMountObject = new GameObject("FarMount");
+        var paintingObject = new GameObject("Painting");
+        try
+        {
+            PaintingMount nearMount = nearMountObject.AddComponent<PaintingMount>();
+            PaintingMount farMount = farMountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+
+            nearMountObject.transform.position = new Vector3(0f, 0f, 2f);
+            farMountObject.transform.position = new Vector3(0f, 0f, 20f);
+            SetPrivateEnum(nearMount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(farMount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            bool found = MuseumNearestMountFinder.TryFindNearestAcceptingMount(
+                painting,
+                Vector3.zero,
+                out PaintingMount result,
+                out float distance);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(nearMount, result);
+            Assert.Less(distance, 5f);
+        }
+        finally
+        {
+            Object.DestroyImmediate(nearMountObject);
+            Object.DestroyImmediate(farMountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void CollectionLog_ContainsPaintingTitle()
+    {
+        var paintingObject = new GameObject("LogPainting");
+        try
+        {
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            SetPrivateString(painting, "paintingTitle", "Test Masterpiece");
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            string log = MuseumCollectionLog.BuildJournalText();
+            Assert.IsTrue(log.Contains("Test Masterpiece"));
+            Assert.IsTrue(log.Contains("COLLECTION LOG"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
     public void HangProgress_CountsCorrectlyOccupiedMounts()
     {
         var mountA = new GameObject("MountA");

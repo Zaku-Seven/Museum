@@ -54,6 +54,36 @@ public class MuseumSaveManager : MonoBehaviour
         return PlayerPrefs.HasKey(SaveKeyV2) || PlayerPrefs.HasKey(SaveKeyV1);
     }
 
+    /// <summary>Short line for main-menu Continue subtitle (reads v2 save without loading).</summary>
+    public static string BuildContinueSummary()
+    {
+        if (!PlayerPrefs.HasKey(SaveKeyV2))
+        {
+            return string.Empty;
+        }
+
+        string json = PlayerPrefs.GetString(SaveKeyV2);
+        if (string.IsNullOrEmpty(json))
+        {
+            return string.Empty;
+        }
+
+        SaveDataV2 data = JsonUtility.FromJson<SaveDataV2>(json);
+        if (data == null)
+        {
+            return string.Empty;
+        }
+
+        int hung = data.mountAssignments != null ? data.mountAssignments.Count : 0;
+        int staged = data.stagedPaintingIds != null ? data.stagedPaintingIds.Count : 0;
+        if (data.museumComplete)
+        {
+            return "Save: museum complete — Continue exploring?";
+        }
+
+        return $"Save: {hung} hung · {staged} staged on table";
+    }
+
     private void OnApplicationQuit()
     {
         Save();

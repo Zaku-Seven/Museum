@@ -404,6 +404,11 @@ public static class MuseumGameplaySetup
         inspectText.alignment = TextAnchor.MiddleCenter;
         inspectText.enabled = false;
 
+        Image progressFillImage = EnsureProgressBar(canvasTransform, defaultFont);
+
+        GameObject journalPanel = EnsureJournalPanel(canvasTransform, defaultFont);
+        (Text compassLabel, RectTransform compassNeedle) = EnsureCompassHud(canvasTransform, defaultFont);
+
         GameObject winPanel = EnsureWinPanel(canvasTransform, defaultFont, out Text winText);
         GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont, out GameObject settingsPanel);
         UpgradeSettingsPanel(settingsPanel, defaultFont);
@@ -411,6 +416,7 @@ public static class MuseumGameplaySetup
         GameObject controlsHelpPanel = EnsureControlsHelpPanel(canvasTransform, defaultFont);
         MuseumUiActions uiActions = EnsureUiActions(canvasTransform);
         EnsureControlsHelpController(canvasTransform, controlsHelpPanel);
+        EnsureJournalController(canvasTransform, journalPanel);
 
         GameObject cameraObject = GameObject.Find("PlayerCamera");
         if (cameraObject == null)
@@ -439,6 +445,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(serializedHud, "objectiveText", objectiveText);
         SetObjectReference(serializedHud, "wingGuideText", wingGuideText);
         SetObjectReference(serializedHud, "inspectText", inspectText);
+        SetObjectReference(serializedHud, "progressFillImage", progressFillImage);
         SetObjectReference(serializedHud, "winPanel", winPanel);
         SetObjectReference(serializedHud, "winText", winText);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
@@ -492,6 +499,8 @@ public static class MuseumGameplaySetup
 
             WirePauseButtons(pausePanel, uiActions);
             WireWinButtons(winPanel, uiActions);
+            WireJournalPanel(journalPanel, uiActions);
+            WireCompassHud(playerObject, cameraObject, artPickup, compassLabel, compassNeedle);
 
             WireButton(settingsPanel.transform, "ResetDefaultsButton", uiActions, nameof(MuseumUiActions.ResetSettingsToDefaults));
 
@@ -607,10 +616,21 @@ public static class MuseumGameplaySetup
             buttonRow = row.transform;
         }
 
-        CreateMenuButton(buttonRow, "ResumeButton", "Resume", font, new Vector2(0f, 60f));
-        CreateMenuButton(buttonRow, "SettingsButton", "Settings", font, new Vector2(0f, 10f));
-        CreateMenuButton(buttonRow, "ControlsButton", "Controls", font, new Vector2(0f, -40f));
-        CreateMenuButton(buttonRow, "NewGameButton", "New Game", font, new Vector2(0f, -90f));
+        CreateMenuButton(buttonRow, "ResumeButton", "Resume", font, new Vector2(0f, 80f));
+        CreateMenuButton(buttonRow, "SettingsButton", "Settings", font, new Vector2(0f, 30f));
+        CreateMenuButton(buttonRow, "ControlsButton", "Controls", font, new Vector2(0f, -20f));
+        CreateMenuButton(buttonRow, "CollectionButton", "Collection", font, new Vector2(0f, -70f));
+        CreateMenuButton(buttonRow, "NewGameButton", "New Game", font, new Vector2(0f, -120f));
+
+        Transform buttonRowTransform = pausePanel.Find("PauseButtons");
+        if (buttonRowTransform != null)
+        {
+            RectTransform buttonRowRect = buttonRowTransform.GetComponent<RectTransform>();
+            if (buttonRowRect != null)
+            {
+                buttonRowRect.sizeDelta = new Vector2(520f, 220f);
+            }
+        }
     }
 
     private static void UpgradeSettingsPanel(GameObject settingsPanel, Font font)
@@ -954,6 +974,7 @@ public static class MuseumGameplaySetup
         WireButton(pausePanel.transform, "PauseButtons/ResumeButton", actions, nameof(MuseumUiActions.ResumeFromPause));
         WireButton(pausePanel.transform, "PauseButtons/SettingsButton", actions, nameof(MuseumUiActions.OpenSettingsFromPause));
         WireButton(pausePanel.transform, "PauseButtons/ControlsButton", actions, nameof(MuseumUiActions.OpenControlsHelp));
+        WireButton(pausePanel.transform, "PauseButtons/CollectionButton", actions, nameof(MuseumUiActions.OpenCollectionJournal));
         WireButton(pausePanel.transform, "PauseButtons/NewGameButton", actions, nameof(MuseumUiActions.NewGameFromPause));
         WireButton(pausePanel.transform, "SettingsPanel/ResetDefaultsButton", actions, nameof(MuseumUiActions.ResetSettingsToDefaults));
         WireButton(pausePanel.transform, "SettingsPanel/CloseSettingsButton", actions, nameof(MuseumUiActions.CloseSettings));
@@ -1040,6 +1061,177 @@ public static class MuseumGameplaySetup
         return buttonObject;
     }
 
+    private static Image EnsureProgressBar(Transform canvas, Font font)
+    {
+        Transform existingFill = canvas.Find("ProgressBar/Fill");
+        if (existingFill != null)
+        {
+            return existingFill.GetComponent<Image>();
+        }
+
+        GameObject barRoot = new GameObject("ProgressBar");
+        barRoot.transform.SetParent(canvas, false);
+        RectTransform barRect = barRoot.AddComponent<RectTransform>();
+        barRect.anchorMin = new Vector2(0f, 1f);
+        barRect.anchorMax = new Vector2(0f, 1f);
+        barRect.pivot = new Vector2(0f, 1f);
+        barRect.anchoredPosition = new Vector2(24f, -72f);
+        barRect.sizeDelta = new Vector2(220f, 10f);
+
+        Image bg = barRoot.AddComponent<Image>();
+        bg.color = new Color(0.15f, 0.18f, 0.22f, 0.85f);
+
+        GameObject fillObject = new GameObject("Fill");
+        fillObject.transform.SetParent(barRoot.transform, false);
+        RectTransform fillRect = fillObject.AddComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+
+        Image fill = fillObject.AddComponent<Image>();
+        fill.color = new Color(0.45f, 0.75f, 0.95f, 0.95f);
+        fill.type = Image.Type.Filled;
+        fill.fillMethod = Image.FillMethod.Horizontal;
+        fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+        fill.fillAmount = 0f;
+        return fill;
+    }
+
+    private static GameObject EnsureJournalPanel(Transform canvas, Font font)
+    {
+        Transform existing = canvas.Find("JournalPanel");
+        if (existing != null)
+        {
+            return existing.gameObject;
+        }
+
+        GameObject panel = new GameObject("JournalPanel");
+        panel.transform.SetParent(canvas, false);
+        RectTransform panelRect = panel.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image backdrop = panel.AddComponent<Image>();
+        backdrop.color = new Color(0.04f, 0.07f, 0.1f, 0.88f);
+
+        GameObject title = CreateUiText(panel.transform, "Title", font, 28, TextAnchor.UpperCenter);
+        RectTransform titleRect = title.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 1f);
+        titleRect.anchorMax = new Vector2(0.5f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.anchoredPosition = new Vector2(0f, -36f);
+        titleRect.sizeDelta = new Vector2(600f, 40f);
+        title.GetComponent<Text>().text = "Curator Collection";
+        title.GetComponent<Text>().color = new Color(0.85f, 0.92f, 1f);
+
+        GameObject body = CreateUiText(panel.transform, "Body", font, 17, TextAnchor.UpperLeft);
+        RectTransform bodyRect = body.GetComponent<RectTransform>();
+        bodyRect.anchorMin = new Vector2(0.5f, 0.5f);
+        bodyRect.anchorMax = new Vector2(0.5f, 0.5f);
+        bodyRect.pivot = new Vector2(0.5f, 0.5f);
+        bodyRect.anchoredPosition = new Vector2(0f, -20f);
+        bodyRect.sizeDelta = new Vector2(560f, 420f);
+        Text bodyText = body.GetComponent<Text>();
+        bodyText.color = new Color(0.82f, 0.88f, 0.95f);
+        bodyText.lineSpacing = 1.1f;
+
+        CreateMenuButton(panel.transform, "CloseJournalButton", "Close (J)", font, new Vector2(0f, -260f));
+        panel.SetActive(false);
+        return panel;
+    }
+
+    private static (Text label, RectTransform needle) EnsureCompassHud(Transform canvas, Font font)
+    {
+        Transform existing = canvas.Find("CompassHud");
+        if (existing != null)
+        {
+            return (
+                existing.Find("CompassLabel")?.GetComponent<Text>(),
+                existing.Find("CompassNeedle")?.GetComponent<RectTransform>());
+        }
+
+        GameObject root = new GameObject("CompassHud");
+        root.transform.SetParent(canvas, false);
+        RectTransform rootRect = root.AddComponent<RectTransform>();
+        rootRect.anchorMin = new Vector2(0.5f, 0.5f);
+        rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+        rootRect.pivot = new Vector2(0.5f, 0.5f);
+        rootRect.anchoredPosition = new Vector2(0f, 120f);
+        rootRect.sizeDelta = new Vector2(200f, 80f);
+
+        GameObject needleObject = CreateUiText(root.transform, "CompassNeedle", font, 36, TextAnchor.MiddleCenter);
+        RectTransform needleRect = needleObject.GetComponent<RectTransform>();
+        needleRect.anchorMin = new Vector2(0.5f, 0.5f);
+        needleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        needleRect.pivot = new Vector2(0.5f, 0.5f);
+        needleRect.anchoredPosition = new Vector2(0f, 12f);
+        needleRect.sizeDelta = new Vector2(40f, 40f);
+        Text needleText = needleObject.GetComponent<Text>();
+        needleText.text = "▲";
+        needleText.color = new Color(0.55f, 0.95f, 0.65f);
+
+        GameObject labelObject = CreateUiText(root.transform, "CompassLabel", font, 15, TextAnchor.MiddleCenter);
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        labelRect.pivot = new Vector2(0.5f, 0.5f);
+        labelRect.anchoredPosition = new Vector2(0f, -22f);
+        labelRect.sizeDelta = new Vector2(320f, 24f);
+        Text label = labelObject.GetComponent<Text>();
+        label.color = new Color(0.75f, 0.95f, 0.8f);
+
+        root.SetActive(true);
+        return (label, needleRect);
+    }
+
+    private static void EnsureJournalController(Transform canvas, GameObject journalPanel)
+    {
+        MuseumJournalController journal = canvas.GetComponent<MuseumJournalController>();
+        if (journal == null)
+        {
+            journal = canvas.gameObject.AddComponent<MuseumJournalController>();
+        }
+
+        SerializedObject serialized = new SerializedObject(journal);
+        SetObjectReference(serialized, "panel", journalPanel);
+        SetObjectReference(serialized, "bodyText", journalPanel.transform.Find("Body")?.GetComponent<Text>());
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void WireJournalPanel(GameObject journalPanel, MuseumUiActions actions)
+    {
+        WireButton(journalPanel.transform, "CloseJournalButton", actions, nameof(MuseumUiActions.CloseJournal));
+    }
+
+    private static void WireCompassHud(
+        GameObject playerObject,
+        GameObject cameraObject,
+        ArtPickup artPickup,
+        Text compassLabel,
+        RectTransform compassNeedle)
+    {
+        if (playerObject == null)
+        {
+            return;
+        }
+
+        WingCompassHud compass = playerObject.GetComponent<WingCompassHud>();
+        if (compass == null)
+        {
+            compass = playerObject.AddComponent<WingCompassHud>();
+        }
+
+        SerializedObject serialized = new SerializedObject(compass);
+        SetObjectReference(serialized, "artPickup", artPickup);
+        SetObjectReference(serialized, "playerBody", playerObject.transform);
+        SetObjectReference(serialized, "compassLabel", compassLabel);
+        SetObjectReference(serialized, "needleRect", compassNeedle);
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static void SetupPlayerGameplayComponents()
     {
         GameObject cameraObject = GameObject.Find("PlayerCamera");
@@ -1108,6 +1300,21 @@ public static class MuseumGameplaySetup
         if (cameraObject.GetComponent<ThrowCameraKick>() == null)
         {
             cameraObject.AddComponent<ThrowCameraKick>();
+        }
+
+        if (cameraObject.GetComponent<MountPlacementGhost>() == null)
+        {
+            cameraObject.AddComponent<MountPlacementGhost>();
+        }
+
+        if (playerObject.GetComponent<JumpLandAudio>() == null)
+        {
+            playerObject.AddComponent<JumpLandAudio>();
+        }
+
+        if (playerObject.GetComponent<WingCompassHud>() == null)
+        {
+            playerObject.AddComponent<WingCompassHud>();
         }
     }
 
