@@ -1,3 +1,4 @@
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -52,31 +53,67 @@ public static class MuseumSceneAutoBootstrap
             return;
         }
 
-        int choice = EditorUtility.DisplayDialogComplex(
-            "Build the museum?",
-            "This scene has no museum layout yet (no GalleryWings or Museum_Architecture).\n\n" +
-            "• Sorting Museum — full gameplay wings, mounts, paintings, HUD\n" +
-            "• Whitebox Museum — Grand Lobby + Art / Fossil wings (greybox layout)\n\n" +
-            "You can also use Game → Build Museum Now (Recommended) anytime.",
-            "Sorting Museum",
-            "Not now",
-            "Whitebox Museum");
-
-        switch (choice)
+        if (SupportsWhiteboxMuseum())
         {
-            case 0:
-                FullMuseumSetup.SetupFromMenu();
-                break;
-            case 2:
-                WhiteboxMuseumSetup.BuildFromMenu();
-                break;
-            default:
-                EditorPrefs.SetBool(PromptDismissedKey, true);
-                Debug.LogWarning(
-                    "MuseumSceneAutoBootstrap: Scene has no museum. Run Game → Build Museum Now (Recommended), " +
-                    "Game → Setup Full Museum, or Game → Build Whitebox Museum.");
-                break;
+            int choice = EditorUtility.DisplayDialogComplex(
+                "Build the museum?",
+                "This scene has no museum layout yet (no GalleryWings or Museum_Architecture).\n\n" +
+                "• Sorting Museum — full gameplay wings, mounts, paintings, HUD\n" +
+                "• Whitebox Museum — Grand Lobby + Art / Fossil wings (greybox layout)\n\n" +
+                "You can also use Game → Build Museum Now (Recommended) anytime.",
+                "Sorting Museum",
+                "Not now",
+                "Whitebox Museum");
+
+            switch (choice)
+            {
+                case 0:
+                    FullMuseumSetup.SetupFromMenu();
+                    break;
+                case 2:
+                    InvokeWhiteboxBuild();
+                    break;
+                default:
+                    DismissPrompt();
+                    break;
+            }
+
+            return;
         }
+
+        if (EditorUtility.DisplayDialog(
+                "Build the museum?",
+                "This scene has no museum layout yet.\n\nRun the full sorting museum setup now?",
+                "Build Sorting Museum",
+                "Not now"))
+        {
+            FullMuseumSetup.SetupFromMenu();
+        }
+        else
+        {
+            DismissPrompt();
+        }
+    }
+
+    private static void DismissPrompt()
+    {
+        EditorPrefs.SetBool(PromptDismissedKey, true);
+        Debug.LogWarning(
+            "MuseumSceneAutoBootstrap: Scene has no museum. Run Game → Build Museum Now (Recommended) " +
+            "or Game → Setup Full Museum.");
+    }
+
+    private static bool SupportsWhiteboxMuseum()
+    {
+        return typeof(MuseumSceneAutoBootstrap).Assembly.GetType("WhiteboxMuseumSetup") != null;
+    }
+
+    private static void InvokeWhiteboxBuild()
+    {
+        MethodInfo build = typeof(MuseumSceneAutoBootstrap).Assembly
+            .GetType("WhiteboxMuseumSetup")
+            ?.GetMethod("BuildFromMenu", BindingFlags.Public | BindingFlags.Static);
+        build?.Invoke(null, null);
     }
 
     private static bool HasMuseumLayout()
