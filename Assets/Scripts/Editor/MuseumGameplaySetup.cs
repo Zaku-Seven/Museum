@@ -453,6 +453,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(serializedHud, "progressFillImage", progressFillImage);
         SetObjectReference(serializedHud, "winPanel", winPanel);
         SetObjectReference(serializedHud, "winText", winText);
+        UpgradeExtendedHud(canvasTransform, defaultFont, serializedHud);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject playerObject = GameObject.Find("Player");
@@ -504,6 +505,7 @@ public static class MuseumGameplaySetup
 
             WirePauseButtons(pausePanel, uiActions);
             WireWinButtons(winPanel, uiActions);
+            UpgradeJournalPanel(journalPanel, defaultFont);
             WireJournalPanel(journalPanel, uiActions);
             WireCompassHud(playerObject, cameraObject, artPickup, compassLabel, compassNeedle);
 
@@ -664,6 +666,7 @@ public static class MuseumGameplaySetup
         }
 
         EnsureSynthesizedSfxToggle(settingsPanel.transform, font);
+        EnsureReduceMotionToggle(settingsPanel.transform, font);
 
         Transform resetButton = settingsPanel.transform.Find("ResetDefaultsButton");
         if (resetButton != null)
@@ -717,6 +720,102 @@ public static class MuseumGameplaySetup
         toggleRect.anchoredPosition = new Vector2(-24f, -130f);
         toggleRect.sizeDelta = new Vector2(40f, 40f);
         toggleObject.AddComponent<Toggle>();
+    }
+
+    private static void EnsureReduceMotionToggle(Transform settingsPanel, Font font)
+    {
+        if (settingsPanel.Find("ReduceMotionToggle") != null)
+        {
+            return;
+        }
+
+        GameObject labelRow = CreateUiText(settingsPanel, "ReduceMotionLabel", font, 18, TextAnchor.MiddleLeft);
+        RectTransform labelRect = labelRow.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.5f);
+        labelRect.anchorMax = new Vector2(0f, 0.5f);
+        labelRect.pivot = new Vector2(0f, 0.5f);
+        labelRect.anchoredPosition = new Vector2(24f, -160f);
+        labelRect.sizeDelta = new Vector2(260f, 30f);
+        labelRow.GetComponent<Text>().text = "Reduce motion";
+        labelRow.GetComponent<Text>().color = Color.white;
+
+        GameObject toggleObject = new GameObject("ReduceMotionToggle");
+        toggleObject.transform.SetParent(settingsPanel, false);
+        RectTransform toggleRect = toggleObject.AddComponent<RectTransform>();
+        toggleRect.anchorMin = new Vector2(1f, 0.5f);
+        toggleRect.anchorMax = new Vector2(1f, 0.5f);
+        toggleRect.pivot = new Vector2(1f, 0.5f);
+        toggleRect.anchoredPosition = new Vector2(-24f, -160f);
+        toggleRect.sizeDelta = new Vector2(40f, 40f);
+        toggleObject.AddComponent<Toggle>();
+
+        Transform resetButton = settingsPanel.Find("ResetDefaultsButton");
+        if (resetButton != null)
+        {
+            resetButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -210f);
+        }
+
+        Transform closeButton = settingsPanel.parent != null ? settingsPanel : settingsPanel;
+        Transform closeSettings = settingsPanel.Find("CloseSettingsButton");
+        if (closeSettings != null)
+        {
+            closeSettings.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -260f);
+        }
+
+        RectTransform panelRect = settingsPanel.GetComponent<RectTransform>();
+        if (panelRect != null)
+        {
+            panelRect.sizeDelta = new Vector2(420f, 480f);
+        }
+    }
+
+    private static void UpgradeExtendedHud(Transform canvas, Font font, SerializedObject hud)
+    {
+        Text nextObjective = EnsureUiText(canvas, "NextObjective", font, 15, TextAnchor.UpperLeft,
+            anchorMin: new Vector2(0f, 1f), anchorMax: new Vector2(0f, 1f), pivot: new Vector2(0f, 1f),
+            anchoredPosition: new Vector2(24f, -68f), sizeDelta: new Vector2(560f, 22f));
+        nextObjective.color = new Color(0.95f, 0.88f, 0.65f);
+
+        Text wingBreakdown = EnsureUiText(canvas, "WingBreakdown", font, 14, TextAnchor.UpperCenter,
+            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+            anchoredPosition: new Vector2(0f, -118f), sizeDelta: new Vector2(760f, 22f));
+        wingBreakdown.color = new Color(0.72f, 0.8f, 0.92f);
+        wingBreakdown.alignment = TextAnchor.UpperCenter;
+
+        SetObjectReference(hud, "nextObjectiveText", nextObjective);
+        SetObjectReference(hud, "wingBreakdownText", wingBreakdown);
+    }
+
+    private static void UpgradeJournalPanel(GameObject journalPanel, Font font)
+    {
+        if (journalPanel == null || journalPanel.transform.Find("FilterRow") != null)
+        {
+            return;
+        }
+
+        GameObject filterLabel = CreateUiText(journalPanel.transform, "FilterLabel", font, 16, TextAnchor.MiddleLeft);
+        RectTransform filterLabelRect = filterLabel.GetComponent<RectTransform>();
+        filterLabelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        filterLabelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        filterLabelRect.pivot = new Vector2(0.5f, 0.5f);
+        filterLabelRect.anchoredPosition = new Vector2(0f, 190f);
+        filterLabelRect.sizeDelta = new Vector2(520f, 24f);
+        filterLabel.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+        filterLabel.GetComponent<Text>().color = new Color(0.75f, 0.82f, 0.9f);
+
+        GameObject row = new GameObject("FilterRow");
+        row.transform.SetParent(journalPanel.transform, false);
+        RectTransform rowRect = row.AddComponent<RectTransform>();
+        rowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+        rowRect.pivot = new Vector2(0.5f, 0.5f);
+        rowRect.anchoredPosition = new Vector2(0f, 150f);
+        rowRect.sizeDelta = new Vector2(520f, 40f);
+
+        CreateMenuButton(row.transform, "FilterAllButton", "All", font, new Vector2(-150f, 0f));
+        CreateMenuButton(row.transform, "FilterUnhungButton", "Unhung", font, new Vector2(-50f, 0f));
+        CreateMenuButton(row.transform, "FilterHungButton", "Hung", font, new Vector2(50f, 0f));
+        CreateMenuButton(row.transform, "FilterStagedButton", "Staged", font, new Vector2(150f, 0f));
     }
 
     private static GameObject EnsureControlsHelpPanel(Transform canvas, Font font)
@@ -1041,6 +1140,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(settings, "masterVolumeSlider", settingsPanel.transform.Find("VolumeRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "invertYToggle", settingsPanel.transform.Find("InvertYToggle")?.GetComponent<Toggle>());
         SetObjectReference(settings, "synthesizedSfxToggle", settingsPanel.transform.Find("SynthesizedSfxToggle")?.GetComponent<Toggle>());
+        SetObjectReference(settings, "reduceMotionToggle", settingsPanel.transform.Find("ReduceMotionToggle")?.GetComponent<Toggle>());
         SetObjectReference(settings, "sensitivityValueText", settingsPanel.transform.Find("MouseSensitivityRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "gamepadLookValueText", settingsPanel.transform.Find("GamepadLookRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "fovValueText", settingsPanel.transform.Find("FovRow/Value")?.GetComponent<Text>());
@@ -1241,12 +1341,17 @@ public static class MuseumGameplaySetup
         SerializedObject serialized = new SerializedObject(journal);
         SetObjectReference(serialized, "panel", journalPanel);
         SetObjectReference(serialized, "bodyText", journalPanel.transform.Find("Body")?.GetComponent<Text>());
+        SetObjectReference(serialized, "filterLabelText", journalPanel.transform.Find("FilterLabel")?.GetComponent<Text>());
         serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static void WireJournalPanel(GameObject journalPanel, MuseumUiActions actions)
     {
         WireButton(journalPanel.transform, "CloseJournalButton", actions, nameof(MuseumUiActions.CloseJournal));
+        WireButton(journalPanel.transform, "FilterRow/FilterAllButton", actions, nameof(MuseumUiActions.JournalFilterAll));
+        WireButton(journalPanel.transform, "FilterRow/FilterUnhungButton", actions, nameof(MuseumUiActions.JournalFilterUnhung));
+        WireButton(journalPanel.transform, "FilterRow/FilterHungButton", actions, nameof(MuseumUiActions.JournalFilterHung));
+        WireButton(journalPanel.transform, "FilterRow/FilterStagedButton", actions, nameof(MuseumUiActions.JournalFilterStaged));
     }
 
     private static void WireCompassHud(
@@ -1358,6 +1463,11 @@ public static class MuseumGameplaySetup
         if (cameraObject.GetComponent<SprintCameraFeel>() == null)
         {
             cameraObject.AddComponent<SprintCameraFeel>();
+        }
+
+        if (cameraObject.GetComponent<InspectZoomController>() == null)
+        {
+            cameraObject.AddComponent<InspectZoomController>();
         }
 
         if (cameraObject.GetComponent<MountPlacementGhost>() == null)

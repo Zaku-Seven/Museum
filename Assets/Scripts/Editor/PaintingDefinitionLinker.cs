@@ -14,7 +14,16 @@ public static class PaintingDefinitionLinker
     {
         { "painting_testpainting", "painting_sunset_study" },
         { "painting_testpainting_2", "painting_blue_horizon" },
-        { "painting_testpainting_3", "painting_amber_grid" }
+        { "painting_testpainting_3", "painting_amber_grid" },
+        { "painting_cobalt_field", "painting_cobalt_field" },
+        { "painting_steel_lines", "painting_steel_lines" },
+        { "painting_neon_dusk", "painting_neon_dusk" },
+        { "painting_gilded_saints", "painting_gilded_saints" },
+        { "painting_marble_study", "painting_marble_study" },
+        { "painting_old_masters", "painting_old_masters" },
+        { "painting_garden_light", "painting_garden_light" },
+        { "painting_rose_morning", "painting_rose_morning" },
+        { "painting_water_lilies", "painting_water_lilies" }
     };
 
     [MenuItem("Game/Link Painting Definitions To Scene")]

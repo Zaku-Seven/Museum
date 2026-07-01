@@ -27,6 +27,9 @@ public class ArtPickup : MonoBehaviour
     [Header("Carry Feel")]
     [SerializeField] private float carryBobAmplitude = 0.022f;
     [SerializeField] private float carryBobFrequency = 7f;
+    [SerializeField] private float carrySwayAmplitude = 0.014f;
+    [SerializeField] private float carrySwayFrequency = 5.5f;
+    [SerializeField] private float carryLeanDegrees = 2.5f;
 
     private Camera playerCamera;
     private int interactableLayerMask;
@@ -262,6 +265,7 @@ public class ArtPickup : MonoBehaviour
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
         if (painting != null)
         {
+            TutorialHints.TryShowInspectHint();
             return $"\"{painting.PaintingTitle}\" · {painting.Wing}\n{painting.InspectDescription}";
         }
 
@@ -295,11 +299,29 @@ public class ArtPickup : MonoBehaviour
         if (!IsHolding || MuseumInput.MoveInput().sqrMagnitude < 0.05f)
         {
             holdPoint.localPosition = holdPointRestLocalPos;
+            holdPoint.localRotation = Quaternion.identity;
             return;
         }
 
         float bob = Mathf.Sin(Time.time * carryBobFrequency) * carryBobAmplitude;
-        holdPoint.localPosition = holdPointRestLocalPos + new Vector3(0f, bob, 0f);
+        Vector3 offset = new Vector3(0f, bob, 0f);
+
+        if (!MuseumMotionSettings.ReduceMotion)
+        {
+            Vector2 move = MuseumInput.MoveInput();
+            float swayX = Mathf.Sin(Time.time * carrySwayFrequency) * carrySwayAmplitude * move.x;
+            float swayZ = Mathf.Cos(Time.time * carrySwayFrequency * 0.85f) * carrySwayAmplitude * 0.6f * move.y;
+            offset += new Vector3(swayX, 0f, swayZ);
+
+            float lean = -move.x * carryLeanDegrees;
+            holdPoint.localRotation = Quaternion.Euler(0f, 0f, lean);
+        }
+        else
+        {
+            holdPoint.localRotation = Quaternion.identity;
+        }
+
+        holdPoint.localPosition = holdPointRestLocalPos + offset;
     }
 
     private string BuildCarryPrompt(string action)

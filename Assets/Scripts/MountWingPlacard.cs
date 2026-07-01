@@ -67,10 +67,21 @@ public class MountWingPlacard : MonoBehaviour
 
         if (sourceMount != null && sourceMount.HasSpecificSlot)
         {
-            labelText.text = $"{requiredWing} · \"{sourceMount.SlotDisplayTitle}\"";
+            labelText.text = $"{FormatWingLabel(requiredWing)} · \"{sourceMount.SlotDisplayTitle}\"";
             return;
         }
 
-        labelText.text = $"{requiredWing} wing";
+        labelText.text = FormatWingLabel(requiredWing);
+    }
+
+    private static string FormatWingLabel(GalleryWing wing)
+    {
+        return wing switch
+        {
+            GalleryWing.Modern => "Modern gallery",
+            GalleryWing.Classical => "Classical hall",
+            GalleryWing.Impressionist => "Impressionist wing",
+            _ => $"{wing} wing"
+        };
     }
 }

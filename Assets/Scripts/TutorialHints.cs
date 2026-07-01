@@ -45,9 +45,29 @@ public static class TutorialHints
         TryShowOnce("MuseumWin", "The museum is open! Every wing is hung. Cozy work.");
     }
 
+    public static void TryShowInspectHint()
+    {
+        TryShowOnce("Inspect", "Tip: Hold Tab / View while aiming at art or mounts to read curator notes.");
+    }
+
+    public static void TryShowSprintHint()
+    {
+        TryShowOnce("Sprint", "Tip: Hold Shift / LT while moving to sprint across the galleries.");
+    }
+
+    public static void TryShowJournalHint()
+    {
+        TryShowOnce("Journal", "Tip: Press J / R3 (or pause → Collection) for the full curator log.");
+    }
+
+    public static void TryShowCompassHint()
+    {
+        TryShowOnce("Compass", "Tip: The compass arrow points to the nearest valid mount for what you're carrying.");
+    }
+
     public static void ClearAllHints()
     {
-        string[] keys = { "Pickup", "WrongWing", "WrongSlot", "StackScroll", "Throw", "Staging", "MuseumWin" };
+        string[] keys = { "Pickup", "WrongWing", "WrongSlot", "StackScroll", "Throw", "Staging", "MuseumWin", "Inspect", "Sprint", "Journal", "Compass" };
         for (int i = 0; i < keys.Length; i++)
         {
             PlayerPrefs.DeleteKey(Prefix + keys[i]);

@@ -19,6 +19,8 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text stagingText;
     [SerializeField] private Text tutorialText;
     [SerializeField] private Text objectiveText;
+    [SerializeField] private Text nextObjectiveText;
+    [SerializeField] private Text wingBreakdownText;
     [SerializeField] private Text wingGuideText;
     [SerializeField] private Text inspectText;
     [SerializeField] private Image progressFillImage;
@@ -108,6 +110,21 @@ public class InteractionHUD : MonoBehaviour
             objectiveText.enabled = !string.IsNullOrEmpty(objectiveText.text);
         }
 
+        if (nextObjectiveText != null)
+        {
+            string next = MuseumObjectiveGuide.BuildNextObjectiveLine(artPickup);
+            nextObjectiveText.text = next;
+            nextObjectiveText.enabled = !string.IsNullOrEmpty(next);
+        }
+
+        if (wingBreakdownText != null)
+        {
+            string breakdown = MuseumObjectiveGuide.BuildWingProgressBreakdown();
+            wingBreakdownText.text = breakdown;
+            wingBreakdownText.enabled = !string.IsNullOrEmpty(breakdown)
+                && !(MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete);
+        }
+
         if (wingGuideText != null)
         {
             string guide = artPickup.GetWingGuidanceLine();
@@ -155,7 +172,7 @@ public class InteractionHUD : MonoBehaviour
             return;
         }
 
-        bannerText.text = "Progress saved";
+        bannerText.text = "Progress saved — safe to take a break";
         bannerText.enabled = true;
         saveToastTimer = saveToastDuration;
         saveToastCooldownTimer = saveToastCooldown;

@@ -59,6 +59,31 @@ public static class MuseumSceneValidator
             warnings += WarnIfMissing<FootstepController>(player, report, "FootstepController");
             warnings += WarnIfMissing<JumpLandAudio>(player, report, "JumpLandAudio");
             warnings += WarnIfMissing<WingCompassHud>(player, report, "WingCompassHud");
+            warnings += WarnIfMissing<MuseumCelebrationFx>(player, report, "MuseumCelebrationFx");
+            warnings += WarnIfMissing<MuseumAmbienceController>(player, report, "MuseumAmbienceController");
+        }
+
+        if (GameObject.Find("PlayerCamera")?.GetComponent<InspectZoomController>() == null)
+        {
+            report.AppendLine("WARN: PlayerCamera missing InspectZoomController (re-run Setup Full Museum).");
+            warnings++;
+        }
+
+        if (GameObject.Find("MuseumAtmosphereVolume") == null)
+        {
+            report.AppendLine("INFO: No MuseumAtmosphereVolume — run Game → Setup Museum Atmosphere (optional).");
+        }
+
+        if (GameObject.Find("Environment")?.transform.Find("MuseumArchitecture") == null)
+        {
+            report.AppendLine("INFO: No MuseumArchitecture — run Game → Setup Museum Architecture (optional).");
+        }
+
+        FootstepSurface floorSurface = GameObject.Find("Floor")?.GetComponent<FootstepSurface>();
+        if (floorSurface == null)
+        {
+            report.AppendLine("WARN: Floor missing FootstepSurface (re-run Setup Full Museum).");
+            warnings++;
         }
 
         if (Object.FindFirstObjectByType<MuseumJournalController>() == null)

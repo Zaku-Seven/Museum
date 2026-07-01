@@ -38,6 +38,10 @@ public static class PaintingCatalogSetup
             "Soft pink blooms at dawn — West gallery.");
         CreateDefinition("painting_water_lilies", "Water Lilies", GalleryWing.Impressionist, new Color(0.35f, 0.65f, 0.85f),
             "Pond reflections in pastel blues — West gallery.");
+        CreateDefinition("painting_twilight_arch", "Twilight Arch", GalleryWing.Modern, new Color(0.55f, 0.35f, 0.65f),
+            "Violet structural study — stretch content for future north expansion.");
+        CreateDefinition("painting_bronze_portrait", "Bronze Portrait", GalleryWing.Classical, new Color(0.62f, 0.42f, 0.28f),
+            "Patina classical bust study — optional east wing overflow.");
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();

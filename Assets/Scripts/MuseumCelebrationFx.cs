@@ -30,7 +30,7 @@ public class MuseumCelebrationFx : MonoBehaviour
 
     private void HandleSectionCompleted(GallerySection section)
     {
-        if (section == null)
+        if (section == null || MuseumMotionSettings.ReduceMotion)
         {
             return;
         }
@@ -41,6 +41,11 @@ public class MuseumCelebrationFx : MonoBehaviour
 
     private void HandleMuseumCompleted()
     {
+        if (MuseumMotionSettings.ReduceMotion)
+        {
+            return;
+        }
+
         Vector3 position = burstAnchor != null
             ? burstAnchor.position + Vector3.up * (burstHeight + 0.4f)
             : Vector3.up * burstHeight;

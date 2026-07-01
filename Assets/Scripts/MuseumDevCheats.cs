@@ -24,6 +24,11 @@ public class MuseumDevCheats : MonoBehaviour
             return;
         }
 
+        if (Keyboard.current.f5Key.wasPressedThisFrame)
+        {
+            SpawnLooseTestPainting();
+        }
+
         if (Keyboard.current.f6Key.wasPressedThisFrame)
         {
             TeleportToNearestMount();
@@ -55,6 +60,32 @@ public class MuseumDevCheats : MonoBehaviour
             TriggerMuseumWin();
         }
 #endif
+    }
+
+    private void SpawnLooseTestPainting()
+    {
+        Transform cameraTransform = transform.Find("PlayerCamera");
+        Vector3 spawnPoint = cameraTransform != null
+            ? cameraTransform.position + cameraTransform.forward * 1.2f
+            : transform.position + transform.forward * 1.2f;
+        spawnPoint.y = 0.025f;
+
+        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cube.name = "DevSpawnPainting";
+        cube.transform.position = spawnPoint;
+        cube.transform.localScale = new Vector3(0.5f, 0.5f, 0.05f);
+
+        int layer = LayerMask.NameToLayer("Interactable");
+        if (layer >= 0)
+        {
+            cube.layer = layer;
+        }
+
+        cube.AddComponent<InteractablePainting>();
+        cube.AddComponent<Rigidbody>().isKinematic = true;
+        cube.AddComponent<MuseumEntityId>();
+
+        Debug.Log("MuseumDevCheats: spawned dev test painting in front of player.");
     }
 
     private static void ToggleDebugOverlay()

@@ -13,6 +13,7 @@ public class SettingsMenuController : MonoBehaviour
     [SerializeField] private Slider fovSlider;
     [SerializeField] private Slider masterVolumeSlider;
     [SerializeField] private Toggle synthesizedSfxToggle;
+    [SerializeField] private Toggle reduceMotionToggle;
     [SerializeField] private Text sensitivityValueText;
     [SerializeField] private Text gamepadLookValueText;
     [SerializeField] private Text fovValueText;
@@ -69,6 +70,11 @@ public class SettingsMenuController : MonoBehaviour
         if (synthesizedSfxToggle != null)
         {
             synthesizedSfxToggle.onValueChanged.AddListener(OnSynthesizedSfxChanged);
+        }
+
+        if (reduceMotionToggle != null)
+        {
+            reduceMotionToggle.onValueChanged.AddListener(OnReduceMotionChanged);
         }
     }
 
@@ -131,6 +137,11 @@ public class SettingsMenuController : MonoBehaviour
             synthesizedSfxToggle.SetIsOnWithoutNotify(PlayerSettingsStore.UseSynthesizedSfx);
         }
 
+        if (reduceMotionToggle != null)
+        {
+            reduceMotionToggle.SetIsOnWithoutNotify(PlayerSettingsStore.ReduceMotion);
+        }
+
         RefreshValueLabels();
     }
 
@@ -171,6 +182,11 @@ public class SettingsMenuController : MonoBehaviour
     private void OnSynthesizedSfxChanged(bool value)
     {
         PlayerSettingsStore.UseSynthesizedSfx = value;
+    }
+
+    private void OnReduceMotionChanged(bool value)
+    {
+        PlayerSettingsStore.ReduceMotion = value;
     }
 
     private void RefreshValueLabels()

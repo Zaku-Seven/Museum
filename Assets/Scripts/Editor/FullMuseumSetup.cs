@@ -21,6 +21,9 @@ public static class FullMuseumSetup
         PaintingDefinitionLinker.LinkScenePaintings();
         MountPlacardSetup.AddPlacardsFromMenu();
 
+        MuseumArchitectureSetup.EnsureArchitecture();
+        MuseumAtmosphereSetup.EnsureAtmosphereVolume();
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
 

@@ -26,9 +26,8 @@ public class ControlsHelpController : MonoBehaviour
         "Left stick — move    Right stick — look\n" +
         "L3 (stick click) — jump    LT — sprint    View — inspect\n\n" +
         "DEV (Editor / Development build)\n" +
-        "F6 — teleport to nearest mount    F7 — debug overlay\n" +
-        "F8 — save    F9 — fill one section    F10 — auto-hang all\n" +
-        "F11 — force museum win";
+        "F5 — spawn test painting    F6 — teleport to nearest mount    F7 — debug overlay\n" +
+        "F8 — save    F9 — fill one section    F10 — auto-hang all    F11 — force win";
 
     public bool IsOpen => panel != null && panel.activeSelf;
 

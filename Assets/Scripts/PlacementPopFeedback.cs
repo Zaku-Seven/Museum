@@ -39,6 +39,12 @@ public class PlacementPopFeedback : MonoBehaviour
     {
         baseLocalScale = transform.localScale;
 
+        if (MuseumMotionSettings.ReduceMotion)
+        {
+            transform.localScale = baseLocalScale;
+            return;
+        }
+
         if (activeRoutine != null)
         {
             StopCoroutine(activeRoutine);

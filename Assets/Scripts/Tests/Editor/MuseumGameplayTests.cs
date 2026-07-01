@@ -452,6 +452,38 @@ public class MuseumGameplayTests
         }
     }
 
+    [Test]
+    public void CollectionLog_MatchesFilter_FiltersByState()
+    {
+        var hung = new GameObject("Hung");
+        var painting = hung.AddComponent<InteractablePainting>();
+        var mountRoot = new GameObject("Mount");
+        var mount = mountRoot.AddComponent<PaintingMount>();
+        hung.AddComponent<Rigidbody>();
+        try
+        {
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            mount.PlacePainting(hung.transform, hung.GetComponent<Rigidbody>());
+
+            Assert.IsTrue(MuseumCollectionLog.MatchesFilter(painting, MuseumJournalFilter.Hung));
+            Assert.IsFalse(MuseumCollectionLog.MatchesFilter(painting, MuseumJournalFilter.Unhung));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountRoot);
+            Object.DestroyImmediate(hung);
+        }
+    }
+
+    [Test]
+    public void PlayerSettingsStore_ReduceMotion_DefaultsFalse()
+    {
+        PlayerSettingsStore.ReduceMotion = true;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.IsFalse(PlayerSettingsStore.ReduceMotion);
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");

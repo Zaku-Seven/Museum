@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// HUD arrow pointing toward the nearest mount that accepts the carried painting.
+/// HUD arrow pointing toward the nearest mount that accepts the carried painting,
+/// or away from a wrong-wing mount the player is aiming at.
 /// </summary>
 public class WingCompassHud : MonoBehaviour
 {
@@ -15,6 +16,10 @@ public class WingCompassHud : MonoBehaviour
     [Header("Display")]
     [SerializeField] private float minShowDistance = 2.5f;
     [SerializeField] private float maxShowDistance = 40f;
+    [SerializeField] private Color validNeedleColor = new Color(0.75f, 0.95f, 0.8f);
+    [SerializeField] private Color wrongWingNeedleColor = new Color(1f, 0.45f, 0.4f);
+
+    private Text needleText;
 
     private void Awake()
     {
@@ -32,6 +37,11 @@ public class WingCompassHud : MonoBehaviour
             }
         }
 
+        if (needleRect != null)
+        {
+            needleText = needleRect.GetComponent<Text>();
+        }
+
         SetVisible(false);
     }
 
@@ -43,8 +53,15 @@ public class WingCompassHud : MonoBehaviour
             return;
         }
 
+        InteractablePainting held = artPickup.HeldPainting;
+
+        if (TryShowWrongWingHint(held))
+        {
+            return;
+        }
+
         if (!MuseumNearestMountFinder.TryFindNearestAcceptingMount(
-                artPickup.HeldPainting,
+                held,
                 playerBody.position,
                 out PaintingMount mount,
                 out float distance))
@@ -59,7 +76,56 @@ public class WingCompassHud : MonoBehaviour
             return;
         }
 
+        ShowNeedleTowardMount(mount, distance, validNeedleColor, $"→ {mount.RequiredWing}{FormatSlot(mount)} · {distance:0}m");
+    }
+
+    private bool TryShowWrongWingHint(InteractablePainting held)
+    {
+        if (!artPickup.TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return false;
+        }
+
+        PaintingMount aimedMount = hit.collider.GetComponentInParent<PaintingMount>();
+        if (aimedMount == null || aimedMount.IsOccupied || aimedMount.CanAccept(held))
+        {
+            return false;
+        }
+
+        if (aimedMount.RequiredWing == held.Wing)
+        {
+            return false;
+        }
+
+        if (!MuseumNearestMountFinder.TryFindNearestAcceptingMount(
+                held,
+                playerBody.position,
+                out PaintingMount correctMount,
+                out float distance))
+        {
+            SetVisible(true);
+            SetNeedleColor(wrongWingNeedleColor);
+            if (compassLabel != null)
+            {
+                compassLabel.text = $"Wrong wing — need {held.Wing}, not {aimedMount.RequiredWing}";
+            }
+
+            return true;
+        }
+
+        ShowNeedleTowardMount(
+            correctMount,
+            distance,
+            wrongWingNeedleColor,
+            $"← {held.Wing} gallery · not {aimedMount.RequiredWing} · {distance:0}m");
+        return true;
+    }
+
+    private void ShowNeedleTowardMount(PaintingMount mount, float distance, Color color, string label)
+    {
+        TutorialHints.TryShowCompassHint();
         SetVisible(true);
+        SetNeedleColor(color);
 
         if (needleRect != null)
         {
@@ -72,8 +138,20 @@ public class WingCompassHud : MonoBehaviour
 
         if (compassLabel != null)
         {
-            string slot = mount.HasSpecificSlot ? $" \"{mount.SlotDisplayTitle}\"" : string.Empty;
-            compassLabel.text = $"→ {mount.RequiredWing}{slot} · {distance:0}m";
+            compassLabel.text = label;
+        }
+    }
+
+    private static string FormatSlot(PaintingMount mount)
+    {
+        return mount.HasSpecificSlot ? $" \"{mount.SlotDisplayTitle}\"" : string.Empty;
+    }
+
+    private void SetNeedleColor(Color color)
+    {
+        if (needleText != null)
+        {
+            needleText.color = color;
         }
     }
 

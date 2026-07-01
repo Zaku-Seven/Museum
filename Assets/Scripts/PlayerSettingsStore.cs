@@ -10,6 +10,8 @@ public static class PlayerSettingsStore
     private const string FieldOfViewKey = "Museum_FieldOfView";
     private const string MasterVolumeKey = "Museum_MasterVolume";
     private const string UseSynthesizedSfxKey = "Museum_UseSynthesizedSfx";
+    private const string ReduceMotionKey = "Museum_ReduceMotion";
+    private const string JournalFilterKey = "Museum_JournalFilter";
 
     public const float DefaultMouseSensitivity = 2f;
     public const float DefaultFieldOfView = 75f;
@@ -79,6 +81,26 @@ public static class PlayerSettingsStore
         }
     }
 
+    public static bool ReduceMotion
+    {
+        get => PlayerPrefs.GetInt(ReduceMotionKey, 0) == 1;
+        set
+        {
+            PlayerPrefs.SetInt(ReduceMotionKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+    }
+
+    public static MuseumJournalFilter JournalFilter
+    {
+        get => (MuseumJournalFilter)PlayerPrefs.GetInt(JournalFilterKey, (int)MuseumJournalFilter.All);
+        set
+        {
+            PlayerPrefs.SetInt(JournalFilterKey, (int)value);
+            PlayerPrefs.Save();
+        }
+    }
+
     public static void ResetToDefaults()
     {
         MouseSensitivity = DefaultMouseSensitivity;
@@ -87,5 +109,7 @@ public static class PlayerSettingsStore
         FieldOfView = DefaultFieldOfView;
         MasterVolume = DefaultMasterVolume;
         UseSynthesizedSfx = true;
+        ReduceMotion = false;
+        JournalFilter = MuseumJournalFilter.All;
     }
 }

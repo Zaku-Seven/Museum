@@ -16,8 +16,9 @@ public class MountAimHighlighter : MonoBehaviour
     [SerializeField] private Color validMountColor = new Color(0.35f, 0.95f, 0.45f);
     [SerializeField] private Color wrongMountColor = new Color(0.95f, 0.3f, 0.25f);
     [SerializeField] private Color occupiedMountColor = new Color(0.75f, 0.75f, 0.75f);
-    [SerializeField] private float mountHighlightIntensity = 1.4f;
+    [SerializeField] private float mountHighlightIntensity = 1.65f;
     [SerializeField] private float wrongPulseSpeed = 6f;
+    [SerializeField] private float validMountPulseSpeed = 2.5f;
 
     [Header("Floor painting (empty-handed)")]
     [SerializeField] private Color floorHighlightColor = new Color(1f, 1f, 1f);
@@ -138,12 +139,15 @@ public class MountAimHighlighter : MonoBehaviour
 
         if (mount.CanAccept(artPickup.HeldPainting))
         {
-            ApplyAimHighlight(frameRenderer, HighlightMode.MountValid, validMountColor, pulse: false);
+            float pulse = MuseumMotionSettings.Pulse01(validMountPulseSpeed);
+            ApplyAimHighlight(frameRenderer, HighlightMode.MountValid, validMountColor * pulse, pulse: true);
             return;
         }
 
-        float pulse = 0.55f + 0.45f * Mathf.Sin(Time.time * wrongPulseSpeed);
-        ApplyAimHighlight(frameRenderer, HighlightMode.MountWrong, wrongMountColor * pulse, pulse: true);
+        float wrongPulse = MuseumMotionSettings.ReduceMotion
+            ? 1f
+            : 0.55f + 0.45f * Mathf.Sin(Time.time * wrongPulseSpeed);
+        ApplyAimHighlight(frameRenderer, HighlightMode.MountWrong, wrongMountColor * wrongPulse, pulse: true);
     }
 
     private void UpdateFloorPaintingHighlight(RaycastHit hit)
@@ -163,7 +167,7 @@ public class MountAimHighlighter : MonoBehaviour
         }
 
         bool staged = SortingTable.IsStaged(painting.transform);
-        float pulse = 0.65f + 0.35f * Mathf.Sin(Time.time * floorPulseSpeed);
+        float pulse = MuseumMotionSettings.Pulse01(floorPulseSpeed);
         if (staged)
         {
             ApplyAimHighlight(canvasRenderer, HighlightMode.StagedPainting, stagedHighlightColor * pulse, pulse: true);

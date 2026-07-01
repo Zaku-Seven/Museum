@@ -10,6 +10,7 @@ public class MuseumJournalController : MonoBehaviour
 
     [SerializeField] private GameObject panel;
     [SerializeField] private Text bodyText;
+    [SerializeField] private Text filterLabelText;
 
     private bool openedWhilePaused;
     private bool freezePushed;
@@ -91,12 +92,21 @@ public class MuseumJournalController : MonoBehaviour
         RestoreCursorForActiveOverlay();
     }
 
+    public void SetJournalFilterAll() => SetFilter(MuseumJournalFilter.All);
+    public void SetJournalFilterUnhung() => SetFilter(MuseumJournalFilter.Unhung);
+    public void SetJournalFilterHung() => SetFilter(MuseumJournalFilter.Hung);
+    public void SetJournalFilterStaged() => SetFilter(MuseumJournalFilter.Staged);
+
+    private void SetFilter(MuseumJournalFilter filter)
+    {
+        PlayerSettingsStore.JournalFilter = filter;
+        RefreshBody();
+    }
+
     private void OpenInternal()
     {
-        if (bodyText != null)
-        {
-            bodyText.text = MuseumCollectionLog.BuildJournalText();
-        }
+        TutorialHints.TryShowJournalHint();
+        RefreshBody();
 
         if (panel != null)
         {
@@ -111,6 +121,20 @@ public class MuseumJournalController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    private void RefreshBody()
+    {
+        MuseumJournalFilter filter = PlayerSettingsStore.JournalFilter;
+        if (bodyText != null)
+        {
+            bodyText.text = MuseumCollectionLog.BuildJournalText(filter);
+        }
+
+        if (filterLabelText != null)
+        {
+            filterLabelText.text = $"Showing: {filter}";
+        }
     }
 
     private void CloseImmediate()

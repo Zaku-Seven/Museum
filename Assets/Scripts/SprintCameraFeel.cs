@@ -13,6 +13,8 @@ public class SprintCameraFeel : MonoBehaviour
     private ThrowCameraKick throwKick;
     private CharacterController characterController;
 
+    public bool IsSprintFovActive { get; private set; }
+
     private void Awake()
     {
         if (targetCamera == null)
@@ -42,6 +44,15 @@ public class SprintCameraFeel : MonoBehaviour
         if (IsSprintMoving())
         {
             targetFov += sprintFovBoost;
+        }
+
+        IsSprintFovActive = targetFov > baseFov + 0.01f;
+
+        if (MuseumMotionSettings.ReduceMotion)
+        {
+            targetCamera.fieldOfView = baseFov;
+            IsSprintFovActive = false;
+            return;
         }
 
         targetCamera.fieldOfView = Mathf.Lerp(

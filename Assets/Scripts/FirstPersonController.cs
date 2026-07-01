@@ -158,6 +158,8 @@ public class FirstPersonController : MonoBehaviour
         playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
+    private bool wasSprinting;
+
     private void HandleMovement()
     {
         bool isGrounded = characterController.isGrounded;
@@ -176,10 +178,17 @@ public class FirstPersonController : MonoBehaviour
 
         Vector2 moveInput = MuseumInput.MoveInput();
         float speed = moveSpeed;
-        if (MuseumInput.IsSprinting() && moveInput.sqrMagnitude > 0.01f && isGrounded)
+        bool isSprinting = MuseumInput.IsSprinting() && moveInput.sqrMagnitude > 0.01f && isGrounded;
+        if (isSprinting)
         {
             speed *= sprintMultiplier;
+            if (!wasSprinting)
+            {
+                TutorialHints.TryShowSprintHint();
+            }
         }
+
+        wasSprinting = isSprinting;
 
         Vector3 forward = playerCamera.forward;
         Vector3 right = playerCamera.right;
@@ -221,7 +230,7 @@ public class FirstPersonController : MonoBehaviour
 
         float bobFrequency = headBobFrequency;
         float bobAmount = headBobAmount;
-        if (MuseumInput.IsSprinting() && characterController.isGrounded)
+        if (MuseumInput.IsSprinting() && characterController.isGrounded && !MuseumMotionSettings.ReduceMotion)
         {
             bobFrequency *= sprintHeadBobMultiplier;
             bobAmount *= 1.12f;

@@ -134,6 +134,8 @@ public static class GalleryContentSetup
         CreateWingFloorZones(root);
         CreateSortingTable(root, counter);
 
+        MuseumArchitectureSetup.EnsureArchitecture();
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
         EditorPrefs.SetBool(SetupCompleteKey, true);

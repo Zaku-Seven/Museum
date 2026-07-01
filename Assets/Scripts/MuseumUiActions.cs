@@ -120,6 +120,30 @@ public class MuseumUiActions : MonoBehaviour
         FindFirstObjectByType<SettingsMenuController>()?.ResetToDefaults();
     }
 
+    public void JournalFilterAll()
+    {
+        PlayClick();
+        MuseumJournalController.Instance?.SetJournalFilterAll();
+    }
+
+    public void JournalFilterUnhung()
+    {
+        PlayClick();
+        MuseumJournalController.Instance?.SetJournalFilterUnhung();
+    }
+
+    public void JournalFilterHung()
+    {
+        PlayClick();
+        MuseumJournalController.Instance?.SetJournalFilterHung();
+    }
+
+    public void JournalFilterStaged()
+    {
+        PlayClick();
+        MuseumJournalController.Instance?.SetJournalFilterStaged();
+    }
+
     private void PlayClick()
     {
         audioDirector?.PlayUiClick();

@@ -8,22 +8,50 @@ public static class MuseumCollectionLog
 {
     private static readonly StringBuilder Builder = new StringBuilder(512);
 
-    public static string BuildJournalText()
+    public static string BuildJournalText(MuseumJournalFilter filter = MuseumJournalFilter.All)
     {
         Builder.Clear();
         Builder.AppendLine("COLLECTION LOG");
         Builder.AppendLine(MuseumHangProgress.BuildSummaryLine());
+        Builder.AppendLine($"Filter: {FormatFilterLabel(filter)}");
         Builder.AppendLine();
 
         foreach (GalleryWing wing in System.Enum.GetValues(typeof(GalleryWing)))
         {
-            AppendWingSection(wing);
+            AppendWingSection(wing, filter);
         }
 
         return Builder.ToString().TrimEnd();
     }
 
-    private static void AppendWingSection(GalleryWing wing)
+    public static bool MatchesFilter(InteractablePainting painting, MuseumJournalFilter filter)
+    {
+        if (painting == null)
+        {
+            return false;
+        }
+
+        return filter switch
+        {
+            MuseumJournalFilter.Unhung => painting.CurrentMount == null,
+            MuseumJournalFilter.Hung => painting.CurrentMount != null,
+            MuseumJournalFilter.Staged => SortingTable.IsStaged(painting.transform),
+            _ => true
+        };
+    }
+
+    private static string FormatFilterLabel(MuseumJournalFilter filter)
+    {
+        return filter switch
+        {
+            MuseumJournalFilter.Unhung => "Unhung only",
+            MuseumJournalFilter.Hung => "Hung only",
+            MuseumJournalFilter.Staged => "Sorting table",
+            _ => "All paintings"
+        };
+    }
+
+    private static void AppendWingSection(GalleryWing wing, MuseumJournalFilter filter)
     {
         InteractablePainting[] paintings = Object.FindObjectsByType<InteractablePainting>(FindObjectsSortMode.None);
         bool any = false;
@@ -31,7 +59,7 @@ public static class MuseumCollectionLog
         for (int i = 0; i < paintings.Length; i++)
         {
             InteractablePainting painting = paintings[i];
-            if (painting == null || painting.Wing != wing)
+            if (painting == null || painting.Wing != wing || !MatchesFilter(painting, filter))
             {
                 continue;
             }
