@@ -123,3 +123,22 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Blockers:** none.
 
 **Morning test steps:** confirm the top-center hint text appears in Play mode; confirm a muted slab sits under the floor-painting pile and you can walk over it / drop paintings on it without being blocked.
+
+## 2026-07-01T06:45Z Night 1 wrap-up
+
+**Delivered:** P0 (phases 1–3) complete, P1 (phase 4) complete, P2 (phase 5) partial (#1, #3).
+
+**New scripts:** `GalleryWing.cs`, `GallerySection.cs`, `SortingTable.cs`, `Editor/GalleryContentSetup.cs`.
+**Modified:** `ArtPickup.cs`, `InteractablePainting.cs`, `PaintingMount.cs`, `InteractionHUD.cs`, `Editor/MuseumGameplaySetup.cs`, `README.md`.
+**Untouched (as required):** `FirstPersonController.cs`, `Packages/manifest.json`, `Library/ Temp/ Logs/ UserSettings/`. `ProjectSettings/TagManager.asset` not hand-edited (Interactable layer already exists at index 6; editor scripts ensure it).
+
+**Self-check performed (no Unity available):**
+- Brace/paren/bracket balance verified across all 12 `.cs` files.
+- No hand-made `.meta` files for new scripts.
+- SerializedObject field names checked against actual private fields (`snapPoint`, `requiredWing`, `wing`, `paintingTitle`, `sectionWing`, `mounts`, `glowRenderers`, `artPickup`, `promptText`, `crosshairText`, `progressText`, `hintText`).
+- Public methods referenced by setup scripts exist (`PaintingMount.CanAccept/SetSection`, `GallerySection.CheckComplete`, etc.).
+- README lists the new **Game → Setup Gallery Wings** menu item.
+
+**Cannot verify (VM is code-only):** compilation, Play-mode feel, glow visuals. Full human checklist in `docs/MORNING_TEST.md`.
+
+**Open blocker for the human:** first Unity import is the source of truth — check the Console for compile errors and run the four setup menus in order.
