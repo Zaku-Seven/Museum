@@ -13,6 +13,8 @@ public class ThrowCameraKick : MonoBehaviour
     private float kickTimer;
     private float activeDelta;
 
+    public bool IsKickActive => kickTimer > 0f;
+
     private void Awake()
     {
         if (targetCamera == null)

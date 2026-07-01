@@ -1334,6 +1334,16 @@ public static class MuseumGameplaySetup
             playerObject.AddComponent<MuseumDevCheats>();
         }
 
+        if (playerObject.GetComponent<MuseumAmbienceController>() == null)
+        {
+            playerObject.AddComponent<MuseumAmbienceController>();
+        }
+
+        if (playerObject.GetComponent<MuseumDebugOverlay>() == null)
+        {
+            playerObject.AddComponent<MuseumDebugOverlay>();
+        }
+
         if (playerObject.GetComponent<FootstepController>() == null)
         {
             playerObject.AddComponent<FootstepController>();
@@ -1342,6 +1352,11 @@ public static class MuseumGameplaySetup
         if (cameraObject.GetComponent<ThrowCameraKick>() == null)
         {
             cameraObject.AddComponent<ThrowCameraKick>();
+        }
+
+        if (cameraObject.GetComponent<SprintCameraFeel>() == null)
+        {
+            cameraObject.AddComponent<SprintCameraFeel>();
         }
 
         if (cameraObject.GetComponent<MountPlacementGhost>() == null)

@@ -26,7 +26,7 @@ See `docs/AUDIO_SETUP.md`. **Synthesized one-shots play automatically** when cli
 - [ ] Section complete, museum win, UI click *(placeholders ship in code)*
 - [ ] Footsteps (surface variants optional) *(placeholder footstep tone)*
 - [ ] Jump / land *(placeholder tones)*
-- [ ] Optional ambient loop on `MuseumAudioDirector` or dedicated `AudioSource`  
+- [ ] Optional ambient loop on Player *(procedural hum ships via `MuseumAmbienceController`)*
 
 ## UI polish
 

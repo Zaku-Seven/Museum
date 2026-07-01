@@ -26,6 +26,16 @@ Gameplay SFX play **out of the box** via tiny runtime-generated tones when clips
 
 Assigned clips always take priority over synthesized fallbacks.
 
+## Ambience loop
+
+`MuseumAmbienceController` on Player loops a subtle procedural hum by default (child `AmbienceAudio`). Assign **Ambient Clip** to replace it. Stops during pause, menus, and win modal. Scales with master volume.
+
+## Sprint audio & feel
+
+- **Footstep Controller** — faster cadence + louder steps while sprinting (Shift / LT)
+- **Sprint Camera Feel** on PlayerCamera — +4° FOV while sprinting (defers to throw/reject FOV kicks)
+- **First Person Controller** — faster head bob while sprinting
+
 ## Volume & placeholder toggle
 
 - **Settings → Master Volume** scales SFX through `PlayerSettingsStore.MasterVolume`.

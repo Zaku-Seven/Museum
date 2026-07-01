@@ -18,16 +18,13 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float gravity = -20f;
 
     [Header("Mouse Look")]
-    [SerializeField] private float mouseSensitivity = 2f;
     [SerializeField] private float minPitch = -85f;
     [SerializeField] private float maxPitch = 85f;
 
     [Header("Head Bob")]
     [SerializeField] private float headBobAmount = 0.035f;
     [SerializeField] private float headBobFrequency = 11f;
-
-    [Header("Camera")]
-    [SerializeField] private float fieldOfView = 75f;
+    [SerializeField] private float sprintHeadBobMultiplier = 1.35f;
 
     private CharacterController characterController;
     private ArtPickup artPickup;
@@ -222,7 +219,15 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
-        float bob = Mathf.Sin(Time.time * headBobFrequency) * headBobAmount;
+        float bobFrequency = headBobFrequency;
+        float bobAmount = headBobAmount;
+        if (MuseumInput.IsSprinting() && characterController.isGrounded)
+        {
+            bobFrequency *= sprintHeadBobMultiplier;
+            bobAmount *= 1.12f;
+        }
+
+        float bob = Mathf.Sin(Time.time * bobFrequency) * bobAmount;
         playerCamera.localPosition = cameraRestLocalPos + Vector3.up * bob;
     }
 

@@ -7,13 +7,16 @@ using UnityEngine;
 public class FootstepController : MonoBehaviour
 {
     [SerializeField] private AudioClip footstepClip;
+    [SerializeField] private AudioClip[] footstepVariants;
     [SerializeField] private float stepInterval = 0.42f;
+    [SerializeField] private float sprintCadenceMultiplier = 1.45f;
     [SerializeField] private float minMoveInput = 0.15f;
     [SerializeField] private bool useSynthesizedFallback = true;
 
     private CharacterController characterController;
     private AudioSource footstepSource;
     private float stepTimer;
+    private bool wasSprinting;
 
     private void Awake()
     {
@@ -45,21 +48,33 @@ public class FootstepController : MonoBehaviour
     {
         if (characterController == null || !characterController.isGrounded)
         {
-            return;
-        }
-
-        AudioClip clip = ResolveFootstepClip();
-        if (clip == null)
-        {
+            wasSprinting = false;
             return;
         }
 
         if (ShouldBlockFootsteps())
         {
+            wasSprinting = false;
             return;
         }
 
-        if (MuseumInput.MoveInput().sqrMagnitude < minMoveInput * minMoveInput)
+        Vector2 moveInput = MuseumInput.MoveInput();
+        if (moveInput.sqrMagnitude < minMoveInput * minMoveInput)
+        {
+            wasSprinting = false;
+            return;
+        }
+
+        bool isSprinting = MuseumInput.IsSprinting();
+        if (isSprinting && !wasSprinting)
+        {
+            PlaySprintStart();
+        }
+
+        wasSprinting = isSprinting;
+
+        AudioClip clip = ResolveFootstepClip();
+        if (clip == null)
         {
             return;
         }
@@ -70,23 +85,54 @@ public class FootstepController : MonoBehaviour
             return;
         }
 
-        stepTimer = stepInterval;
-        float pitch = Random.Range(0.92f, 1.08f);
-        float volume = PlayerSettingsStore.MasterVolume * 0.35f;
+        stepTimer = MuseumProceduralSfx.ComputeSprintStepInterval(stepInterval, sprintCadenceMultiplier, isSprinting);
+        float pitchMin = isSprinting ? 0.88f : 0.92f;
+        float pitchMax = isSprinting ? 1.12f : 1.08f;
+        float pitch = Random.Range(pitchMin, pitchMax);
+        float volumeScale = isSprinting ? 0.48f : 0.35f;
+        float volume = PlayerSettingsStore.MasterVolume * volumeScale;
         footstepSource.pitch = pitch;
         footstepSource.PlayOneShot(clip, volume);
         footstepSource.pitch = 1f;
     }
 
+    private void PlaySprintStart()
+    {
+        if (footstepSource == null || !useSynthesizedFallback || !PlayerSettingsStore.UseSynthesizedSfx)
+        {
+            return;
+        }
+
+        AudioClip clip = MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.SprintStart);
+        if (clip == null)
+        {
+            return;
+        }
+
+        footstepSource.PlayOneShot(clip, PlayerSettingsStore.MasterVolume * 0.25f);
+    }
+
     private AudioClip ResolveFootstepClip()
     {
+        if (footstepVariants != null && footstepVariants.Length > 0)
+        {
+            for (int attempt = 0; attempt < footstepVariants.Length; attempt++)
+            {
+                AudioClip candidate = footstepVariants[Random.Range(0, footstepVariants.Length)];
+                if (candidate != null)
+                {
+                    return candidate;
+                }
+            }
+        }
+
         if (footstepClip != null)
         {
             return footstepClip;
         }
 
-        return useSynthesizedFallback
-            ? MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.Footstep)
+        return useSynthesizedFallback && PlayerSettingsStore.UseSynthesizedSfx
+            ? MuseumProceduralSfx.GetRandomFootstepVariant()
             : null;
     }
 
@@ -108,6 +154,11 @@ public class FootstepController : MonoBehaviour
         }
 
         if (MuseumJournalController.Instance != null && MuseumJournalController.Instance.IsOpen)
+        {
+            return true;
+        }
+
+        if (ControlsHelpController.Instance != null && ControlsHelpController.Instance.IsOpen)
         {
             return true;
         }

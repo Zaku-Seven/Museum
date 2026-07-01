@@ -96,6 +96,7 @@ public class SettingsMenuController : MonoBehaviour
         LoadValuesIntoUi();
         firstPersonController?.ApplyPlayerSettings();
         audioDirector?.ApplyVolume();
+        FindFirstObjectByType<MuseumAmbienceController>()?.ApplyVolume();
     }
 
     private void LoadValuesIntoUi()
@@ -163,6 +164,7 @@ public class SettingsMenuController : MonoBehaviour
     {
         PlayerSettingsStore.MasterVolume = value;
         audioDirector?.ApplyVolume();
+        FindFirstObjectByType<MuseumAmbienceController>()?.ApplyVolume();
         RefreshValueLabels();
     }
 

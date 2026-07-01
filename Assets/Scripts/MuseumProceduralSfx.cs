@@ -20,11 +20,16 @@ public static class MuseumProceduralSfx
         Stage,
         UiClick,
         Footstep,
+        FootstepB,
+        FootstepC,
         Jump,
-        Land
+        Land,
+        SprintStart,
+        AmbienceLoop
     }
 
     private static readonly Dictionary<SfxKind, AudioClip> Cache = new Dictionary<SfxKind, AudioClip>();
+    private static AudioClip ambienceLoopClip;
 
     public static AudioClip ResolveOrFallback(AudioClip clip, SfxKind kind)
     {
@@ -34,6 +39,40 @@ public static class MuseumProceduralSfx
         }
 
         return PlayerSettingsStore.UseSynthesizedSfx ? Get(kind) : null;
+    }
+
+    public static AudioClip GetRandomFootstepVariant()
+    {
+        int pick = Random.Range(0, 3);
+        SfxKind kind = pick switch
+        {
+            1 => SfxKind.FootstepB,
+            2 => SfxKind.FootstepC,
+            _ => SfxKind.Footstep
+        };
+
+        return Get(kind);
+    }
+
+    public static AudioClip GetAmbienceLoop()
+    {
+        if (ambienceLoopClip != null)
+        {
+            return ambienceLoopClip;
+        }
+
+        ambienceLoopClip = CreateAmbienceLoop();
+        return ambienceLoopClip;
+    }
+
+    public static float ComputeSprintStepInterval(float baseInterval, float sprintCadenceMultiplier, bool isSprinting)
+    {
+        if (baseInterval <= 0f)
+        {
+            return baseInterval;
+        }
+
+        return isSprinting ? baseInterval / Mathf.Max(1f, sprintCadenceMultiplier) : baseInterval;
     }
 
     public static AudioClip Get(SfxKind kind)
@@ -56,8 +95,11 @@ public static class MuseumProceduralSfx
             SfxKind.Stage => CreateTone("sfx_stage", 500f, 0.1f, 0.22f, secondFreq: 750f),
             SfxKind.UiClick => CreateTone("sfx_ui", 880f, 0.04f, 0.15f),
             SfxKind.Footstep => CreateTone("sfx_step", 90f, 0.05f, 0.12f, wave: Wave.Noise),
+            SfxKind.FootstepB => CreateTone("sfx_step_b", 75f, 0.055f, 0.11f, wave: Wave.Noise, pitchSlide: -15f),
+            SfxKind.FootstepC => CreateTone("sfx_step_c", 105f, 0.045f, 0.13f, wave: Wave.Noise, pitchSlide: 20f),
             SfxKind.Jump => CreateTone("sfx_jump", 520f, 0.06f, 0.14f, pitchSlide: 100f),
             SfxKind.Land => CreateTone("sfx_land", 110f, 0.05f, 0.16f, wave: Wave.Noise),
+            SfxKind.SprintStart => CreateTone("sfx_sprint", 180f, 0.05f, 0.1f, wave: Wave.Noise, pitchSlide: 60f),
             _ => CreateTone("sfx_default", 440f, 0.05f, 0.1f)
         };
 
@@ -111,6 +153,27 @@ public static class MuseumProceduralSfx
 
             float envelope = Mathf.Clamp01(1f - progress);
             data[i] = sample * volume * envelope;
+        }
+
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    private static AudioClip CreateAmbienceLoop()
+    {
+        const int sampleRate = 44100;
+        const float durationSeconds = 12f;
+        int sampleCount = Mathf.Max(1, Mathf.RoundToInt(sampleRate * durationSeconds));
+        var clip = AudioClip.Create("sfx_ambience_loop", sampleCount, 1, sampleRate, false);
+        var data = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = i / (float)sampleRate;
+            float cycle = t / durationSeconds * Mathf.PI * 2f;
+            float hum = Mathf.Sin(cycle * 0.5f) * 0.06f + Mathf.Sin(cycle * 1.7f) * 0.03f;
+            float air = (Mathf.PerlinNoise(t * 0.25f, 0.12f) - 0.5f) * 0.04f;
+            data[i] = hum + air;
         }
 
         clip.SetData(data, 0);

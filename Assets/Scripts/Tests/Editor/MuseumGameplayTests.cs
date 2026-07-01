@@ -382,6 +382,37 @@ public class MuseumGameplayTests
         PlayerSettingsStore.ResetToDefaults();
     }
 
+    [Test]
+    public void ProceduralSfx_GetRandomFootstepVariant_ReturnsDistinctClips()
+    {
+        AudioClip a = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.Footstep);
+        AudioClip b = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.FootstepB);
+        AudioClip c = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.FootstepC);
+        Assert.IsNotNull(a);
+        Assert.IsNotNull(b);
+        Assert.IsNotNull(c);
+        Assert.AreNotEqual(a.length, b.length);
+    }
+
+    [Test]
+    public void ProceduralSfx_ComputeSprintStepInterval_ShortensWhileSprinting()
+    {
+        const float baseInterval = 0.42f;
+        float walk = MuseumProceduralSfx.ComputeSprintStepInterval(baseInterval, 1.45f, false);
+        float sprint = MuseumProceduralSfx.ComputeSprintStepInterval(baseInterval, 1.45f, true);
+        Assert.AreEqual(baseInterval, walk, 0.0001f);
+        Assert.Less(sprint, walk);
+    }
+
+    [Test]
+    public void ProceduralSfx_GetAmbienceLoop_ReturnsLoopingClip()
+    {
+        AudioClip loop = MuseumProceduralSfx.GetAmbienceLoop();
+        Assert.IsNotNull(loop);
+        Assert.Greater(loop.length, 8f);
+        Assert.AreEqual(44100, loop.frequency);
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");
