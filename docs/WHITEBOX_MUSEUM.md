@@ -4,9 +4,11 @@ Cozy curation puzzle architecture: **Grand Lobby** hub, **Pre-1900 Art** wing (l
 
 ## Build in Unity
 
+**If you see an empty room or no wings:** use **Game → Build Museum Now (Recommended)** (top of the Game menu). Unity may also prompt automatically when you open the scene.
+
 1. Open your active scene (e.g. `SampleScene.unity`).
 2. Ensure a **Player** exists (**Game → Setup Zero-to-One Prototype** if needed).
-3. Run **Game → Build Whitebox Museum**.
+3. Run **Game → Build Museum Now (Recommended)** *or* **Game → Build Whitebox Museum**.
 
 The menu creates:
 

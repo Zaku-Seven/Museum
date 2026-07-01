@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class FullMuseumSetup
 {
-    [MenuItem("Game/Setup Full Museum")]
+    [MenuItem("Game/Setup Full Museum", priority = 1)]
     public static void SetupFromMenu()
     {
         Debug.Log("Full Museum setup: starting all setup steps in order…");

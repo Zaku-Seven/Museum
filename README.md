@@ -11,7 +11,7 @@ First-person museum sorting prototype (Unity 6 / URP).
 
 ## Editor menu items
 
-**Quick start:** **Game → Setup Full Museum** — runs all four steps below in order.
+**Quick start:** **Game → Build Museum Now (Recommended)** — builds the full sorting museum in one click (same as Setup Full Museum below).
 
 Or run individually on an empty scene:
 

@@ -18,7 +18,7 @@ public static class WhiteboxMuseumSetup
     // Unity plane mesh is 10×10; scale multiplies footprint.
     private const float PlaneUnit = 10f;
 
-    [MenuItem("Game/Build Whitebox Museum")]
+    [MenuItem("Game/Build Whitebox Museum", priority = 2)]
     public static void BuildFromMenu()
     {
         BuildWhiteboxMuseum();
