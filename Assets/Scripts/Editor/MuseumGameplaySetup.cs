@@ -67,6 +67,7 @@ public static class MuseumGameplaySetup
         CreateFloorPainting("TestPainting_3", "Amber Grid", new Vector3(-3f, 0.025f, 5f), new Color(0.9f, 0.65f, 0.15f), GalleryWing.Modern, interactableLayer);
         SetupInteractionHud();
         SetupPlayerGameplayComponents();
+        EnsureFootstepSurfaces();
         PlayerVisualSetup.EnsurePlayerBean();
         FixExistingHoldPoint();
 
@@ -1378,6 +1379,34 @@ public static class MuseumGameplaySetup
         {
             playerObject.AddComponent<MuseumStartupValidator>();
         }
+
+        if (playerObject.GetComponent<MuseumCelebrationFx>() == null)
+        {
+            playerObject.AddComponent<MuseumCelebrationFx>();
+        }
+    }
+
+    private static void EnsureFootstepSurfaces()
+    {
+        EnsureFootstepSurfaceOn("Floor", FootstepSurface.SurfaceKind.Stone);
+        EnsureFootstepSurfaceOn("SortingTable", FootstepSurface.SurfaceKind.Wood);
+    }
+
+    private static void EnsureFootstepSurfaceOn(string objectName, FootstepSurface.SurfaceKind kind)
+    {
+        GameObject target = GameObject.Find(objectName);
+        if (target == null)
+        {
+            return;
+        }
+
+        FootstepSurface surface = target.GetComponent<FootstepSurface>();
+        if (surface == null)
+        {
+            surface = target.AddComponent<FootstepSurface>();
+        }
+
+        surface.Configure(kind);
     }
 
     private static void EnsureEventSystem()

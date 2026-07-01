@@ -413,6 +413,45 @@ public class MuseumGameplayTests
         Assert.AreEqual(44100, loop.frequency);
     }
 
+    [Test]
+    public void FootstepSurface_ResolveProceduralKind_MapsSurfaces()
+    {
+        Assert.AreEqual(
+            MuseumProceduralSfx.SfxKind.FootstepWood,
+            FootstepSurface.ResolveProceduralKind(FootstepSurface.SurfaceKind.Wood));
+        Assert.AreEqual(
+            MuseumProceduralSfx.SfxKind.FootstepCarpet,
+            FootstepSurface.ResolveProceduralKind(FootstepSurface.SurfaceKind.Carpet));
+    }
+
+    [Test]
+    public void GallerySection_GetCelebrationPosition_AveragesMountPositions()
+    {
+        var sectionObject = new GameObject("TestSection");
+        var mountA = new GameObject("MountA");
+        var mountB = new GameObject("MountB");
+        mountA.transform.position = new Vector3(0f, 2f, 0f);
+        mountB.transform.position = new Vector3(4f, 2f, 0f);
+
+        try
+        {
+            GallerySection section = sectionObject.AddComponent<GallerySection>();
+            PaintingMount paintingMountA = mountA.AddComponent<PaintingMount>();
+            PaintingMount paintingMountB = mountB.AddComponent<PaintingMount>();
+            SetPrivateList(section, "mounts", new[] { paintingMountA, paintingMountB });
+
+            Vector3 center = section.GetCelebrationPosition();
+            Assert.AreEqual(2f, center.x, 0.01f);
+            Assert.AreEqual(2f, center.y, 0.01f);
+        }
+        finally
+        {
+            Object.DestroyImmediate(sectionObject);
+            Object.DestroyImmediate(mountA);
+            Object.DestroyImmediate(mountB);
+        }
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");

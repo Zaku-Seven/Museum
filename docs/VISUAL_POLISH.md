@@ -16,7 +16,7 @@ Gameplay systems are complete. This document is the art/audio/environment checkl
 - [ ] Baked or real-time GI tuned for gallery readability  
 - [ ] Spot/accent lights on hung art (completion glow can stay emission-based)  
 - [ ] Subtle fog or post-processing (URP Volume) for “arcane museum” mood  
-- [ ] Win / section-complete moment: optional particle burst (code hooks via `MuseumGameEvents`)  
+- [x] Win / section-complete moment: procedural particle burst (`MuseumCelebrationFx` on Player)  
 
 ## Audio (assign in Inspector to replace placeholders)
 
@@ -24,7 +24,7 @@ See `docs/AUDIO_SETUP.md`. **Synthesized one-shots play automatically** when cli
 
 - [ ] Pickup, place, drop, wrong wing/slot, throw, stage *(placeholders ship in code)*
 - [ ] Section complete, museum win, UI click *(placeholders ship in code)*
-- [ ] Footsteps (surface variants optional) *(placeholder footstep tone)*
+- [ ] Footsteps (surface variants optional) *(stone / wood / carpet via `FootstepSurface` + procedural tones)*
 - [ ] Jump / land *(placeholder tones)*
 - [ ] Optional ambient loop on Player *(procedural hum ships via `MuseumAmbienceController`)*
 

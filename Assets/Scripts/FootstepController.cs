@@ -11,6 +11,7 @@ public class FootstepController : MonoBehaviour
     [SerializeField] private float stepInterval = 0.42f;
     [SerializeField] private float sprintCadenceMultiplier = 1.45f;
     [SerializeField] private float minMoveInput = 0.15f;
+    [SerializeField] private float groundProbeDistance = 2f;
     [SerializeField] private bool useSynthesizedFallback = true;
 
     private CharacterController characterController;
@@ -131,9 +132,36 @@ public class FootstepController : MonoBehaviour
             return footstepClip;
         }
 
-        return useSynthesizedFallback && PlayerSettingsStore.UseSynthesizedSfx
-            ? MuseumProceduralSfx.GetRandomFootstepVariant()
-            : null;
+        if (!useSynthesizedFallback || !PlayerSettingsStore.UseSynthesizedSfx)
+        {
+            return null;
+        }
+
+        FootstepSurface.SurfaceKind surface = SampleGroundSurface();
+        if (surface == FootstepSurface.SurfaceKind.Stone)
+        {
+            return MuseumProceduralSfx.GetRandomFootstepVariant();
+        }
+
+        return MuseumProceduralSfx.Get(FootstepSurface.ResolveProceduralKind(surface));
+    }
+
+    private FootstepSurface.SurfaceKind SampleGroundSurface()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.15f;
+        if (!Physics.Raycast(
+                origin,
+                Vector3.down,
+                out RaycastHit hit,
+                groundProbeDistance,
+                Physics.DefaultRaycastLayers,
+                QueryTriggerInteraction.Collide))
+        {
+            return FootstepSurface.SurfaceKind.Stone;
+        }
+
+        FootstepSurface surface = hit.collider.GetComponentInParent<FootstepSurface>();
+        return surface != null ? surface.Kind : FootstepSurface.SurfaceKind.Stone;
     }
 
     private static bool ShouldBlockFootsteps()

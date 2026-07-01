@@ -40,6 +40,31 @@ public class GallerySection : MonoBehaviour
     public bool IsComplete { get; private set; }
     public int MountCount => mounts != null ? mounts.Count : 0;
 
+    /// <summary>World position for celebration VFX (average mount height).</summary>
+    public Vector3 GetCelebrationPosition()
+    {
+        if (mounts == null || mounts.Count == 0)
+        {
+            return transform.position;
+        }
+
+        Vector3 sum = Vector3.zero;
+        int count = 0;
+        for (int i = 0; i < mounts.Count; i++)
+        {
+            PaintingMount mount = mounts[i];
+            if (mount == null)
+            {
+                continue;
+            }
+
+            sum += mount.transform.position;
+            count++;
+        }
+
+        return count > 0 ? sum / count : transform.position;
+    }
+
     private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
     private readonly List<Renderer> resolvedRenderers = new List<Renderer>();
     private bool renderersResolved;

@@ -298,6 +298,8 @@ public static class GalleryContentSetup
         }
 
         table.AddComponent<SortingTable>();
+        FootstepSurface tableSurface = table.AddComponent<FootstepSurface>();
+        tableSurface.Configure(FootstepSurface.SurfaceKind.Wood);
         MuseumEntityIdUtility.EnsureEntityId(table, "sorting_table_main");
         counter.Created++;
     }

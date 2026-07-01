@@ -63,7 +63,7 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | **J** / **R3** | Collection journal (pause → **Collection** on gamepad) |
 | Esc / **Start** (gamepad) | Pause / resume (Settings, Controls, New Game) |
 
-**Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.
+**Dev cheats** (Editor / Development builds only): **F6** teleport to nearest mount · **F7** debug overlay · **F8** save · **F9** fill one section · **F10** auto-hang all · **F11** force win.
 
 When every gallery section is complete, a **win overlay** appears with **Continue exploring** or **New game**. Pickup stays disabled after win unless you start a new game. Progress (mounts, sorting table staging, win state) persists via **save v2** (`MuseumSaveManager` + stable `MuseumEntityId`s). Pause menu includes **mouse sensitivity**, **FOV**, **invert Y**, and **master volume**. Optional SFX hooks live on `MuseumAudioDirector` (assign clips in Inspector).
 
