@@ -89,10 +89,32 @@ public static class MuseumInput
         return Gamepad.current != null && Gamepad.current.selectButton.isPressed;
     }
 
-    /// <summary>J — toggle collection journal (pause → Collection for gamepad).</summary>
+    /// <summary>J — toggle collection journal. R3 (right stick click) on gamepad.</summary>
     public static bool JournalPressedThisFrame()
     {
-        return Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame;
+        if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+
+        return Gamepad.current != null && Gamepad.current.rightStickButton.wasPressedThisFrame;
+    }
+
+    /// <summary>Esc, B (gamepad), or Start when closing overlays.</summary>
+    public static bool CloseOverlayPressedThisFrame()
+    {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+
+        if (Gamepad.current == null)
+        {
+            return false;
+        }
+
+        return Gamepad.current.buttonEast.wasPressedThisFrame
+            || Gamepad.current.startButton.wasPressedThisFrame;
     }
 
     /// <summary>Mouse wheel Y, or gamepad bumpers / d-pad for stack selection.</summary>

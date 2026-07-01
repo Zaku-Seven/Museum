@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
@@ -17,7 +16,7 @@ public class PauseMenuController : MonoBehaviour
     [SerializeField] private SettingsMenuController settingsMenu;
 
     [Header("Copy")]
-    [SerializeField] private string pauseMessage = "PAUSED\nPress Esc to resume";
+    [SerializeField] private string pauseMessage = "PAUSED\nEsc / Start — resume  ·  B — back from submenus";
 
     public bool IsPaused { get; private set; }
 
@@ -44,8 +43,21 @@ public class PauseMenuController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current == null && Gamepad.current == null)
+        if (MuseumJournalController.Instance != null && MuseumJournalController.Instance.IsOpen)
         {
+            return;
+        }
+
+        if (IsPaused && settingsMenu != null && settingsMenu.IsSettingsOpen
+            && MuseumInput.CloseOverlayPressedThisFrame())
+        {
+            settingsMenu.CloseSettings();
+            return;
+        }
+
+        if (IsPaused && MuseumInput.CloseOverlayPressedThisFrame())
+        {
+            SetPaused(false);
             return;
         }
 

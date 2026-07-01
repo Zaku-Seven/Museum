@@ -19,7 +19,7 @@ public class ControlsHelpController : MonoBehaviour
         "Right-click — undo     Esc — pause\n" +
         "WASD — move            Space — jump\n" +
         "Shift — sprint         Tab — inspect art\n" +
-        "J — collection log (pause → Collection)\n\n" +
+        "J — collection log    R3 — journal (gamepad)\n\n" +
         "GAMEPAD\n" +
         "A — pick up    B — throw    X — place    Y — undo\n" +
         "LB / RB — stack item    Start — pause\n" +
@@ -39,6 +39,14 @@ public class ControlsHelpController : MonoBehaviour
         }
 
         Close();
+    }
+
+    private void Update()
+    {
+        if (IsOpen && MuseumInput.CloseOverlayPressedThisFrame())
+        {
+            Close();
+        }
     }
 
     private void OnDestroy()

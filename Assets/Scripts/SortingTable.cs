@@ -98,7 +98,7 @@ public class SortingTable : MonoBehaviour
         }
 
         Rigidbody rb = painting.GetComponent<Rigidbody>();
-        if (rb != null && rb.linearVelocity.magnitude > 3.5f)
+        if (rb != null && rb.linearVelocity.magnitude > 5.5f)
         {
             return;
         }

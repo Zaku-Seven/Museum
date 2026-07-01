@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,6 +9,13 @@ using UnityEngine;
 public static class PaintingDefinitionLinker
 {
     private const string CatalogFolder = "Assets/Data/Paintings";
+
+    private static readonly Dictionary<string, string> EntityIdToCatalogId = new Dictionary<string, string>
+    {
+        { "painting_testpainting", "painting_sunset_study" },
+        { "painting_testpainting_2", "painting_blue_horizon" },
+        { "painting_testpainting_3", "painting_amber_grid" }
+    };
 
     [MenuItem("Game/Link Painting Definitions To Scene")]
     public static void LinkScenePaintings()
@@ -25,8 +33,12 @@ public static class PaintingDefinitionLinker
 
             MuseumEntityId entityId = painting.GetComponent<MuseumEntityId>();
             string id = entityId != null ? entityId.EntityId : painting.gameObject.name;
-            string assetPath = $"{CatalogFolder}/{id}.asset";
-            PaintingDefinition definition = AssetDatabase.LoadAssetAtPath<PaintingDefinition>(assetPath);
+            PaintingDefinition definition = LoadDefinitionForEntity(id);
+            if (definition == null)
+            {
+                definition = FindDefinitionByTitle(painting.PaintingTitle);
+            }
+
             if (definition == null)
             {
                 continue;
@@ -38,6 +50,41 @@ public static class PaintingDefinitionLinker
         }
 
         Debug.Log($"PaintingDefinitionLinker: linked {linked} painting(s). Run 'Create Painting Definition Assets' first if zero.");
+    }
+
+    private static PaintingDefinition LoadDefinitionForEntity(string entityId)
+    {
+        if (EntityIdToCatalogId.TryGetValue(entityId, out string catalogId))
+        {
+            PaintingDefinition aliased = AssetDatabase.LoadAssetAtPath<PaintingDefinition>($"{CatalogFolder}/{catalogId}.asset");
+            if (aliased != null)
+            {
+                return aliased;
+            }
+        }
+
+        return AssetDatabase.LoadAssetAtPath<PaintingDefinition>($"{CatalogFolder}/{entityId}.asset");
+    }
+
+    private static PaintingDefinition FindDefinitionByTitle(string title)
+    {
+        if (string.IsNullOrEmpty(title))
+        {
+            return null;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:PaintingDefinition", new[] { CatalogFolder });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            PaintingDefinition definition = AssetDatabase.LoadAssetAtPath<PaintingDefinition>(path);
+            if (definition != null && definition.Title == title)
+            {
+                return definition;
+            }
+        }
+
+        return null;
     }
 }
 #endif

@@ -16,6 +16,8 @@ public static class PaintingCatalogSetup
 
         CreateDefinition("painting_sunset_study", "Sunset Study", GalleryWing.Modern, new Color(0.85f, 0.55f, 0.2f),
             "Warm geometric study — belongs on the north Modern wall.");
+        CreateDefinition("painting_amber_grid", "Amber Grid", GalleryWing.Modern, new Color(0.9f, 0.65f, 0.15f),
+            "Golden lattice — north Modern demo painting.");
         CreateDefinition("painting_blue_horizon", "Blue Horizon", GalleryWing.Classical, new Color(0.2f, 0.35f, 0.75f),
             "Cool classical seascape — wrong wing for Modern mounts.");
         CreateDefinition("painting_cobalt_field", "Cobalt Field", GalleryWing.Modern, new Color(0.15f, 0.3f, 0.8f),

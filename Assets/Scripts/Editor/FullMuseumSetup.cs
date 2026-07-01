@@ -24,6 +24,7 @@ public static class FullMuseumSetup
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
 
-        Debug.Log("Full Museum setup complete. Press Play to sort paintings by wing.");
+        MuseumSceneValidator.ValidateFromMenu();
+        Debug.Log("Full Museum setup complete. Press Play — gameplay is feature-complete; add art/audio meshes in Inspector.");
     }
 }

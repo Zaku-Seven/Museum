@@ -2,6 +2,8 @@ using UnityEditor;
 using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -338,6 +340,8 @@ public static class MuseumGameplaySetup
 
     private static void SetupInteractionHud()
     {
+        EnsureEventSystem();
+
         Transform canvasTransform = GetOrCreateHudCanvas();
         Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
@@ -1316,6 +1320,23 @@ public static class MuseumGameplaySetup
         {
             playerObject.AddComponent<WingCompassHud>();
         }
+
+        if (playerObject.GetComponent<MuseumStartupValidator>() == null)
+        {
+            playerObject.AddComponent<MuseumStartupValidator>();
+        }
+    }
+
+    private static void EnsureEventSystem()
+    {
+        if (Object.FindFirstObjectByType<EventSystem>() != null)
+        {
+            return;
+        }
+
+        GameObject eventSystemObject = new GameObject("EventSystem");
+        eventSystemObject.AddComponent<EventSystem>();
+        eventSystemObject.AddComponent<InputSystemUIInputModule>();
     }
 
     private static GameObject EnsureWinPanel(Transform canvas, Font font, out Text winText)

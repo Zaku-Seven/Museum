@@ -198,6 +198,36 @@ public class MuseumGameplayTests
     }
 
     [Test]
+    public void SaveSummary_ReadsHungCountFromPlayerPrefs()
+    {
+        const string testKey = "MuseumMountSave_v2";
+        string prior = PlayerPrefs.HasKey(testKey) ? PlayerPrefs.GetString(testKey) : null;
+        try
+        {
+            string json = "{\"version\":2,\"museumComplete\":false,\"mountAssignments\":[{\"mountId\":\"m1\",\"paintingId\":\"p1\"}],\"stagedPaintingIds\":[\"s1\"]}";
+            PlayerPrefs.SetString(testKey, json);
+            PlayerPrefs.Save();
+
+            string summary = MuseumSaveManager.BuildContinueSummary();
+            Assert.IsTrue(summary.Contains("1 hung"));
+            Assert.IsTrue(summary.Contains("1 staged"));
+        }
+        finally
+        {
+            if (prior != null)
+            {
+                PlayerPrefs.SetString(testKey, prior);
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(testKey);
+            }
+
+            PlayerPrefs.Save();
+        }
+    }
+
+    [Test]
     public void NearestMountFinder_PicksClosestAcceptingMount()
     {
         var nearMountObject = new GameObject("NearMount");

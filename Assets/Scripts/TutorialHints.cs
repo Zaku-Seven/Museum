@@ -27,7 +27,7 @@ public static class TutorialHints
 
     public static void TryShowStackScrollHint()
     {
-        TryShowOnce("StackScroll", "Tip: Scroll the mouse wheel to change which painting you're holding forward.");
+        TryShowOnce("StackScroll", "Tip: Scroll or LB/RB to change which painting you're holding forward.");
     }
 
     public static void TryShowThrowHint()

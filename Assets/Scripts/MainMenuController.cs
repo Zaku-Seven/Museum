@@ -30,11 +30,17 @@ public class MainMenuController : MonoBehaviour
 
         if (subtitleText != null)
         {
-            string baseLine = MuseumSaveManager.HasExistingSave()
-                ? "Welcome back, curator."
-                : "Sort paintings by wing. Hang every gallery.";
-            string saveLine = MuseumSaveManager.BuildContinueSummary();
-            subtitleText.text = string.IsNullOrEmpty(saveLine) ? baseLine : $"{baseLine}\n{saveLine}";
+            if (MuseumSaveManager.HasExistingSave())
+            {
+                string saveLine = MuseumSaveManager.BuildContinueSummary();
+                subtitleText.text = string.IsNullOrEmpty(saveLine)
+                    ? "Welcome back — Continue restores your save."
+                    : $"Continue restores progress · Enter museum uses default layout\n{saveLine}";
+            }
+            else
+            {
+                subtitleText.text = "Sort paintings by wing. Hang every gallery.";
+            }
         }
 
         if (showMenuOnStart)

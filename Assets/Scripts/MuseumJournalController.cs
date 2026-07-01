@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Curator journal: every painting, wing, and location. Open with J or pause menu Collection.
+/// Curator journal: every painting, wing, and location. Open with J / R3 or pause menu Collection.
 /// </summary>
 public class MuseumJournalController : MonoBehaviour
 {
@@ -32,7 +32,7 @@ public class MuseumJournalController : MonoBehaviour
 
     private void Update()
     {
-        if (IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (IsOpen && MuseumInput.CloseOverlayPressedThisFrame())
         {
             Close();
             return;

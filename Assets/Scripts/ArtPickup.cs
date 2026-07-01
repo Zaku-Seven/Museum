@@ -236,7 +236,7 @@ public class ArtPickup : MonoBehaviour
             return string.Empty;
         }
 
-        return $"Placing: \"{HeldPainting.PaintingTitle}\" ({activeStackIndex + 1}/{carryStack.Count}) · scroll to change";
+        return $"Placing: \"{HeldPainting.PaintingTitle}\" ({activeStackIndex + 1}/{carryStack.Count}) · scroll / LB RB";
     }
 
     /// <summary>HUD hint for where to hang the active painting.</summary>

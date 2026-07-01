@@ -60,11 +60,11 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Space / **L3** (stick click) | Jump |
 | Shift / **LT** (hold) | Sprint |
 | Tab / **View** (hold) | Inspect painting or mount |
-| **J** | Collection journal (pause → **Collection** on gamepad) |
+| **J** / **R3** | Collection journal (pause → **Collection** on gamepad) |
 | Esc / **Start** (gamepad) | Pause / resume (Settings, Controls, New Game) |
 
 **Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.
 
 When every gallery section is complete, a **win overlay** appears with **Continue exploring** or **New game**. Pickup stays disabled after win unless you start a new game. Progress (mounts, sorting table staging, win state) persists via **save v2** (`MuseumSaveManager` + stable `MuseumEntityId`s). Pause menu includes **mouse sensitivity**, **FOV**, **invert Y**, and **master volume**. Optional SFX hooks live on `MuseumAudioDirector` (assign clips in Inspector).
 
-See `docs/MULTIPLAYER_VOIP.md` for multiplayer / voice chat scope (not implemented yet).
+See `docs/FEATURE_COMPLETE.md` for the gameplay-complete checklist and `docs/VISUAL_POLISH.md` for the art/audio pass. Multiplayer / VoIP: `docs/MULTIPLAYER_VOIP.md` (future phase).

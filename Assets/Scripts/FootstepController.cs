@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Plays optional footstep one-shots while the player walks.
+/// Plays optional footstep one-shots while the player walks (dedicated AudioSource).
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class FootstepController : MonoBehaviour
@@ -11,18 +11,33 @@ public class FootstepController : MonoBehaviour
     [SerializeField] private float minMoveInput = 0.15f;
 
     private CharacterController characterController;
-    private AudioSource audioSource;
+    private AudioSource footstepSource;
     private float stepTimer;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
-        audioSource = GetComponent<MuseumAudioDirector>() != null
-            ? GetComponent<AudioSource>()
-            : gameObject.AddComponent<AudioSource>();
+        footstepSource = CreateFootstepSource();
+    }
 
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0f;
+    private AudioSource CreateFootstepSource()
+    {
+        Transform existing = transform.Find("FootstepAudio");
+        if (existing != null)
+        {
+            AudioSource existingSource = existing.GetComponent<AudioSource>();
+            if (existingSource != null)
+            {
+                return existingSource;
+            }
+        }
+
+        GameObject child = new GameObject("FootstepAudio");
+        child.transform.SetParent(transform, false);
+        AudioSource source = child.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        source.spatialBlend = 0f;
+        return source;
     }
 
     private void Update()
@@ -51,9 +66,9 @@ public class FootstepController : MonoBehaviour
         stepTimer = stepInterval;
         float pitch = Random.Range(0.92f, 1.08f);
         float volume = PlayerSettingsStore.MasterVolume * 0.35f;
-        audioSource.pitch = pitch;
-        audioSource.PlayOneShot(footstepClip, volume);
-        audioSource.pitch = 1f;
+        footstepSource.pitch = pitch;
+        footstepSource.PlayOneShot(footstepClip, volume);
+        footstepSource.pitch = 1f;
     }
 
     private static bool ShouldBlockFootsteps()
@@ -69,6 +84,11 @@ public class FootstepController : MonoBehaviour
         }
 
         if (MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
+        {
+            return true;
+        }
+
+        if (MuseumJournalController.Instance != null && MuseumJournalController.Instance.IsOpen)
         {
             return true;
         }
