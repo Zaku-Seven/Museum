@@ -2,16 +2,13 @@
     "name": "Museum.Tests.PlayMode",
     "rootNamespace": "",
     "references": [
-        "Museum",
-        "UnityEngine.TestRunner"
+        "Museum"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "nunit.framework.dll"
-    ],
+    "overrideReferences": false,
+    "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
