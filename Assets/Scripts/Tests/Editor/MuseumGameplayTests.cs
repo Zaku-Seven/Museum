@@ -90,8 +90,8 @@ public class MuseumGameplayTests
         finally
         {
             Object.DestroyImmediate(sectionObject);
-            mountA.Root.DestroyImmediateSafe();
-            mountB.Root.DestroyImmediateSafe();
+            Object.DestroyImmediate(mountA.Root);
+            Object.DestroyImmediate(mountB.Root);
         }
     }
 
@@ -119,7 +119,7 @@ public class MuseumGameplayTests
         finally
         {
             Object.DestroyImmediate(sectionObject);
-            filled.Root.DestroyImmediateSafe();
+            Object.DestroyImmediate(filled.Root);
             Object.DestroyImmediate(emptyMountObject);
         }
     }
@@ -157,11 +157,4 @@ public class MuseumGameplayTests
         field.SetValue(target, new System.Collections.Generic.List<PaintingMount>(mounts));
     }
 
-    private static void DestroyImmediateSafe(this GameObject gameObject)
-    {
-        if (gameObject != null)
-        {
-            Object.DestroyImmediate(gameObject);
-        }
-    }
 }
