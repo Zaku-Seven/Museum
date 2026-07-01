@@ -58,9 +58,11 @@ public static class MuseumGameplaySetup
         // The three north-wall mounts form a small Modern wall so the existing menu already
         // demonstrates wing sorting (TestPainting = Modern fits; TestPainting_2 = Classical is rejected).
         CreateWallMounts(museumRoot, interactableLayer, GalleryWing.Modern);
+        WireNorthWallGallerySection(museumRoot);
         UpgradeExistingPaintings(interactableLayer);
         CreateFloorPainting("TestPainting_2", "Blue Horizon", new Vector3(3f, 0.025f, 5f), new Color(0.2f, 0.35f, 0.75f), GalleryWing.Classical, interactableLayer);
         SetupInteractionHud();
+        SetupPlayerGameplayComponents();
         FixExistingHoldPoint();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
@@ -242,59 +244,116 @@ public static class MuseumGameplaySetup
         holdPoint.localRotation = Quaternion.Euler(6f, 0f, 0f);
     }
 
-    private static void SetupInteractionHud()
+    private static void WireNorthWallGallerySection(Transform museumRoot)
     {
-        if (GameObject.Find("InteractionHUD") != null)
+        const string sectionName = "Section_ModernNorth";
+        var mounts = new System.Collections.Generic.List<PaintingMount>();
+        var frameRenderers = new System.Collections.Generic.List<Renderer>();
+
+        for (int i = 1; i <= 3; i++)
+        {
+            GameObject mountObject = GameObject.Find($"WallMount_{i}");
+            if (mountObject == null)
+            {
+                continue;
+            }
+
+            PaintingMount mount = mountObject.GetComponent<PaintingMount>();
+            if (mount != null)
+            {
+                mounts.Add(mount);
+            }
+
+            Renderer frameRenderer = mountObject.GetComponentInChildren<Renderer>();
+            if (frameRenderer != null)
+            {
+                frameRenderers.Add(frameRenderer);
+            }
+        }
+
+        if (mounts.Count == 0)
         {
             return;
         }
 
-        GameObject canvasObject = new GameObject("InteractionHUD");
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObject.AddComponent<CanvasScaler>();
-        canvasObject.AddComponent<GraphicRaycaster>();
+        GameObject sectionObject = GameObject.Find(sectionName);
+        if (sectionObject == null)
+        {
+            sectionObject = new GameObject(sectionName);
+            sectionObject.transform.SetParent(museumRoot, false);
+        }
 
+        GallerySection section = sectionObject.GetComponent<GallerySection>();
+        if (section == null)
+        {
+            section = sectionObject.AddComponent<GallerySection>();
+        }
+
+        SerializedObject serializedSection = new SerializedObject(section);
+        SerializedProperty wingProperty = serializedSection.FindProperty("sectionWing");
+        if (wingProperty != null)
+        {
+            wingProperty.enumValueIndex = (int)GalleryWing.Modern;
+        }
+
+        SerializedProperty displayNameProperty = serializedSection.FindProperty("sectionDisplayName");
+        if (displayNameProperty != null)
+        {
+            displayNameProperty.stringValue = "Modern (North)";
+        }
+
+        AssignObjectList(serializedSection.FindProperty("mounts"), mounts.ConvertAll(m => (Object)m));
+        AssignObjectList(serializedSection.FindProperty("glowRenderers"), frameRenderers.ConvertAll(r => (Object)r));
+        serializedSection.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void AssignObjectList(SerializedProperty listProperty, System.Collections.Generic.List<Object> values)
+    {
+        if (listProperty == null)
+        {
+            return;
+        }
+
+        listProperty.arraySize = values.Count;
+        for (int i = 0; i < values.Count; i++)
+        {
+            listProperty.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        }
+    }
+
+    private static void SetupInteractionHud()
+    {
+        Transform canvasTransform = GetOrCreateHudCanvas();
         Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-        GameObject crosshairObject = CreateUiText(canvasObject.transform, "Crosshair", defaultFont, 28, TextAnchor.MiddleCenter);
-        RectTransform crosshairRect = crosshairObject.GetComponent<RectTransform>();
-        crosshairRect.anchorMin = new Vector2(0.5f, 0.5f);
-        crosshairRect.anchorMax = new Vector2(0.5f, 0.5f);
-        crosshairRect.anchoredPosition = Vector2.zero;
-        crosshairRect.sizeDelta = new Vector2(40f, 40f);
-        Text crosshairText = crosshairObject.GetComponent<Text>();
+        Text crosshairText = EnsureUiText(canvasTransform, "Crosshair", defaultFont, 28, TextAnchor.MiddleCenter,
+            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            anchoredPosition: Vector2.zero, sizeDelta: new Vector2(40f, 40f));
         crosshairText.text = "+";
         crosshairText.color = new Color(1f, 1f, 1f, 0.85f);
 
-        GameObject promptObject = CreateUiText(canvasObject.transform, "Prompt", defaultFont, 20, TextAnchor.LowerCenter);
-        RectTransform promptRect = promptObject.GetComponent<RectTransform>();
-        promptRect.anchorMin = new Vector2(0.5f, 0f);
-        promptRect.anchorMax = new Vector2(0.5f, 0f);
-        promptRect.anchoredPosition = new Vector2(0f, 80f);
-        promptRect.sizeDelta = new Vector2(700f, 40f);
-        Text promptText = promptObject.GetComponent<Text>();
+        Text promptText = EnsureUiText(canvasTransform, "Prompt", defaultFont, 20, TextAnchor.LowerCenter,
+            anchorMin: new Vector2(0.5f, 0f), anchorMax: new Vector2(0.5f, 0f), pivot: new Vector2(0.5f, 0.5f),
+            anchoredPosition: new Vector2(0f, 80f), sizeDelta: new Vector2(700f, 40f));
         promptText.color = Color.white;
 
-        GameObject progressObject = CreateUiText(canvasObject.transform, "Progress", defaultFont, 18, TextAnchor.LowerLeft);
-        RectTransform progressRect = progressObject.GetComponent<RectTransform>();
-        progressRect.anchorMin = new Vector2(0f, 0f);
-        progressRect.anchorMax = new Vector2(0f, 0f);
-        progressRect.pivot = new Vector2(0f, 0f);
-        progressRect.anchoredPosition = new Vector2(24f, 24f);
-        progressRect.sizeDelta = new Vector2(900f, 30f);
-        Text progressText = progressObject.GetComponent<Text>();
+        Text progressText = EnsureUiText(canvasTransform, "Progress", defaultFont, 18, TextAnchor.LowerLeft,
+            anchorMin: new Vector2(0f, 0f), anchorMax: new Vector2(0f, 0f), pivot: new Vector2(0f, 0f),
+            anchoredPosition: new Vector2(24f, 24f), sizeDelta: new Vector2(900f, 30f));
         progressText.color = new Color(0.85f, 0.9f, 1f);
 
-        GameObject hintObject = CreateUiText(canvasObject.transform, "Hint", defaultFont, 16, TextAnchor.UpperCenter);
-        RectTransform hintRect = hintObject.GetComponent<RectTransform>();
-        hintRect.anchorMin = new Vector2(0.5f, 1f);
-        hintRect.anchorMax = new Vector2(0.5f, 1f);
-        hintRect.pivot = new Vector2(0.5f, 1f);
-        hintRect.anchoredPosition = new Vector2(0f, -20f);
-        hintRect.sizeDelta = new Vector2(700f, 26f);
-        Text hintText = hintObject.GetComponent<Text>();
+        Text hintText = EnsureUiText(canvasTransform, "Hint", defaultFont, 16, TextAnchor.UpperCenter,
+            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+            anchoredPosition: new Vector2(0f, -20f), sizeDelta: new Vector2(700f, 26f));
         hintText.color = new Color(1f, 1f, 1f, 0.6f);
+
+        Text bannerText = EnsureUiText(canvasTransform, "Banner", defaultFont, 26, TextAnchor.MiddleCenter,
+            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            anchoredPosition: new Vector2(0f, 120f), sizeDelta: new Vector2(800f, 48f));
+        bannerText.color = new Color(0.7f, 0.9f, 1f);
+        bannerText.enabled = false;
+
+        GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont);
 
         GameObject cameraObject = GameObject.Find("PlayerCamera");
         if (cameraObject == null)
@@ -311,38 +370,134 @@ public static class MuseumGameplaySetup
 
         ArtPickup artPickup = cameraObject.GetComponent<ArtPickup>();
         SerializedObject serializedHud = new SerializedObject(hud);
-        SerializedProperty pickupProperty = serializedHud.FindProperty("artPickup");
-        SerializedProperty promptProperty = serializedHud.FindProperty("promptText");
-        SerializedProperty crosshairProperty = serializedHud.FindProperty("crosshairText");
-        SerializedProperty progressProperty = serializedHud.FindProperty("progressText");
-        SerializedProperty hintProperty = serializedHud.FindProperty("hintText");
-
-        if (pickupProperty != null)
-        {
-            pickupProperty.objectReferenceValue = artPickup;
-        }
-
-        if (promptProperty != null)
-        {
-            promptProperty.objectReferenceValue = promptText;
-        }
-
-        if (crosshairProperty != null)
-        {
-            crosshairProperty.objectReferenceValue = crosshairText;
-        }
-
-        if (progressProperty != null)
-        {
-            progressProperty.objectReferenceValue = progressText;
-        }
-
-        if (hintProperty != null)
-        {
-            hintProperty.objectReferenceValue = hintText;
-        }
-
+        SetObjectReference(serializedHud, "artPickup", artPickup);
+        SetObjectReference(serializedHud, "promptText", promptText);
+        SetObjectReference(serializedHud, "crosshairText", crosshairText);
+        SetObjectReference(serializedHud, "progressText", progressText);
+        SetObjectReference(serializedHud, "hintText", hintText);
+        SetObjectReference(serializedHud, "bannerText", bannerText);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
+
+        GameObject playerObject = GameObject.Find("Player");
+        if (playerObject != null)
+        {
+            PauseMenuController pauseController = playerObject.GetComponent<PauseMenuController>();
+            if (pauseController == null)
+            {
+                pauseController = playerObject.AddComponent<PauseMenuController>();
+            }
+
+            FirstPersonController fps = playerObject.GetComponent<FirstPersonController>();
+            SerializedObject serializedPause = new SerializedObject(pauseController);
+            SetObjectReference(serializedPause, "pausePanel", pausePanel);
+            SetObjectReference(serializedPause, "pauseMessageText", pausePanel.transform.Find("PauseMessage")?.GetComponent<Text>());
+            SetObjectReference(serializedPause, "firstPersonController", fps);
+            SetObjectReference(serializedPause, "artPickup", artPickup);
+            SetObjectReference(serializedPause, "mountAimHighlighter", cameraObject.GetComponent<MountAimHighlighter>());
+            serializedPause.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    private static Transform GetOrCreateHudCanvas()
+    {
+        GameObject canvasObject = GameObject.Find("InteractionHUD");
+        if (canvasObject == null)
+        {
+            canvasObject = new GameObject("InteractionHUD");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObject.AddComponent<CanvasScaler>();
+            canvasObject.AddComponent<GraphicRaycaster>();
+        }
+
+        return canvasObject.transform;
+    }
+
+    private static Text EnsureUiText(
+        Transform canvas,
+        string objectName,
+        Font font,
+        int fontSize,
+        TextAnchor alignment,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 anchoredPosition,
+        Vector2 sizeDelta)
+    {
+        Transform existing = canvas.Find(objectName);
+        GameObject textObject = existing != null ? existing.gameObject : CreateUiText(canvas, objectName, font, fontSize, alignment);
+
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = sizeDelta;
+
+        return textObject.GetComponent<Text>();
+    }
+
+    private static GameObject EnsurePausePanel(Transform canvas, Font font)
+    {
+        Transform existing = canvas.Find("PausePanel");
+        if (existing != null)
+        {
+            return existing.gameObject;
+        }
+
+        GameObject panelObject = new GameObject("PausePanel");
+        panelObject.transform.SetParent(canvas, false);
+        RectTransform panelRect = panelObject.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image backdrop = panelObject.AddComponent<Image>();
+        backdrop.color = new Color(0f, 0f, 0f, 0.65f);
+
+        GameObject messageObject = CreateUiText(panelObject.transform, "PauseMessage", font, 32, TextAnchor.MiddleCenter);
+        RectTransform messageRect = messageObject.GetComponent<RectTransform>();
+        messageRect.anchorMin = Vector2.zero;
+        messageRect.anchorMax = Vector2.one;
+        messageRect.offsetMin = Vector2.zero;
+        messageRect.offsetMax = Vector2.zero;
+        Text messageText = messageObject.GetComponent<Text>();
+        messageText.text = "PAUSED\nPress Esc to resume";
+        messageText.color = Color.white;
+
+        panelObject.SetActive(false);
+        return panelObject;
+    }
+
+    private static void SetupPlayerGameplayComponents()
+    {
+        GameObject cameraObject = GameObject.Find("PlayerCamera");
+        if (cameraObject == null)
+        {
+            return;
+        }
+
+        ArtPickup artPickup = cameraObject.GetComponent<ArtPickup>();
+        MountAimHighlighter highlighter = cameraObject.GetComponent<MountAimHighlighter>();
+        if (highlighter == null)
+        {
+            highlighter = cameraObject.AddComponent<MountAimHighlighter>();
+        }
+
+        SerializedObject serializedHighlighter = new SerializedObject(highlighter);
+        SetObjectReference(serializedHighlighter, "artPickup", artPickup);
+        serializedHighlighter.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void SetObjectReference(SerializedObject serializedObject, string propertyName, Object value)
+    {
+        SerializedProperty property = serializedObject.FindProperty(propertyName);
+        if (property != null)
+        {
+            property.objectReferenceValue = value;
+        }
     }
 
     private static GameObject CreateUiText(Transform parent, string objectName, Font font, int fontSize, TextAnchor alignment)

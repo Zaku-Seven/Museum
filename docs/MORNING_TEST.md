@@ -1,64 +1,78 @@
-# Morning Test — Night 1 (Arcane Museum Feel)
+# Morning Test — Arcane Museum Feel (Night 1 + Night 2)
 
-A ~10-minute human checklist. All of this is verified on **Windows + Unity Editor** — the
-overnight cloud agent is code-only and could not compile or enter Play mode.
+A ~10-minute human checklist. The cloud agent is **code-only** and cannot compile or enter Play mode.
 
 ## Setup
 
 1. `git fetch && git checkout feature/arcane-museum-feel && git pull`
 2. Open the project in Unity **6000.5.1f1**.
 3. Open `Assets/Scenes/SampleScene.unity`.
-4. Let scripts compile. Check the **Console** for red errors before continuing.
-   - New scripts have no `.meta` files in git on purpose — Unity generates them on first import.
+4. Let scripts compile. Check the **Console** for red errors.
+   - New scripts have no `.meta` in git — Unity generates them on first import.
 
-## Editor menus (run in order)
+## Editor menus
 
-1. **Game → Setup Zero-to-One Prototype** — room, player, sun
-2. **Game → Setup Art Pickup Test** — Interactable layer + first painting
-3. **Game → Setup Museum Gameplay** — north-wall Modern mounts + HUD (crosshair, prompt, progress line, hint)
-4. **Game → Setup Gallery Wings** — 3 wings, 9 wall mounts, 9 floor paintings, 3 sections, sorting-table slab
+**Fast path:** **Game → Setup Full Museum** (runs all steps below).
 
-Each menu logs a summary line (created/skipped). Re-running is safe (idempotent).
+Or run individually:
+
+1. **Game → Setup Zero-to-One Prototype**
+2. **Game → Setup Art Pickup Test**
+3. **Game → Setup Museum Gameplay** — north section, HUD banner, pause overlay, aim highlighter
+4. **Game → Setup Gallery Wings**
+
+Re-running menus is safe (idempotent). If you had an old HUD canvas from Night 1, re-run **Setup Museum Gameplay** to add Banner + PausePanel (it upgrades in place).
 
 ## Play mode checklist
 
-1. Press **Play**. Cursor locks; you see a `+` crosshair, a bottom-left progress line, and a faint top hint ("Future: scroll to reorder stack").
-2. **Move/look:** WASD to walk, mouse to look, Space to jump. Confirm no camera jitter.
-3. **Pick up:** look at a colored floor slab → prompt `Click to pick up "<title>"` → left-click.
-   - The painting should **snap to your hands instantly** and stay centered/readable while you look around (no floaty lag, no physics fighting).
-4. **Wrong wing (key test):** carry a painting to a mount of a **different** wing → prompt reads **"Wrong gallery"** → left-click → nothing happens (it is **not** placed and **not** dropped; you keep holding it).
-5. **Occupied mount:** aim at a mount that already holds art → prompt **"Gallery spot taken"** → click is rejected.
-6. **Correct placement:** carry a painting to a matching empty mount → prompt **"Click to place on wall"** → click → it snaps onto the frame; progress line increments (e.g. `Modern: 1/3 hung`).
-7. **Drop:** while holding, aim at empty space (no mount) and click → the painting drops to the floor.
-8. **Complete a wing:** fill all 3 mounts of one wing with correct paintings → that wing's frames **glow with a pulsing blue emission** and the progress line shows `<Wing>: 3/3 hung - done`.
-9. **Re-pick a hung painting:** take one back off a completed wall → the glow turns off and the count drops (completion is reversible).
+1. Press **Play**. Expect: `+` crosshair, bottom-left progress, top hint (`Esc — pause …`), cursor locked.
+2. **Floor highlight:** look at a floor painting (empty-handed) → canvas **subtly pulses**.
+3. **Pick up:** left-click a painting → instant snap to hands.
+4. **Valid mount:** carry matching art to an empty mount → frame tints **green**, prompt **"Click to place on wall"** → click → **scale pop** on hang; progress increments.
+5. **Wrong wing:** carry to wrong mount → frame **pulses red**, prompt **"This belongs in the [Wing] gallery"** → click does **not** place or drop.
+6. **Occupied mount:** grey frame tint, **"Gallery spot taken"**.
+7. **Section complete:** fill all 3 mounts in one section → **center banner** (`… wing complete!` ~4s), frames **glow blue**, progress shows `… - done`.
+8. **North wall:** progress includes **`Modern (North): X/3`** after Museum Gameplay (separate from `Modern (South)`).
+9. **Pause:** press **Esc** → dark overlay, cursor unlocks, movement/pickup stop → **Esc** again resumes.
+10. **Drop:** while holding, aim at empty space and click → painting drops.
 
 ## Expected HUD prompts
 
 | Situation | Prompt |
 |-----------|--------|
-| Looking at a floor painting (empty-handed) | `Click to pick up "<title>"` |
-| Holding, aiming at matching empty mount | `Click to place on wall` |
-| Holding, aiming at wrong-wing mount | `Wrong gallery` |
-| Holding, aiming at occupied mount | `Gallery spot taken` |
-| Holding, not aiming at a mount | `Click to drop` |
+| Looking at floor painting | `Click to pick up "<title>"` |
+| Holding, valid empty mount | `Click to place on wall` |
+| Holding, wrong-wing mount | `This belongs in the Modern gallery` (etc.) |
+| Holding, occupied mount | `Gallery spot taken` |
+| Holding, not on a mount | `Click to drop` |
 
 ## Wing layout
 
-- **Modern** → south wall, blue/steel paintings (Cobalt Field, Steel Lines, Neon Dusk)
-- **Classical** → east wall, gold/brown paintings (Gilded Saints, Marble Study, Old Masters)
-- **Impressionist** → west wall, pastel paintings (Garden Light, Rose Morning, Water Lilies)
-- North wall keeps the original 3 Museum Gameplay mounts (also Modern).
+| Section label | Wall | Sample paintings |
+|---------------|------|------------------|
+| Modern (North) | North | Sunset Study, Blue Horizon (demo mounts) |
+| Modern (South) | South | Cobalt Field, Steel Lines, Neon Dusk |
+| Classical (East) | East | Gilded Saints, Marble Study, Old Masters |
+| Impressionist (West) | West | Garden Light, Rose Morning, Water Lilies |
 
-## Known gaps / not implemented
+## Night 2 polish (verify)
 
-- Not compiled or Play-tested by the agent (cloud VM is code-only). Report any compile errors.
-- Materials for the 9 paintings + frames are created at edit time (`new Material(URP/Lit)`). They should serialize into the scene on save; if a color ever reverts to grey/pink-missing-shader, re-run **Setup Gallery Wings**.
-- Stretch items skipped: wrong-wing floor-painting highlight (#2), Escape-to-unlock cursor (#4 — the editor already frees the cursor on Esc), second room (#5). See `OVERNIGHT_LOG.md`.
-- `SortingTable` is a visual/trigger marker only (no scoring yet).
+- Mount aim highlights (green / red pulse / grey)
+- Floor painting pulse when viewed
+- Placement scale pop on hang
+- Section-complete center banner
+- Esc pause overlay
+- **Game → Setup Full Museum** one-click bootstrap
 
-## If a setup script did not wire something (manual Inspector steps)
+## Known gaps
 
-- **HUD progress/hint missing:** if `InteractionHUD` already existed from a previous run, `Setup Museum Gameplay` skips rebuilding it. Delete the `InteractionHUD` GameObject and re-run the menu, or manually drag the `Progress`/`Hint` Text objects into the `InteractionHUD` component's fields.
-- **Section not completing:** select each `Section_<Wing>` under `GalleryWings/Wing_<Wing>` and confirm its `GallerySection` has `Section Wing` set and the 3 `Mounts` populated. Re-run **Setup Gallery Wings** to re-wire.
-- **Painting won't pick up:** confirm it is on the **Interactable** layer (layer 6) and has a `Rigidbody` + `InteractablePainting` with a `Wing` set.
+- Agent did not compile/Play-test. Report Console errors.
+- Procedural materials may need re-run of setup if colors revert.
+- No audio yet. Stack carry / win screen not implemented.
+- `SortingTable` is visual-only (no snap-to-pile behavior).
+
+## Manual fixes if wiring is missing
+
+- **Banner / pause missing:** re-run **Setup Museum Gameplay** (upgrades existing `InteractionHUD` canvas).
+- **`MountAimHighlighter` missing:** confirm `PlayerCamera` has the component (Museum Gameplay adds it).
+- **Section not completing:** re-run **Setup Gallery Wings** or **Setup Museum Gameplay** for north section; check `GallerySection` mount lists in Inspector.

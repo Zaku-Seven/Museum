@@ -41,6 +41,7 @@ public class ArtPickup : MonoBehaviour
     private Quaternion carryLocalRotation;
 
     public bool IsHolding => heldObject != null;
+    public InteractablePainting HeldPainting => heldPainting;
 
     private void Awake()
     {
@@ -114,7 +115,7 @@ public class ArtPickup : MonoBehaviour
                     return "Click to place on wall";
                 }
 
-                return "Wrong gallery";
+                return $"This belongs in the {mount.RequiredWing} gallery";
             }
 
             return "Click to drop";
@@ -156,7 +157,8 @@ public class ArtPickup : MonoBehaviour
         holdPoint.localRotation = Quaternion.Euler(6f, 0f, 0f);
     }
 
-    private bool TryGetCenterRayHit(out RaycastHit hit)
+    /// <summary>Center-screen raycast on the Interactable layer (shared with highlight + prompts).</summary>
+    public bool TryGetCenterRayHit(out RaycastHit hit)
     {
         Ray centerRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         return Physics.Raycast(centerRay, out hit, maxPickupDistance, interactableLayerMask);

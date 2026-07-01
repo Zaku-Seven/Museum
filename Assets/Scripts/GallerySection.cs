@@ -19,6 +19,9 @@ public class GallerySection : MonoBehaviour
     [Tooltip("Mounts that belong to this section. Wired by GalleryContentSetup.")]
     [SerializeField] private List<PaintingMount> mounts = new List<PaintingMount>();
 
+    [Tooltip("Optional label for the HUD progress line (e.g. \"Modern (North)\"). Empty = wing name.")]
+    [SerializeField] private string sectionDisplayName = string.Empty;
+
     [Header("Completion Glow")]
     [Tooltip("Renderers pulsed when the section completes. If empty, each mount's child renderer is used.")]
     [SerializeField] private List<Renderer> glowRenderers = new List<Renderer>();
@@ -33,6 +36,7 @@ public class GallerySection : MonoBehaviour
     public static event Action<GallerySection> OnSectionCompleted;
 
     public GalleryWing SectionWing => sectionWing;
+    public string DisplayName => string.IsNullOrEmpty(sectionDisplayName) ? sectionWing.ToString() : sectionDisplayName;
     public bool IsComplete { get; private set; }
     public int MountCount => mounts != null ? mounts.Count : 0;
 

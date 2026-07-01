@@ -201,7 +201,22 @@ public static class GalleryContentSetup
             section = sectionObject.AddComponent<GallerySection>();
         }
 
-        WireSection(section, wing, mounts, frameRenderers);
+        WireSection(section, wing, GetSectionDisplayName(wingName), mounts, frameRenderers);
+    }
+
+    private static string GetSectionDisplayName(string wingName)
+    {
+        switch (wingName)
+        {
+            case "Modern":
+                return "Modern (South)";
+            case "Classical":
+                return "Classical (East)";
+            case "Impressionist":
+                return "Impressionist (West)";
+            default:
+                return wingName;
+        }
     }
 
     private static void CreateSortingTable(Transform parent, Counter counter)
@@ -351,7 +366,7 @@ public static class GalleryContentSetup
         }
     }
 
-    private static void WireSection(GallerySection section, GalleryWing wing, List<PaintingMount> mounts, List<Renderer> frameRenderers)
+    private static void WireSection(GallerySection section, GalleryWing wing, string displayName, List<PaintingMount> mounts, List<Renderer> frameRenderers)
     {
         SerializedObject serializedSection = new SerializedObject(section);
 
@@ -359,6 +374,12 @@ public static class GalleryContentSetup
         if (wingProperty != null)
         {
             wingProperty.enumValueIndex = (int)wing;
+        }
+
+        SerializedProperty displayNameProperty = serializedSection.FindProperty("sectionDisplayName");
+        if (displayNameProperty != null)
+        {
+            displayNameProperty.stringValue = displayName;
         }
 
         AssignObjectList(serializedSection.FindProperty("mounts"), mounts.ConvertAll(m => (Object)m));

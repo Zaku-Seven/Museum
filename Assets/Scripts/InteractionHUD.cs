@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Displays a crosshair, a context-sensitive interaction prompt, and a per-wing sorting
-/// progress line (e.g. "Modern: 2/3 hung") for the art pickup system.
+/// Displays a crosshair, context-sensitive prompt, per-wing progress line, completion banner,
+/// and optional hint text for the art pickup system.
 /// </summary>
 public class InteractionHUD : MonoBehaviour
 {
@@ -14,12 +14,17 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text crosshairText;
     [SerializeField] private Text progressText;
     [SerializeField] private Text hintText;
+    [SerializeField] private Text bannerText;
 
     [Header("Hints")]
-    [Tooltip("Constant hint shown at the top of the screen (stretch-goal placeholder).")]
-    [SerializeField] private string hintMessage = "Future: scroll to reorder stack";
+    [Tooltip("Constant hint shown at the top of the screen.")]
+    [SerializeField] private string hintMessage = "Esc — pause    ·    Sort paintings onto matching wing walls";
+
+    [Header("Completion banner")]
+    [SerializeField] private float bannerDuration = 4f;
 
     private static readonly StringBuilder ProgressBuilder = new StringBuilder();
+    private float bannerTimer;
 
     private void Awake()
     {
@@ -27,6 +32,16 @@ public class InteractionHUD : MonoBehaviour
         {
             artPickup = GetComponent<ArtPickup>();
         }
+    }
+
+    private void OnEnable()
+    {
+        GallerySection.OnSectionCompleted += HandleSectionCompleted;
+    }
+
+    private void OnDisable()
+    {
+        GallerySection.OnSectionCompleted -= HandleSectionCompleted;
     }
 
     private void Update()
@@ -57,11 +72,43 @@ public class InteractionHUD : MonoBehaviour
             hintText.text = hintMessage;
             hintText.enabled = !string.IsNullOrEmpty(hintMessage);
         }
+
+        UpdateBanner();
+    }
+
+    private void HandleSectionCompleted(GallerySection section)
+    {
+        if (section == null || bannerText == null)
+        {
+            return;
+        }
+
+        bannerText.text = $"{section.DisplayName} wing complete!";
+        bannerText.enabled = true;
+        bannerTimer = bannerDuration;
+    }
+
+    private void UpdateBanner()
+    {
+        if (bannerText == null || bannerTimer <= 0f)
+        {
+            if (bannerText != null && bannerTimer <= 0f)
+            {
+                bannerText.enabled = false;
+            }
+
+            return;
+        }
+
+        bannerTimer -= Time.deltaTime;
+        if (bannerTimer <= 0f)
+        {
+            bannerText.enabled = false;
+        }
     }
 
     /// <summary>
-    /// Builds the per-wing progress line from every active <see cref="GallerySection"/>,
-    /// e.g. "Modern: 2/3 hung    Classical: 3/3 hung - done".
+    /// Builds the per-wing progress line from every active <see cref="GallerySection"/>.
     /// </summary>
     private static string BuildProgressText()
     {
@@ -86,7 +133,7 @@ public class InteractionHUD : MonoBehaviour
             }
 
             ProgressBuilder
-                .Append(section.SectionWing)
+                .Append(section.DisplayName)
                 .Append(": ")
                 .Append(section.CorrectlyFilledCount())
                 .Append('/')

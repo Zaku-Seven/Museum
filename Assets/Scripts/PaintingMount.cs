@@ -82,6 +82,7 @@ public class PaintingMount : MonoBehaviour
         Occupant = interactablePainting;
         isOccupied = true;
 
+        PlacementPopFeedback.Play(painting);
         NotifySectionChanged();
     }
 

@@ -142,3 +142,22 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Cannot verify (VM is code-only):** compilation, Play-mode feel, glow visuals. Full human checklist in `docs/MORNING_TEST.md`.
 
 **Open blocker for the human:** first Unity import is the source of truth — check the Console for compile errors and run the four setup menus in order.
+
+---
+
+## 2026-07-01 Night 2 — Polish bundle
+
+**Status:** done
+
+**Delivered (5 items):**
+1. **Mount + floor aim highlights** — `MountAimHighlighter.cs`: green valid mount, red pulse wrong mount, grey occupied, subtle floor painting pulse (MaterialPropertyBlock, no material mutation).
+2. **Placement pop + section banner** — `PlacementPopFeedback.cs` on hang; `InteractionHUD` listens to `GallerySection.OnSectionCompleted` for ~4s center banner.
+3. **North-wall section** — `MuseumGameplaySetup.WireNorthWallGallerySection()` groups `WallMount_1..3` into `Section_ModernNorth` with label `Modern (South)` siblings get `Modern (South)` / `Classical (East)` / `Impressionist (West)` via `GalleryContentSetup`.
+4. **Escape pause** — `PauseMenuController.cs` on Player: Esc toggles overlay, unlocks cursor, disables FPC/ArtPickup/Highlighter (no FPC rewrite).
+5. **Setup Full Museum** — `Editor/FullMuseumSetup.cs` menu runs all four setup steps.
+
+**Also:** clearer wrong-wing prompt (`This belongs in the … gallery`); HUD hint updated; Museum Gameplay HUD setup now **upgrades** existing canvas (Banner, PausePanel) instead of skipping.
+
+**Assumptions:** Highlights need URP Lit + `_EmissionColor` in MaterialPropertyBlock (standard URP). Pause does not set `Time.timeScale = 0` so glow/banner timers keep working. Placement pop uses `Time.deltaTime` (normal play only).
+
+**Cannot verify on VM:** highlight colors, pop timing, banner visibility — see updated `docs/MORNING_TEST.md`.
