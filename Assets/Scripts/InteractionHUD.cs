@@ -13,6 +13,11 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text promptText;
     [SerializeField] private Text crosshairText;
     [SerializeField] private Text progressText;
+    [SerializeField] private Text hintText;
+
+    [Header("Hints")]
+    [Tooltip("Constant hint shown at the top of the screen (stretch-goal placeholder).")]
+    [SerializeField] private string hintMessage = "Future: scroll to reorder stack";
 
     private static readonly StringBuilder ProgressBuilder = new StringBuilder();
 
@@ -45,6 +50,12 @@ public class InteractionHUD : MonoBehaviour
             string progress = BuildProgressText();
             progressText.text = progress;
             progressText.enabled = !string.IsNullOrEmpty(progress);
+        }
+
+        if (hintText != null)
+        {
+            hintText.text = hintMessage;
+            hintText.enabled = !string.IsNullOrEmpty(hintMessage);
         }
     }
 

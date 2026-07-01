@@ -102,3 +102,24 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Blockers:** none (cannot compile/verify in Unity on the VM).
 
 **Morning test steps:** Game → Setup Gallery Wings; confirm 3 walls each show 3 empty frames and ~9 colored slabs on the floor; sort each pile onto its wall; each completed wing glows and the HUD shows all three at "3/3 hung - done".
+
+## 2026-07-01T06:40Z Phase 5 — Stretch goals (P2)
+
+**Status:** partial (ranked items #1 and #3 done; #2/#4/#5 intentionally skipped)
+
+**Files changed:**
+- #1 HUD hint — `Assets/Scripts/InteractionHUD.cs` gained `hintText` + `hintMessage` ("Future: scroll to reorder stack"), shown top-center; `MuseumGameplaySetup.cs` creates + wires the Hint text.
+- #3 SortingTable — `Assets/Scripts/SortingTable.cs` (new): a floor staging marker with a trigger `BoxCollider` and `Contains()` helper. `GalleryContentSetup.CreateSortingTable()` adds a thin muted slab at room-center (Default layer so pickup ignores it; trigger so it never blocks physics).
+
+**Ranked stretch items NOT done (with reasons):**
+- #2 Wrong-wing floor-painting highlight — skipped: needs runtime material pulsing that I cannot verify visually on the code-only VM; higher regression risk for low value tonight.
+- #4 Escape unlocks cursor — skipped: the Unity **editor** already releases the cursor on Escape during Play mode, so this is largely redundant for the human's workflow; avoided touching `FirstPersonController` (which owns cursor lock).
+- #5 Second room / additive scene — skipped: largest item, only "if everything else done," and not worth the scene-scale risk without in-Unity verification.
+
+**Assumptions:**
+- Hint is a static placeholder string only (master: "no implementation required").
+- `SortingTable` is a marker (no scoring) — intentionally minimal.
+
+**Blockers:** none.
+
+**Morning test steps:** confirm the top-center hint text appears in Play mode; confirm a muted slab sits under the floor-painting pile and you can walk over it / drop paintings on it without being blocked.

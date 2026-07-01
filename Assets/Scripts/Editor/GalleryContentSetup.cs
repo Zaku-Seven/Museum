@@ -131,6 +131,8 @@ public static class GalleryContentSetup
                 new Art("Water Lilies", new Color(0.4f, 0.75f, 0.7f), new Vector3(1.5f, 0.025f, 10f))
             });
 
+        CreateSortingTable(root, counter);
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
         EditorPrefs.SetBool(SetupCompleteKey, true);
@@ -200,6 +202,39 @@ public static class GalleryContentSetup
         }
 
         WireSection(section, wing, mounts, frameRenderers);
+    }
+
+    private static void CreateSortingTable(Transform parent, Counter counter)
+    {
+        const string tableName = "SortingTable";
+        if (GameObject.Find(tableName) != null)
+        {
+            counter.Skipped++;
+            return;
+        }
+
+        // A flat, muted slab on the floor marking the staging area. Left on the Default layer
+        // so the pickup raycast (Interactable-only) ignores it; its collider is a trigger.
+        GameObject table = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        table.name = tableName;
+        table.transform.SetParent(parent, false);
+        table.transform.position = new Vector3(0f, 0.01f, 6.5f);
+        table.transform.localScale = new Vector3(14f, 0.02f, 9f);
+
+        BoxCollider collider = table.GetComponent<BoxCollider>();
+        if (collider != null)
+        {
+            collider.isTrigger = true;
+        }
+
+        Renderer renderer = table.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.sharedMaterial = CreateColorMaterial(new Color(0.22f, 0.22f, 0.24f));
+        }
+
+        table.AddComponent<SortingTable>();
+        counter.Created++;
     }
 
     private static void CollectMount(GameObject mountObject, List<PaintingMount> mounts, List<Renderer> frameRenderers)
