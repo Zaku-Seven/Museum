@@ -2,8 +2,8 @@
 
 One-click path after pulling latest:
 
-1. Open `Assets/Scenes/SampleScene.unity`
-2. **Game → Setup Full Museum** — room, wings, HUD, architecture, URP atmosphere volume, catalog link
+1. Open `Assets/Scenes/SampleScene.unity`.
+2. **Game → Build Museum Now (Recommended)** — or **Game → Setup Full Museum** (same content, runs all setup steps).
 3. **Game → Validate Museum Scene** — target 0 errors
 4. Press Play
 
