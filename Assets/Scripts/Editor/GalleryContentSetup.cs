@@ -165,11 +165,26 @@ public static class GalleryContentSetup
             if (existing != null)
             {
                 counter.Skipped++;
+                if (i < artworks.Length)
+                {
+                    UpgradeMountSlot(existing, artworks[i]);
+                }
+
                 CollectMount(existing, mounts, frameRenderers);
                 continue;
             }
 
-            GameObject mountObject = CreateMount(wingRoot, mountName, mountPositions[i], mountRotation, wing, frameColor, interactableLayer);
+            Art slotArt = artworks[i];
+            GameObject mountObject = CreateMount(
+                wingRoot,
+                mountName,
+                mountPositions[i],
+                mountRotation,
+                wing,
+                frameColor,
+                interactableLayer,
+                BuildPaintingEntityId(slotArt.Title),
+                slotArt.Title);
             counter.Created++;
             CollectMount(mountObject, mounts, frameRenderers);
         }
@@ -309,7 +324,9 @@ public static class GalleryContentSetup
         Quaternion rotation,
         GalleryWing wing,
         Color frameColor,
-        int interactableLayer)
+        int interactableLayer,
+        string slotPaintingId,
+        string slotDisplayTitle)
     {
         GameObject mountRoot = new GameObject(mountName);
         mountRoot.transform.SetParent(parent, false);
@@ -351,6 +368,18 @@ public static class GalleryContentSetup
             wingProperty.enumValueIndex = (int)wing;
         }
 
+        SerializedProperty slotIdProperty = serializedMount.FindProperty("requiredPaintingId");
+        if (slotIdProperty != null)
+        {
+            slotIdProperty.stringValue = slotPaintingId ?? string.Empty;
+        }
+
+        SerializedProperty slotTitleProperty = serializedMount.FindProperty("slotDisplayTitle");
+        if (slotTitleProperty != null)
+        {
+            slotTitleProperty.stringValue = slotDisplayTitle ?? string.Empty;
+        }
+
         serializedMount.ApplyModifiedPropertiesWithoutUndo();
 
         BoxCollider mountCollider = mountRoot.AddComponent<BoxCollider>();
@@ -361,6 +390,31 @@ public static class GalleryContentSetup
         MountPlacardSetup.EnsurePlacard(mountRoot.GetComponent<PaintingMount>());
 
         return mountRoot;
+    }
+
+    private static void UpgradeMountSlot(GameObject mountObject, Art slotArt)
+    {
+        PaintingMount mount = mountObject.GetComponent<PaintingMount>();
+        if (mount == null)
+        {
+            return;
+        }
+
+        SerializedObject serializedMount = new SerializedObject(mount);
+        SerializedProperty slotIdProperty = serializedMount.FindProperty("requiredPaintingId");
+        if (slotIdProperty != null)
+        {
+            slotIdProperty.stringValue = BuildPaintingEntityId(slotArt.Title);
+        }
+
+        SerializedProperty slotTitleProperty = serializedMount.FindProperty("slotDisplayTitle");
+        if (slotTitleProperty != null)
+        {
+            slotTitleProperty.stringValue = slotArt.Title;
+        }
+
+        serializedMount.ApplyModifiedPropertiesWithoutUndo();
+        MountPlacardSetup.EnsurePlacard(mount);
     }
 
     private static string BuildMountEntityId(GalleryWing wing, string mountName)

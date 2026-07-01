@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// First-person character controller using Unity's CharacterController (no Rigidbody).
@@ -178,7 +177,7 @@ public class FirstPersonController : MonoBehaviour
             verticalVelocity = -2f;
         }
 
-        if (isGrounded && Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (isGrounded && MuseumInput.JumpPressedThisFrame())
         {
             verticalVelocity = jumpForce;
         }

@@ -56,6 +56,17 @@ public static class MuseumInput
         return Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame;
     }
 
+    /// <summary>Space on keyboard, left stick click (L3) on gamepad — A is reserved for interact.</summary>
+    public static bool JumpPressedThisFrame()
+    {
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+
+        return Gamepad.current != null && Gamepad.current.leftStickButton.wasPressedThisFrame;
+    }
+
     /// <summary>Mouse wheel Y, or gamepad bumpers / d-pad for stack selection.</summary>
     public static float StackScrollDelta()
     {

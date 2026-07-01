@@ -13,6 +13,8 @@ public static class MuseumGameEvents
     public static event Action MuseumCompleted;
     public static event Action<InteractablePainting, PaintingMount> PlacementUndone;
     public static event Action WrongWingRejected;
+    public static event Action WrongSlotRejected;
+    public static event Action GameSaved;
     public static event Action<InteractablePainting> PaintingThrown;
 
     public static void RaisePaintingPickedUp(InteractablePainting painting)
@@ -48,6 +50,16 @@ public static class MuseumGameEvents
     public static void RaiseWrongWingRejected()
     {
         WrongWingRejected?.Invoke();
+    }
+
+    public static void RaiseWrongSlotRejected()
+    {
+        WrongSlotRejected?.Invoke();
+    }
+
+    public static void RaiseGameSaved()
+    {
+        GameSaved?.Invoke();
     }
 
     public static void RaisePaintingThrown(InteractablePainting painting)

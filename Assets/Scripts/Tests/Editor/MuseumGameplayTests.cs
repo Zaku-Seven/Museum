@@ -146,6 +146,58 @@ public class MuseumGameplayTests
     }
 
     [Test]
+    public void CanAccept_SpecificSlot_WrongPainting_ReturnsFalse()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+            paintingObject.AddComponent<MuseumEntityId>().SetEntityId("painting_cobalt_field");
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            SetPrivateString(mount, "requiredPaintingId", "painting_steel_lines");
+
+            Assert.IsFalse(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
+    [Test]
+    public void CanAccept_SpecificSlot_MatchingPainting_ReturnsTrue()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+            paintingObject.AddComponent<MuseumEntityId>().SetEntityId("painting_cobalt_field");
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            SetPrivateString(mount, "requiredPaintingId", "painting_cobalt_field");
+
+            Assert.IsTrue(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
+    [Test]
     public void PlayerSettingsStore_ResetToDefaults_RestoresDefaults()
     {
         PlayerSettingsStore.MouseSensitivity = 7f;
@@ -171,6 +223,14 @@ public class MuseumGameplayTests
     }
 
     private static void SetPrivateEnum(Object target, string fieldName, GalleryWing value)
+    {
+        var field = target.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(field, $"Field {fieldName} not found on {target.GetType().Name}");
+        field.SetValue(target, value);
+    }
+
+    private static void SetPrivateString(Object target, string fieldName, string value)
     {
         var field = target.GetType().GetField(fieldName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

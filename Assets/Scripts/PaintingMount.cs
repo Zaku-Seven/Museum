@@ -12,11 +12,20 @@ public class PaintingMount : MonoBehaviour
     [Tooltip("Only a painting whose wing matches this value can be hung here.")]
     [SerializeField] private GalleryWing requiredWing = GalleryWing.Modern;
 
+    [Tooltip("Optional: only this painting (by id) may hang here. Empty = any wing match.")]
+    [SerializeField] private string requiredPaintingId = string.Empty;
+
+    [Tooltip("HUD/placard label when a specific painting is reserved for this mount.")]
+    [SerializeField] private string slotDisplayTitle = string.Empty;
+
     [Header("State")]
     [SerializeField] private bool isOccupied;
 
     public bool IsOccupied => isOccupied;
     public GalleryWing RequiredWing => requiredWing;
+    public string RequiredPaintingId => requiredPaintingId;
+    public bool HasSpecificSlot => !string.IsNullOrEmpty(requiredPaintingId);
+    public string SlotDisplayTitle => string.IsNullOrEmpty(slotDisplayTitle) ? requiredPaintingId : slotDisplayTitle;
     public Transform SnapPoint => snapPoint != null ? snapPoint : transform;
 
     /// <summary>The painting currently hung on this mount, or null when empty.</summary>
@@ -35,6 +44,13 @@ public class PaintingMount : MonoBehaviour
         section = owningSection;
     }
 
+    /// <summary>Editor/setup helper to reserve a mount for one painting.</summary>
+    public void ConfigureSlot(string paintingId, string displayTitle)
+    {
+        requiredPaintingId = paintingId ?? string.Empty;
+        slotDisplayTitle = displayTitle ?? string.Empty;
+    }
+
     private void Awake()
     {
         if (snapPoint == null)
@@ -45,11 +61,39 @@ public class PaintingMount : MonoBehaviour
     }
 
     /// <summary>
-    /// True when this mount is empty and the painting's wing matches <see cref="RequiredWing"/>.
+    /// True when this mount is empty and the painting matches wing (and optional slot id).
     /// </summary>
     public bool CanAccept(InteractablePainting painting)
     {
-        return !isOccupied && painting != null && painting.Wing == requiredWing;
+        if (isOccupied || painting == null || painting.Wing != requiredWing)
+        {
+            return false;
+        }
+
+        if (HasSpecificSlot && !PaintingIdsMatch(requiredPaintingId, painting))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// True when occupied by a painting that satisfies wing and optional slot rules.
+    /// </summary>
+    public bool IsCorrectlyOccupied()
+    {
+        if (!isOccupied || Occupant == null || Occupant.Wing != requiredWing)
+        {
+            return false;
+        }
+
+        if (HasSpecificSlot && !PaintingIdsMatch(requiredPaintingId, Occupant))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -137,5 +181,16 @@ public class PaintingMount : MonoBehaviour
         {
             section.CheckComplete();
         }
+    }
+
+    private static bool PaintingIdsMatch(string requiredId, InteractablePainting painting)
+    {
+        if (string.IsNullOrEmpty(requiredId) || painting == null)
+        {
+            return true;
+        }
+
+        return string.Equals(requiredId, painting.PaintingId, System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(requiredId, painting.SaveId, System.StringComparison.OrdinalIgnoreCase);
     }
 }

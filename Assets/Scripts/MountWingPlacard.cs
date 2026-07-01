@@ -1,12 +1,32 @@
 using UnityEngine;
 using UnityEngine.UI;
+
+/// <summary>
+/// World-space label on a mount frame showing wing (and optional reserved painting title).
+/// Billboards toward the player camera when nearby.
+/// </summary>
+public class MountWingPlacard : MonoBehaviour
 {
     [SerializeField] private GalleryWing requiredWing = GalleryWing.Modern;
     [SerializeField] private Text labelText;
     [SerializeField] private float billboardDistance = 24f;
 
+    private PaintingMount sourceMount;
+
+    public void Configure(PaintingMount mount)
+    {
+        sourceMount = mount;
+        if (mount != null)
+        {
+            requiredWing = mount.RequiredWing;
+        }
+
+        RefreshLabel();
+    }
+
     public void Configure(GalleryWing wing)
     {
+        sourceMount = null;
         requiredWing = wing;
         RefreshLabel();
     }
@@ -40,9 +60,17 @@ using UnityEngine.UI;
 
     private void RefreshLabel()
     {
-        if (labelText != null)
+        if (labelText == null)
         {
-            labelText.text = $"{requiredWing} wing";
+            return;
         }
+
+        if (sourceMount != null && sourceMount.HasSpecificSlot)
+        {
+            labelText.text = $"{requiredWing} · \"{sourceMount.SlotDisplayTitle}\"";
+            return;
+        }
+
+        labelText.text = $"{requiredWing} wing";
     }
 }

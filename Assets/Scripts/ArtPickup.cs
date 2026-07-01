@@ -142,6 +142,11 @@ public class ArtPickup : MonoBehaviour
                     return BuildCarryPrompt($"Click to hang \"{title}\" ({mount.RequiredWing})");
                 }
 
+                if (HeldPainting != null && mount.RequiredWing == HeldPainting.Wing && mount.HasSpecificSlot)
+                {
+                    return BuildCarryPrompt($"Spot reserved for \"{mount.SlotDisplayTitle}\"");
+                }
+
                 return BuildCarryPrompt($"This belongs in the {mount.RequiredWing} gallery");
             }
 
@@ -169,6 +174,11 @@ public class ArtPickup : MonoBehaviour
             if (emptyMount.IsOccupied && emptyMount.Occupant != null)
             {
                 return $"Hung: \"{emptyMount.Occupant.PaintingTitle}\" ({emptyMount.RequiredWing})";
+            }
+
+            if (emptyMount.HasSpecificSlot)
+            {
+                return $"{emptyMount.RequiredWing} · \"{emptyMount.SlotDisplayTitle}\" — empty";
             }
 
             return $"{emptyMount.RequiredWing} wing mount — empty";
@@ -290,10 +300,18 @@ public class ArtPickup : MonoBehaviour
                 {
                     PlaceActiveOnMount(mount);
                 }
-                else if (HeldPainting != null && mount.RequiredWing != HeldPainting.Wing)
+                else if (HeldPainting != null)
                 {
-                    TutorialHints.TryShowWrongWingHint();
-                    MuseumGameEvents.RaiseWrongWingRejected();
+                    if (mount.RequiredWing != HeldPainting.Wing)
+                    {
+                        TutorialHints.TryShowWrongWingHint();
+                        MuseumGameEvents.RaiseWrongWingRejected();
+                    }
+                    else if (mount.HasSpecificSlot)
+                    {
+                        TutorialHints.TryShowWrongSlotHint();
+                        MuseumGameEvents.RaiseWrongSlotRejected();
+                    }
                 }
 
                 return;

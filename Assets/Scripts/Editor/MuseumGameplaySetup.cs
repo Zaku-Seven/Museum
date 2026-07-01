@@ -478,6 +478,8 @@ public static class MuseumGameplaySetup
             WirePauseButtons(pausePanel, uiActions);
             WireWinButtons(winPanel, uiActions);
 
+            WireButton(settingsPanel.transform, "ResetDefaultsButton", uiActions, nameof(MuseumUiActions.ResetSettingsToDefaults));
+
             MainMenuController mainMenu = playerObject.GetComponent<MainMenuController>();
             if (mainMenu == null)
             {
@@ -938,6 +940,7 @@ public static class MuseumGameplaySetup
         WireButton(pausePanel.transform, "PauseButtons/SettingsButton", actions, nameof(MuseumUiActions.OpenSettingsFromPause));
         WireButton(pausePanel.transform, "PauseButtons/ControlsButton", actions, nameof(MuseumUiActions.OpenControlsHelp));
         WireButton(pausePanel.transform, "PauseButtons/NewGameButton", actions, nameof(MuseumUiActions.NewGameFromPause));
+        WireButton(pausePanel.transform, "SettingsPanel/ResetDefaultsButton", actions, nameof(MuseumUiActions.ResetSettingsToDefaults));
         WireButton(pausePanel.transform, "SettingsPanel/CloseSettingsButton", actions, nameof(MuseumUiActions.CloseSettings));
     }
 
@@ -955,10 +958,12 @@ public static class MuseumGameplaySetup
         }
 
         SetObjectReference(settings, "mouseSensitivitySlider", settingsPanel.transform.Find("MouseSensitivityRow/Slider")?.GetComponent<Slider>());
+        SetObjectReference(settings, "gamepadLookSlider", settingsPanel.transform.Find("GamepadLookRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "fovSlider", settingsPanel.transform.Find("FovRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "masterVolumeSlider", settingsPanel.transform.Find("VolumeRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "invertYToggle", settingsPanel.transform.Find("InvertYToggle")?.GetComponent<Toggle>());
         SetObjectReference(settings, "sensitivityValueText", settingsPanel.transform.Find("MouseSensitivityRow/Value")?.GetComponent<Text>());
+        SetObjectReference(settings, "gamepadLookValueText", settingsPanel.transform.Find("GamepadLookRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "fovValueText", settingsPanel.transform.Find("FovRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "volumeValueText", settingsPanel.transform.Find("VolumeRow/Value")?.GetComponent<Text>());
     }
@@ -1078,6 +1083,11 @@ public static class MuseumGameplaySetup
         if (playerObject.GetComponent<MuseumDevCheats>() == null)
         {
             playerObject.AddComponent<MuseumDevCheats>();
+        }
+
+        if (playerObject.GetComponent<FootstepController>() == null)
+        {
+            playerObject.AddComponent<FootstepController>();
         }
 
         if (cameraObject.GetComponent<ThrowCameraKick>() == null)

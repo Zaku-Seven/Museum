@@ -34,6 +34,7 @@ Each painting belongs to a **wing** (`Modern`, `Classical`, `Impressionist`) and
 only accepts a painting of its required wing:
 
 - Aim at a wrong-wing mount → **"This belongs in the [Wing] gallery"**; click is rejected (painting stays in hand). Frame **pulses red**.
+- Some gallery wing mounts reserve a **specific painting** (placard shows title). Wrong painting on correct wing → **"Spot reserved for …"**; frame pulses red.
 - Aim at a matching empty mount → frame tints **green**; placement plays a brief **scale pop**.
 - Aim at a filled mount → **"Gallery spot taken"** (grey frame tint).
 - Floor paintings **pulse subtly** when viewed empty-handed.
@@ -54,8 +55,8 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Left click / **X** (gamepad) | Place **active** stack item on wall / drop |
 | Right click / **Y** (gamepad) | Undo last wall placement |
 | LB / RB or D-pad | Change stack item (gamepad) |
-| Space | Jump |
-| Esc / **Start** (gamepad) | Pause / resume (Settings, New Game) |
+| Space / **L3** (stick click) | Jump |
+| Esc / **Start** (gamepad) | Pause / resume (Settings, Controls, New Game) |
 
 **Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.
 

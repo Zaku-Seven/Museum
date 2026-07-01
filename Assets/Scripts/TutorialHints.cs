@@ -20,6 +20,11 @@ public static class TutorialHints
         TryShowOnce("WrongWing", "Tip: Each wall is a gallery wing — match the painting's wing to the wall.");
     }
 
+    public static void TryShowWrongSlotHint()
+    {
+        TryShowOnce("WrongSlot", "Tip: Some frames are reserved for a specific painting — read the placard label.");
+    }
+
     public static void TryShowStackScrollHint()
     {
         TryShowOnce("StackScroll", "Tip: Scroll the mouse wheel to change which painting you're holding forward.");
@@ -37,7 +42,7 @@ public static class TutorialHints
 
     public static void ClearAllHints()
     {
-        string[] keys = { "Pickup", "WrongWing", "StackScroll", "Throw", "MuseumWin" };
+        string[] keys = { "Pickup", "WrongWing", "WrongSlot", "StackScroll", "Throw", "MuseumWin" };
         for (int i = 0; i < keys.Length; i++)
         {
             PlayerPrefs.DeleteKey(Prefix + keys[i]);

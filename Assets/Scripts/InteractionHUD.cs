@@ -25,10 +25,12 @@ public class InteractionHUD : MonoBehaviour
     [Header("Hints")]
     [Tooltip("Constant hint shown at the top of the screen.")]
     [SerializeField] private string hintMessage =
-        "E — pick up  ·  Scroll/LB RB — stack  ·  Click — place  ·  Q/B — throw  ·  Right-click/Y — undo  ·  Esc/Start — pause";
+        "E — pick up  ·  Scroll/LB RB — stack  ·  Click — place  ·  Q/B — throw  ·  Right-click/Y — undo  ·  Esc/Start — pause  ·  Space/L3 — jump";
 
     [Header("Completion banner")]
     [SerializeField] private float bannerDuration = 4f;
+    [SerializeField] private float saveToastDuration = 2f;
+    [SerializeField] private float saveToastCooldown = 12f;
 
     [Header("Tutorial tips")]
     [SerializeField] private float tutorialDuration = 5f;
@@ -39,6 +41,8 @@ public class InteractionHUD : MonoBehaviour
     private static readonly StringBuilder ProgressBuilder = new StringBuilder();
     private float bannerTimer;
     private float tutorialTimer;
+    private float saveToastTimer;
+    private float saveToastCooldownTimer;
 
     private void Awake()
     {
@@ -52,6 +56,7 @@ public class InteractionHUD : MonoBehaviour
     {
         GallerySection.OnSectionCompleted += HandleSectionCompleted;
         MuseumGameEvents.MuseumCompleted += HandleMuseumCompleted;
+        MuseumGameEvents.GameSaved += HandleGameSaved;
         TutorialHints.OnShowHint += HandleTutorialHint;
     }
 
@@ -59,6 +64,7 @@ public class InteractionHUD : MonoBehaviour
     {
         GallerySection.OnSectionCompleted -= HandleSectionCompleted;
         MuseumGameEvents.MuseumCompleted -= HandleMuseumCompleted;
+        MuseumGameEvents.GameSaved -= HandleGameSaved;
         TutorialHints.OnShowHint -= HandleTutorialHint;
     }
 
@@ -115,11 +121,33 @@ public class InteractionHUD : MonoBehaviour
 
         UpdateBanner();
         UpdateTutorialBanner();
+        UpdateSaveToastCooldown();
+    }
+
+    private void HandleGameSaved()
+    {
+        if (bannerText == null || saveToastCooldownTimer > 0f)
+        {
+            return;
+        }
+
+        bannerText.text = "Progress saved";
+        bannerText.enabled = true;
+        saveToastTimer = saveToastDuration;
+        saveToastCooldownTimer = saveToastCooldown;
+    }
+
+    private void UpdateSaveToastCooldown()
+    {
+        if (saveToastCooldownTimer > 0f)
+        {
+            saveToastCooldownTimer -= Time.deltaTime;
+        }
     }
 
     private void HandleSectionCompleted(GallerySection section)
     {
-        if (section == null || bannerText == null)
+        if (section == null || bannerText == null || saveToastTimer > 0f)
         {
             return;
         }
@@ -160,13 +188,25 @@ public class InteractionHUD : MonoBehaviour
 
     private void UpdateBanner()
     {
-        if (bannerText == null || bannerTimer <= 0f)
+        if (bannerText == null)
         {
-            if (bannerText != null && bannerTimer <= 0f)
+            return;
+        }
+
+        if (saveToastTimer > 0f)
+        {
+            saveToastTimer -= Time.deltaTime;
+            if (saveToastTimer <= 0f)
             {
                 bannerText.enabled = false;
             }
 
+            return;
+        }
+
+        if (bannerTimer <= 0f)
+        {
+            bannerText.enabled = false;
             return;
         }
 

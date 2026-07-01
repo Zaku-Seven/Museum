@@ -88,7 +88,10 @@ public class GallerySection : MonoBehaviour
         {
             if (mount != null && mount.IsOccupied && mount.Occupant != null && mount.Occupant.Wing == sectionWing)
             {
-                count++;
+                if (mount.IsCorrectlyOccupied())
+                {
+                    count++;
+                }
             }
         }
 

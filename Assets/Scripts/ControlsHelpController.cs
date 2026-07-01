@@ -21,7 +21,8 @@ public class ControlsHelpController : MonoBehaviour
         "GAMEPAD\n" +
         "A — pick up    B — throw    X — place    Y — undo\n" +
         "LB / RB — stack item    Start — pause\n" +
-        "Left stick — move    Right stick — look\n\n" +
+        "Left stick — move    Right stick — look\n" +
+        "L3 (stick click) — jump\n\n" +
         "DEV (Editor / Development build)\n" +
         "F9 — fill one section    F10 — auto-hang all    F8 — save";
 

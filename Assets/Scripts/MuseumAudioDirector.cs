@@ -11,6 +11,7 @@ public class MuseumAudioDirector : MonoBehaviour
     [SerializeField] private AudioClip placeClip;
     [SerializeField] private AudioClip dropClip;
     [SerializeField] private AudioClip wrongWingClip;
+    [SerializeField] private AudioClip wrongSlotClip;
     [SerializeField] private AudioClip sectionCompleteClip;
     [SerializeField] private AudioClip museumWinClip;
     [SerializeField] private AudioClip undoClip;
@@ -39,6 +40,7 @@ public class MuseumAudioDirector : MonoBehaviour
         MuseumGameEvents.MuseumCompleted += HandleMuseumWin;
         MuseumGameEvents.PlacementUndone += HandleUndo;
         MuseumGameEvents.WrongWingRejected += HandleWrongWing;
+        MuseumGameEvents.WrongSlotRejected += HandleWrongSlot;
         MuseumGameEvents.PaintingThrown += HandleThrow;
     }
 
@@ -51,6 +53,7 @@ public class MuseumAudioDirector : MonoBehaviour
         MuseumGameEvents.MuseumCompleted -= HandleMuseumWin;
         MuseumGameEvents.PlacementUndone -= HandleUndo;
         MuseumGameEvents.WrongWingRejected -= HandleWrongWing;
+        MuseumGameEvents.WrongSlotRejected -= HandleWrongSlot;
         MuseumGameEvents.PaintingThrown -= HandleThrow;
     }
 
@@ -93,6 +96,11 @@ public class MuseumAudioDirector : MonoBehaviour
     private void HandleWrongWing()
     {
         PlayOneShot(wrongWingClip);
+    }
+
+    private void HandleWrongSlot()
+    {
+        PlayOneShot(wrongSlotClip != null ? wrongSlotClip : wrongWingClip);
     }
 
     private void HandleThrow(InteractablePainting painting)

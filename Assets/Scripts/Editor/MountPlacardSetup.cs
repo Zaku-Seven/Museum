@@ -38,7 +38,7 @@ public static class MountPlacardSetup
             placard = CreatePlacardObject(mount.transform).GetComponent<MountWingPlacard>();
         }
 
-        placard.Configure(mount.RequiredWing);
+        placard.Configure(mount);
         EditorUtility.SetDirty(mount.gameObject);
         return true;
     }

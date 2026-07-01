@@ -111,6 +111,7 @@ public class MuseumSaveManager : MonoBehaviour
         PlayerPrefs.SetString(SaveKeyV2, json);
         PlayerPrefs.DeleteKey(SaveKeyV1);
         PlayerPrefs.Save();
+        MuseumGameEvents.RaiseGameSaved();
     }
 
     public void Load()
