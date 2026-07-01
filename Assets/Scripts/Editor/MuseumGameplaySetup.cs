@@ -241,8 +241,8 @@ public static class MuseumGameplaySetup
             return;
         }
 
-        holdPoint.localPosition = new Vector3(0f, -0.22f, 0.68f);
-        holdPoint.localRotation = Quaternion.Euler(6f, 0f, 0f);
+        holdPoint.localPosition = new Vector3(0.12f, -0.18f, 0.62f);
+        holdPoint.localRotation = Quaternion.identity;
     }
 
     private static void WireNorthWallGallerySection(Transform museumRoot)
