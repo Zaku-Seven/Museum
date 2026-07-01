@@ -145,6 +145,14 @@ public class MuseumGameplayTests
         }
     }
 
+    [Test]
+    public void PlayerSettingsStore_ResetToDefaults_RestoresDefaults()
+    {
+        PlayerSettingsStore.MouseSensitivity = 7f;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.AreEqual(PlayerSettingsStore.DefaultMouseSensitivity, PlayerSettingsStore.MouseSensitivity);
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");

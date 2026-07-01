@@ -208,6 +208,19 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 
 ---
 
+## 2026-07-01 Night 7 — Controls help, gamepad settings, objective HUD, footsteps
+
+**Delivered:**
+- **Controls help panel** — pause + main menu; keyboard + gamepad reference
+- **Gamepad look sensitivity** slider + **Reset defaults** in settings
+- **Objective line** on HUD (wings completed count)
+- **Richer mount prompts** — wing name, painting title when hanging
+- **Mount placards billboard** toward player
+- **FootstepController** hook (assign clip on Player)
+- **UI click SFX** hook on MuseumAudioDirector
+
+---
+
 ## 2026-07-01 Night 6 — Gamepad, placards, throw juice, dev cheats
 
 **Delivered:**

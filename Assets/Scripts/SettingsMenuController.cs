@@ -8,10 +8,12 @@ public class SettingsMenuController : MonoBehaviour
 {
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private Slider gamepadLookSlider;
     [SerializeField] private Toggle invertYToggle;
     [SerializeField] private Slider fovSlider;
     [SerializeField] private Slider masterVolumeSlider;
     [SerializeField] private Text sensitivityValueText;
+    [SerializeField] private Text gamepadLookValueText;
     [SerializeField] private Text fovValueText;
     [SerializeField] private Text volumeValueText;
     [SerializeField] private FirstPersonController firstPersonController;
@@ -41,6 +43,11 @@ public class SettingsMenuController : MonoBehaviour
         if (mouseSensitivitySlider != null)
         {
             mouseSensitivitySlider.onValueChanged.AddListener(OnSensitivityChanged);
+        }
+
+        if (gamepadLookSlider != null)
+        {
+            gamepadLookSlider.onValueChanged.AddListener(OnGamepadLookChanged);
         }
 
         if (invertYToggle != null)
@@ -77,11 +84,24 @@ public class SettingsMenuController : MonoBehaviour
         }
     }
 
+    public void ResetToDefaults()
+    {
+        PlayerSettingsStore.ResetToDefaults();
+        LoadValuesIntoUi();
+        firstPersonController?.ApplyPlayerSettings();
+        audioDirector?.ApplyVolume();
+    }
+
     private void LoadValuesIntoUi()
     {
         if (mouseSensitivitySlider != null)
         {
             mouseSensitivitySlider.SetValueWithoutNotify(PlayerSettingsStore.MouseSensitivity);
+        }
+
+        if (gamepadLookSlider != null)
+        {
+            gamepadLookSlider.SetValueWithoutNotify(PlayerSettingsStore.GamepadLookSensitivity);
         }
 
         if (invertYToggle != null)
@@ -106,6 +126,12 @@ public class SettingsMenuController : MonoBehaviour
     {
         PlayerSettingsStore.MouseSensitivity = value;
         firstPersonController?.ApplyPlayerSettings();
+        RefreshValueLabels();
+    }
+
+    private void OnGamepadLookChanged(float value)
+    {
+        PlayerSettingsStore.GamepadLookSensitivity = value;
         RefreshValueLabels();
     }
 
@@ -134,6 +160,11 @@ public class SettingsMenuController : MonoBehaviour
         if (sensitivityValueText != null)
         {
             sensitivityValueText.text = PlayerSettingsStore.MouseSensitivity.ToString("0.0");
+        }
+
+        if (gamepadLookValueText != null)
+        {
+            gamepadLookValueText.text = PlayerSettingsStore.GamepadLookSensitivity.ToString("0.0");
         }
 
         if (fovValueText != null)

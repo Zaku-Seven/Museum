@@ -138,7 +138,8 @@ public class ArtPickup : MonoBehaviour
 
                 if (mount.CanAccept(HeldPainting))
                 {
-                    return BuildCarryPrompt("Click to place on wall");
+                    string title = HeldPainting != null ? HeldPainting.PaintingTitle : "painting";
+                    return BuildCarryPrompt($"Click to hang \"{title}\" ({mount.RequiredWing})");
                 }
 
                 return BuildCarryPrompt($"This belongs in the {mount.RequiredWing} gallery");
@@ -160,6 +161,17 @@ public class ArtPickup : MonoBehaviour
         if (hit.collider.GetComponentInParent<WingZoneMarker>() is WingZoneMarker zone)
         {
             return $"Floor zone: {zone.ZoneLabel}";
+        }
+
+        PaintingMount emptyMount = hit.collider.GetComponentInParent<PaintingMount>();
+        if (emptyMount != null)
+        {
+            if (emptyMount.IsOccupied && emptyMount.Occupant != null)
+            {
+                return $"Hung: \"{emptyMount.Occupant.PaintingTitle}\" ({emptyMount.RequiredWing})";
+            }
+
+            return $"{emptyMount.RequiredWing} wing mount — empty";
         }
 
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();

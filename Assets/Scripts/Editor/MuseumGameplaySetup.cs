@@ -386,10 +386,18 @@ public static class MuseumGameplaySetup
         tutorialText.color = new Color(1f, 0.95f, 0.75f);
         tutorialText.enabled = false;
 
+        Text objectiveText = EnsureUiText(canvasTransform, "Objective", defaultFont, 16, TextAnchor.UpperLeft,
+            anchorMin: new Vector2(0f, 1f), anchorMax: new Vector2(0f, 1f), pivot: new Vector2(0f, 1f),
+            anchoredPosition: new Vector2(24f, -20f), sizeDelta: new Vector2(520f, 24f));
+        objectiveText.color = new Color(0.8f, 0.88f, 0.95f);
+
         GameObject winPanel = EnsureWinPanel(canvasTransform, defaultFont, out Text winText);
         GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont, out GameObject settingsPanel);
+        UpgradeSettingsPanel(settingsPanel, defaultFont);
         GameObject mainMenuPanel = EnsureMainMenuPanel(canvasTransform, defaultFont, out GameObject newGameConfirmPanel, out Button continueButton, out Text mainMenuSubtitle);
+        GameObject controlsHelpPanel = EnsureControlsHelpPanel(canvasTransform, defaultFont);
         MuseumUiActions uiActions = EnsureUiActions(canvasTransform);
+        EnsureControlsHelpController(canvasTransform, controlsHelpPanel);
 
         GameObject cameraObject = GameObject.Find("PlayerCamera");
         if (cameraObject == null)
@@ -415,6 +423,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(serializedHud, "stackText", stackText);
         SetObjectReference(serializedHud, "stagingText", stagingText);
         SetObjectReference(serializedHud, "tutorialText", tutorialText);
+        SetObjectReference(serializedHud, "objectiveText", objectiveText);
         SetObjectReference(serializedHud, "winPanel", winPanel);
         SetObjectReference(serializedHud, "winText", winText);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
@@ -483,6 +492,7 @@ public static class MuseumGameplaySetup
             serializedMainMenu.ApplyModifiedPropertiesWithoutUndo();
 
             WireMainMenuButtons(mainMenuPanel, newGameConfirmPanel, uiActions);
+            WireControlsHelpButton(controlsHelpPanel, uiActions);
         }
     }
 
@@ -580,9 +590,109 @@ public static class MuseumGameplaySetup
             buttonRow = row.transform;
         }
 
-        CreateMenuButton(buttonRow, "ResumeButton", "Resume", font, new Vector2(0f, 50f));
-        CreateMenuButton(buttonRow, "SettingsButton", "Settings", font, new Vector2(0f, 0f));
-        CreateMenuButton(buttonRow, "NewGameButton", "New Game", font, new Vector2(0f, -50f));
+        CreateMenuButton(buttonRow, "ResumeButton", "Resume", font, new Vector2(0f, 60f));
+        CreateMenuButton(buttonRow, "SettingsButton", "Settings", font, new Vector2(0f, 10f));
+        CreateMenuButton(buttonRow, "ControlsButton", "Controls", font, new Vector2(0f, -40f));
+        CreateMenuButton(buttonRow, "NewGameButton", "New Game", font, new Vector2(0f, -90f));
+    }
+
+    private static void UpgradeSettingsPanel(GameObject settingsPanel, Font font)
+    {
+        if (settingsPanel == null)
+        {
+            return;
+        }
+
+        RectTransform rect = settingsPanel.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.sizeDelta = new Vector2(420f, 380f);
+        }
+
+        if (settingsPanel.transform.Find("GamepadLookRow") == null)
+        {
+            CreateSettingRow(settingsPanel.transform, "GamepadLookRow", "Gamepad look", font, new Vector2(0f, 130f), out Slider gpSlider, out Text _);
+            gpSlider.minValue = 0.5f;
+            gpSlider.maxValue = 8f;
+        }
+
+        if (settingsPanel.transform.Find("ResetDefaultsButton") == null)
+        {
+            CreateMenuButton(settingsPanel.transform, "ResetDefaultsButton", "Reset defaults", font, new Vector2(0f, -170f));
+        }
+
+        Transform closeButton = settingsPanel.transform.Find("CloseSettingsButton");
+        if (closeButton != null)
+        {
+            closeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -220f);
+        }
+
+        Transform invertLabel = settingsPanel.transform.Find("InvertYLabel");
+        if (invertLabel != null)
+        {
+            invertLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(24f, -100f);
+        }
+
+        Transform invertToggle = settingsPanel.transform.Find("InvertYToggle");
+        if (invertToggle != null)
+        {
+            invertToggle.GetComponent<RectTransform>().anchoredPosition = new Vector2(-24f, -100f);
+        }
+    }
+
+    private static GameObject EnsureControlsHelpPanel(Transform canvas, Font font)
+    {
+        Transform existing = canvas.Find("ControlsHelpPanel");
+        if (existing != null)
+        {
+            return existing.gameObject;
+        }
+
+        GameObject panel = new GameObject("ControlsHelpPanel");
+        panel.transform.SetParent(canvas, false);
+        RectTransform panelRect = panel.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image bg = panel.AddComponent<Image>();
+        bg.color = new Color(0.03f, 0.05f, 0.08f, 0.92f);
+
+        GameObject bodyObject = CreateUiText(panel.transform, "Body", font, 18, TextAnchor.UpperLeft);
+        RectTransform bodyRect = bodyObject.GetComponent<RectTransform>();
+        bodyRect.anchorMin = new Vector2(0.5f, 0.5f);
+        bodyRect.anchorMax = new Vector2(0.5f, 0.5f);
+        bodyRect.pivot = new Vector2(0.5f, 0.5f);
+        bodyRect.anchoredPosition = new Vector2(0f, 20f);
+        bodyRect.sizeDelta = new Vector2(520f, 360f);
+        Text body = bodyObject.GetComponent<Text>();
+        body.color = new Color(0.9f, 0.93f, 0.98f);
+        body.horizontalOverflow = HorizontalWrapMode.Wrap;
+        body.verticalOverflow = VerticalWrapMode.Overflow;
+
+        CreateMenuButton(panel.transform, "CloseControlsButton", "Back", font, new Vector2(0f, -200f));
+        panel.SetActive(false);
+        return panel;
+    }
+
+    private static void EnsureControlsHelpController(Transform canvas, GameObject panel)
+    {
+        ControlsHelpController controller = canvas.GetComponent<ControlsHelpController>();
+        if (controller == null)
+        {
+            controller = canvas.gameObject.AddComponent<ControlsHelpController>();
+        }
+
+        SerializedObject serialized = new SerializedObject(controller);
+        SetObjectReference(serialized, "panel", panel);
+        SetObjectReference(serialized, "bodyText", panel.transform.Find("Body")?.GetComponent<Text>());
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void WireControlsHelpButton(GameObject panel, MuseumUiActions actions)
+    {
+        WireButton(panel.transform, "CloseControlsButton", actions, nameof(MuseumUiActions.CloseControlsHelp));
     }
 
     private static GameObject EnsureSettingsPanel(Transform pausePanel, Font font)
@@ -701,6 +811,7 @@ public static class MuseumGameplaySetup
         WireButton(mainMenuPanel.transform, "MainMenuButtons/StartButton", actions, nameof(MuseumUiActions.MainMenuStartFresh));
         WireButton(mainMenuPanel.transform, "MainMenuButtons/NewGameButton", actions, nameof(MuseumUiActions.MainMenuShowNewGameConfirm));
         WireButton(mainMenuPanel.transform, "MainMenuButtons/SettingsButton", actions, nameof(MuseumUiActions.MainMenuOpenSettings));
+        WireButton(mainMenuPanel.transform, "MainMenuButtons/ControlsButton", actions, nameof(MuseumUiActions.OpenControlsHelp));
 
         if (confirmPanel != null)
         {
@@ -760,12 +871,13 @@ public static class MuseumGameplaySetup
         rowRect.anchorMax = new Vector2(0.5f, 0.5f);
         rowRect.pivot = new Vector2(0.5f, 0.5f);
         rowRect.anchoredPosition = new Vector2(0f, -20f);
-        rowRect.sizeDelta = new Vector2(520f, 220f);
+        rowRect.sizeDelta = new Vector2(520f, 280f);
 
-        CreateMenuButton(buttonRow.transform, "ContinueButton", "Continue", font, new Vector2(0f, 70f));
+        CreateMenuButton(buttonRow.transform, "ContinueButton", "Continue", font, new Vector2(0f, 100f));
         CreateMenuButton(buttonRow.transform, "StartButton", "Enter museum", font, new Vector2(0f, 15f));
         CreateMenuButton(buttonRow.transform, "NewGameButton", "New game", font, new Vector2(0f, -40f));
         CreateMenuButton(buttonRow.transform, "SettingsButton", "Settings", font, new Vector2(0f, -95f));
+        CreateMenuButton(buttonRow.transform, "ControlsButton", "Controls", font, new Vector2(0f, -150f));
 
         subtitle = panelObject.transform.Find("Subtitle")?.GetComponent<Text>();
         continueButton = panelObject.transform.Find("MainMenuButtons/ContinueButton")?.GetComponent<Button>();
@@ -824,6 +936,7 @@ public static class MuseumGameplaySetup
     {
         WireButton(pausePanel.transform, "PauseButtons/ResumeButton", actions, nameof(MuseumUiActions.ResumeFromPause));
         WireButton(pausePanel.transform, "PauseButtons/SettingsButton", actions, nameof(MuseumUiActions.OpenSettingsFromPause));
+        WireButton(pausePanel.transform, "PauseButtons/ControlsButton", actions, nameof(MuseumUiActions.OpenControlsHelp));
         WireButton(pausePanel.transform, "PauseButtons/NewGameButton", actions, nameof(MuseumUiActions.NewGameFromPause));
         WireButton(pausePanel.transform, "SettingsPanel/CloseSettingsButton", actions, nameof(MuseumUiActions.CloseSettings));
     }

@@ -64,4 +64,13 @@ public static class PlayerSettingsStore
             PlayerPrefs.Save();
         }
     }
+
+    public static void ResetToDefaults()
+    {
+        MouseSensitivity = DefaultMouseSensitivity;
+        GamepadLookSensitivity = DefaultGamepadLookSensitivity;
+        InvertY = false;
+        FieldOfView = DefaultFieldOfView;
+        MasterVolume = DefaultMasterVolume;
+    }
 }

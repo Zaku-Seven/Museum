@@ -69,4 +69,23 @@ public class MuseumUiActions : MonoBehaviour
     {
         MainMenuController.Instance?.OpenSettingsFromMainMenu();
     }
+
+    public void OpenControlsHelp()
+    {
+        MuseumAudioDirector audio = FindFirstObjectByType<MuseumAudioDirector>();
+        audio?.PlayUiClick();
+        ControlsHelpController.Instance?.Open();
+    }
+
+    public void CloseControlsHelp()
+    {
+        MuseumAudioDirector audio = FindFirstObjectByType<MuseumAudioDirector>();
+        audio?.PlayUiClick();
+        ControlsHelpController.Instance?.Close();
+    }
+
+    public void ResetSettingsToDefaults()
+    {
+        FindFirstObjectByType<SettingsMenuController>()?.ResetToDefaults();
+    }
 }

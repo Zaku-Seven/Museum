@@ -18,6 +18,7 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text stackText;
     [SerializeField] private Text stagingText;
     [SerializeField] private Text tutorialText;
+    [SerializeField] private Text objectiveText;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private Text winText;
 
@@ -90,6 +91,12 @@ public class InteractionHUD : MonoBehaviour
         {
             hintText.text = hintMessage;
             hintText.enabled = !string.IsNullOrEmpty(hintMessage);
+        }
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = BuildObjectiveText();
+            objectiveText.enabled = !string.IsNullOrEmpty(objectiveText.text);
         }
 
         if (stackText != null)
@@ -229,5 +236,35 @@ public class InteractionHUD : MonoBehaviour
         }
 
         return ProgressBuilder.ToString();
+    }
+
+    private static string BuildObjectiveText()
+    {
+        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete)
+        {
+            return "Objective complete — the museum is open.";
+        }
+
+        int completeSections = 0;
+        int totalSections = 0;
+        if (GallerySection.AllSections != null)
+        {
+            totalSections = GallerySection.AllSections.Count;
+            for (int i = 0; i < GallerySection.AllSections.Count; i++)
+            {
+                GallerySection section = GallerySection.AllSections[i];
+                if (section != null && section.IsComplete)
+                {
+                    completeSections++;
+                }
+            }
+        }
+
+        if (totalSections == 0)
+        {
+            return "Objective: Hang paintings on matching wing walls.";
+        }
+
+        return $"Objective: Complete every wing ({completeSections}/{totalSections} done).";
     }
 }

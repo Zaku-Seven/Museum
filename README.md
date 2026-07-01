@@ -51,10 +51,13 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | E | Pick up / add to stack (max 5, fans to your right) |
 | Scroll wheel | Change which stack item is forward (when carrying 2+) |
 | Q | Throw active painting (physics arc; sorting table catches slow lands) |
-| Left click | Place **active** stack item on wall / drop |
-| Right click | Undo last wall placement (returns painting to stack) |
+| Left click / **X** (gamepad) | Place **active** stack item on wall / drop |
+| Right click / **Y** (gamepad) | Undo last wall placement |
+| LB / RB or D-pad | Change stack item (gamepad) |
 | Space | Jump |
-| Esc | Pause / resume (Settings, New Game) |
+| Esc / **Start** (gamepad) | Pause / resume (Settings, New Game) |
+
+**Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.
 
 When every gallery section is complete, a **win overlay** appears with **Continue exploring** or **New game**. Pickup stays disabled after win unless you start a new game. Progress (mounts, sorting table staging, win state) persists via **save v2** (`MuseumSaveManager` + stable `MuseumEntityId`s). Pause menu includes **mouse sensitivity**, **FOV**, **invert Y**, and **master volume**. Optional SFX hooks live on `MuseumAudioDirector` (assign clips in Inspector).
 

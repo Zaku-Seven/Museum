@@ -15,6 +15,7 @@ public class MuseumAudioDirector : MonoBehaviour
     [SerializeField] private AudioClip museumWinClip;
     [SerializeField] private AudioClip undoClip;
     [SerializeField] private AudioClip throwClip;
+    [SerializeField] private AudioClip uiClickClip;
 
     [Header("Mix")]
     [SerializeField] private float sfxVolume = 1f;
@@ -97,6 +98,11 @@ public class MuseumAudioDirector : MonoBehaviour
     private void HandleThrow(InteractablePainting painting)
     {
         PlayOneShot(throwClip);
+    }
+
+    public void PlayUiClick()
+    {
+        PlayOneShot(uiClickClip);
     }
 
     private void PlayOneShot(AudioClip clip)

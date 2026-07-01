@@ -113,6 +113,11 @@ public class FirstPersonController : MonoBehaviour
             return true;
         }
 
+        if (ControlsHelpController.Instance != null && ControlsHelpController.Instance.IsOpen)
+        {
+            return true;
+        }
+
         return false;
     }
 
