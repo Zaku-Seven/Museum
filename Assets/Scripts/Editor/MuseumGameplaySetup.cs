@@ -63,6 +63,7 @@ public static class MuseumGameplaySetup
         CreateFloorPainting("TestPainting_2", "Blue Horizon", new Vector3(3f, 0.025f, 5f), new Color(0.2f, 0.35f, 0.75f), GalleryWing.Classical, interactableLayer);
         SetupInteractionHud();
         SetupPlayerGameplayComponents();
+        PlayerVisualSetup.EnsurePlayerBean();
         FixExistingHoldPoint();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());

@@ -201,5 +201,7 @@ public static class PrototypeSceneSetup
         {
             Debug.LogWarning("PrototypeSceneSetup: Could not find playerCamera field on FirstPersonController.");
         }
+
+        PlayerVisualSetup.EnsurePlayerBean();
     }
 }

@@ -42,6 +42,7 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 |-------|--------|
 | WASD | Move |
 | Mouse | Look |
-| Left click | Pick up / place on wall / drop |
+| E | Pick up / add to stack (max 5, fans to your right) |
+| Left click | Place front stack item on wall / drop |
 | Space | Jump |
 | Esc | Pause / resume (unlocks cursor, shows overlay) |

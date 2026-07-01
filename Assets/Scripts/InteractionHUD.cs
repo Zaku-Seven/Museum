@@ -18,7 +18,7 @@ public class InteractionHUD : MonoBehaviour
 
     [Header("Hints")]
     [Tooltip("Constant hint shown at the top of the screen.")]
-    [SerializeField] private string hintMessage = "Esc — pause    ·    Sort paintings onto matching wing walls";
+    [SerializeField] private string hintMessage = "E — pick up / add to stack    ·    Click — place or drop    ·    Esc — pause";
 
     [Header("Completion banner")]
     [SerializeField] private float bannerDuration = 4f;

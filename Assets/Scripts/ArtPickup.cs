@@ -1,46 +1,44 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Raycast-based pick-up, carry, wall-mount placement, and drop for museum paintings.
-/// Attach to the player camera. Uses the "Interactable" layer and a HoldPoint child transform.
-///
-/// Carry feel (Night 1, verified defaults — see docs/MORNING_TEST.md):
-///   - Immediate snap to the hold point on pickup (no pop-in lag), then a per-frame
-///     LateUpdate lerp keeps the canvas glued to the hands after camera movement.
-///   - Rigidbody is disabled while held so physics never fights the camera.
-///   - carryFollowSharpness ~= 28 gives a tight, readable follow; carryLocalEuler (-90,0,0)
-///     rotates the flat cube "canvas" to face the player.
-/// Placement is wing-gated (see GalleryWing / PaintingMount.CanAccept): aiming at a
-/// wrong-wing or occupied mount rejects the click but never drops the painting.
+/// Raycast pick-up, multi-item carry stack, wall placement, and drop for museum paintings.
+/// <b>E</b> adds a painting to the stack (offset to the right of the hold point).
+/// <b>Left click</b> places or drops the front-most stacked item (rightmost / last picked).
+/// Items are parented to the hold point so they move with zero lag.
 /// </summary>
 [RequireComponent(typeof(Camera))]
 public class ArtPickup : MonoBehaviour
 {
     [Header("Pickup Settings")]
-    [Tooltip("Maximum distance from the camera center ray to pick up or place objects.")]
     [SerializeField] private float maxPickupDistance = 3.5f;
-
-    [Tooltip("Empty transform in front of the camera representing the player's hands.")]
     [SerializeField] private Transform holdPoint;
 
-    [Header("Carry Feel")]
-    [Tooltip("Local rotation applied while carrying so the canvas faces the player naturally.")]
+    [Header("Carry Stack")]
+    [SerializeField] private int maxStackSize = 5;
+    [Tooltip("Local-space offset per stack slot along the hold point's right axis.")]
+    [SerializeField] private float stackSlotSpacing = 0.14f;
     [SerializeField] private Vector3 carryLocalEuler = new Vector3(-90f, 0f, 0f);
-
-    [Tooltip("How quickly the painting catches up to the hold point. Higher = tighter to the camera.")]
-    [SerializeField] private float carryFollowSharpness = 28f;
 
     private Camera playerCamera;
     private int interactableLayerMask;
-    private Transform heldObject;
-    private InteractablePainting heldPainting;
-    private Rigidbody heldRigidbody;
-    private Collider[] heldColliders;
+    private readonly List<CarriedEntry> carryStack = new List<CarriedEntry>();
     private Quaternion carryLocalRotation;
 
-    public bool IsHolding => heldObject != null;
-    public InteractablePainting HeldPainting => heldPainting;
+    public bool IsHolding => carryStack.Count > 0;
+    public int CarryCount => carryStack.Count;
+
+    /// <summary>The painting currently offered for placement (last picked / rightmost in stack).</summary>
+    public InteractablePainting HeldPainting => carryStack.Count > 0 ? carryStack[carryStack.Count - 1].Painting : null;
+
+    private sealed class CarriedEntry
+    {
+        public Transform Transform;
+        public InteractablePainting Painting;
+        public Rigidbody Rigidbody;
+        public Collider[] Colliders;
+    }
 
     private void Awake()
     {
@@ -50,7 +48,7 @@ public class ArtPickup : MonoBehaviour
 
         if (interactableLayerMask == 0)
         {
-            Debug.LogWarning("ArtPickup: 'Interactable' layer not found. Create it in Project Settings > Tags and Layers.");
+            Debug.LogWarning("ArtPickup: 'Interactable' layer not found.");
         }
 
         EnsureHoldPointExists();
@@ -58,83 +56,238 @@ public class ArtPickup : MonoBehaviour
 
     private void Update()
     {
-        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
-            return;
+            TryPickupFromRaycast();
         }
 
-        if (heldObject != null)
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && IsHolding)
         {
             HandleHeldClick();
-            return;
         }
-
-        TryPickupFromRaycast();
     }
 
-    /// <summary>
-    /// Keeps the carried painting glued to the hold point after camera movement.
-    /// Runs after FirstPersonController updates the camera rotation.
-    /// </summary>
-    private void LateUpdate()
-    {
-        if (heldObject == null || holdPoint == null)
-        {
-            return;
-        }
-
-        Quaternion targetRotation = holdPoint.rotation * carryLocalRotation;
-        float followFactor = 1f - Mathf.Exp(-carryFollowSharpness * Time.deltaTime);
-        heldObject.position = Vector3.Lerp(heldObject.position, holdPoint.position, followFactor);
-        heldObject.rotation = Quaternion.Slerp(heldObject.rotation, targetRotation, followFactor);
-    }
-
-    /// <summary>
-    /// Returns a context-sensitive prompt based on what the player is looking at.
-    /// </summary>
     public string GetInteractionPrompt()
     {
         if (!TryGetCenterRayHit(out RaycastHit hit))
         {
-            return IsHolding ? "Click to drop" : string.Empty;
+            return IsHolding ? BuildCarryPrompt("Click to drop") : string.Empty;
         }
 
         if (IsHolding)
         {
             PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+            InteractablePainting aimedPainting = hit.collider.GetComponentInParent<InteractablePainting>();
+
             if (mount != null)
             {
                 if (mount.IsOccupied)
                 {
-                    return "Gallery spot taken";
+                    return BuildCarryPrompt("Gallery spot taken");
                 }
 
-                if (mount.CanAccept(heldPainting))
+                if (mount.CanAccept(HeldPainting))
                 {
-                    return "Click to place on wall";
+                    return BuildCarryPrompt("Click to place on wall");
                 }
 
-                return $"This belongs in the {mount.RequiredWing} gallery";
+                return BuildCarryPrompt($"This belongs in the {mount.RequiredWing} gallery");
             }
 
-            return "Click to drop";
+            if (aimedPainting != null && !IsInStack(aimedPainting.transform) && carryStack.Count < maxStackSize)
+            {
+                return BuildCarryPrompt($"E — add \"{aimedPainting.PaintingTitle}\" to stack");
+            }
+
+            if (aimedPainting != null && carryStack.Count >= maxStackSize)
+            {
+                return BuildCarryPrompt("Stack full — place or drop first");
+            }
+
+            return BuildCarryPrompt("Click to drop");
         }
 
-        if (hit.collider.GetComponentInParent<InteractablePainting>() != null)
+        InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+        if (painting != null)
         {
-            InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
-            return $"Click to pick up \"{painting.PaintingTitle}\"";
+            if (carryStack.Count >= maxStackSize)
+            {
+                return "Stack full — place or drop first";
+            }
+
+            return $"E — pick up \"{painting.PaintingTitle}\"";
         }
 
         return string.Empty;
+    }
+
+    private string BuildCarryPrompt(string action)
+    {
+        if (carryStack.Count <= 1)
+        {
+            return action;
+        }
+
+        string title = HeldPainting != null ? HeldPainting.PaintingTitle : "item";
+        return $"{action} ({title}, stack {carryStack.Count}/{maxStackSize})";
+    }
+
+    public bool TryGetCenterRayHit(out RaycastHit hit)
+    {
+        Ray centerRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        return Physics.Raycast(centerRay, out hit, maxPickupDistance, interactableLayerMask);
+    }
+
+    private void TryPickupFromRaycast()
+    {
+        if (carryStack.Count >= maxStackSize)
+        {
+            return;
+        }
+
+        if (!TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return;
+        }
+
+        InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+        if (painting == null || IsInStack(painting.transform))
+        {
+            return;
+        }
+
+        AddToStack(painting.transform);
+    }
+
+    private void HandleHeldClick()
+    {
+        if (TryGetCenterRayHit(out RaycastHit hit))
+        {
+            PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+            if (mount != null)
+            {
+                if (mount.CanAccept(HeldPainting))
+                {
+                    PlaceActiveOnMount(mount);
+                }
+
+                return;
+            }
+        }
+
+        DropActiveObject();
+    }
+
+    private void AddToStack(Transform target)
+    {
+        var entry = new CarriedEntry
+        {
+            Transform = target,
+            Rigidbody = target.GetComponent<Rigidbody>(),
+            Colliders = target.GetComponentsInChildren<Collider>(),
+            Painting = target.GetComponent<InteractablePainting>()
+        };
+
+        if (entry.Painting != null && entry.Painting.CurrentMount != null)
+        {
+            entry.Painting.CurrentMount.ClearOccupant();
+            entry.Painting.ClearMount();
+        }
+
+        foreach (Collider collider in entry.Colliders)
+        {
+            collider.enabled = false;
+        }
+
+        if (entry.Rigidbody != null)
+        {
+            entry.Rigidbody.linearVelocity = Vector3.zero;
+            entry.Rigidbody.angularVelocity = Vector3.zero;
+            entry.Rigidbody.isKinematic = true;
+            entry.Rigidbody.useGravity = false;
+            entry.Rigidbody.detectCollisions = false;
+        }
+
+        carryStack.Add(entry);
+        RefreshStackLayout();
+    }
+
+    private void RefreshStackLayout()
+    {
+        for (int i = 0; i < carryStack.Count; i++)
+        {
+            CarriedEntry entry = carryStack[i];
+            entry.Transform.SetParent(holdPoint, false);
+            entry.Transform.localPosition = GetStackLocalOffset(i);
+            entry.Transform.localRotation = carryLocalRotation;
+        }
+    }
+
+    private Vector3 GetStackLocalOffset(int stackIndex)
+    {
+        return new Vector3(stackSlotSpacing * stackIndex, 0f, 0f);
+    }
+
+    private void PlaceActiveOnMount(PaintingMount mount)
+    {
+        if (carryStack.Count == 0)
+        {
+            return;
+        }
+
+        CarriedEntry entry = carryStack[carryStack.Count - 1];
+        carryStack.RemoveAt(carryStack.Count - 1);
+
+        foreach (Collider collider in entry.Colliders)
+        {
+            collider.enabled = true;
+        }
+
+        entry.Transform.SetParent(null, true);
+        RestoreRigidbody(entry.Rigidbody, kinematic: true, useGravity: false);
+        mount.PlacePainting(entry.Transform, entry.Rigidbody);
+        RefreshStackLayout();
+    }
+
+    private void DropActiveObject()
+    {
+        if (carryStack.Count == 0)
+        {
+            return;
+        }
+
+        CarriedEntry entry = carryStack[carryStack.Count - 1];
+        carryStack.RemoveAt(carryStack.Count - 1);
+
+        foreach (Collider collider in entry.Colliders)
+        {
+            collider.enabled = true;
+        }
+
+        entry.Transform.SetParent(null, true);
+        RestoreRigidbody(entry.Rigidbody, kinematic: false, useGravity: true);
+        entry.Transform.position += playerCamera.transform.forward * 0.25f;
+        RefreshStackLayout();
+    }
+
+    private bool IsInStack(Transform target)
+    {
+        for (int i = 0; i < carryStack.Count; i++)
+        {
+            if (carryStack[i].Transform == target)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void EnsureHoldPointExists()
     {
         if (holdPoint == null)
         {
-            Transform existing = transform.Find("HoldPoint");
-            holdPoint = existing;
+            holdPoint = transform.Find("HoldPoint");
         }
 
         if (holdPoint == null)
@@ -144,147 +297,8 @@ public class ArtPickup : MonoBehaviour
             holdPoint = holdPointObject.transform;
         }
 
-        ApplyHoldPointDefaults();
-    }
-
-    /// <summary>
-    /// Positions the hold point at chest height, arm's length, with a slight tilt toward the player.
-    /// </summary>
-    private void ApplyHoldPointDefaults()
-    {
         holdPoint.localPosition = new Vector3(0f, -0.22f, 0.68f);
         holdPoint.localRotation = Quaternion.Euler(6f, 0f, 0f);
-    }
-
-    /// <summary>Center-screen raycast on the Interactable layer (shared with highlight + prompts).</summary>
-    public bool TryGetCenterRayHit(out RaycastHit hit)
-    {
-        Ray centerRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        return Physics.Raycast(centerRay, out hit, maxPickupDistance, interactableLayerMask);
-    }
-
-    private void TryPickupFromRaycast()
-    {
-        if (!TryGetCenterRayHit(out RaycastHit hit))
-        {
-            return;
-        }
-
-        InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
-        if (painting == null)
-        {
-            return;
-        }
-
-        PickUpObject(painting.transform);
-    }
-
-    /// <summary>
-    /// Handles a left-click while carrying a painting. Placing is wing-gated: aiming at a
-    /// valid empty mount hangs the painting; aiming at an occupied or wrong-wing mount
-    /// rejects the click and keeps the painting in hand (cozy, forgiving — never a silent
-    /// or accidental drop). Clicking while not aimed at any mount drops the painting.
-    /// </summary>
-    private void HandleHeldClick()
-    {
-        if (TryGetCenterRayHit(out RaycastHit hit))
-        {
-            PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
-            if (mount != null)
-            {
-                if (mount.CanAccept(heldPainting))
-                {
-                    PlaceOnMount(mount);
-                }
-
-                // Occupied or wrong wing: reject but keep holding. The HUD prompt
-                // ("Wrong gallery" / "Gallery spot taken") already explains why.
-                return;
-            }
-        }
-
-        DropHeldObject();
-    }
-
-    private void PickUpObject(Transform target)
-    {
-        heldObject = target;
-        heldRigidbody = heldObject.GetComponent<Rigidbody>();
-        heldColliders = heldObject.GetComponentsInChildren<Collider>();
-
-        InteractablePainting painting = heldObject.GetComponent<InteractablePainting>();
-        heldPainting = painting;
-        if (painting != null && painting.CurrentMount != null)
-        {
-            painting.CurrentMount.ClearOccupant();
-            painting.ClearMount();
-        }
-
-        // Detach from any parent so the carry system fully controls the transform.
-        heldObject.SetParent(null);
-
-        foreach (Collider collider in heldColliders)
-        {
-            collider.enabled = false;
-        }
-
-        // Kinematic + no collisions prevents physics from fighting camera movement while carried.
-        if (heldRigidbody != null)
-        {
-            heldRigidbody.linearVelocity = Vector3.zero;
-            heldRigidbody.angularVelocity = Vector3.zero;
-            heldRigidbody.isKinematic = true;
-            heldRigidbody.useGravity = false;
-            heldRigidbody.detectCollisions = false;
-        }
-
-        // Snap immediately so there is no pop-in lag on pickup.
-        heldObject.SetPositionAndRotation(holdPoint.position, holdPoint.rotation * carryLocalRotation);
-    }
-
-    private void PlaceOnMount(PaintingMount mount)
-    {
-        Transform objectToPlace = heldObject;
-        Rigidbody rigidbody = heldRigidbody;
-        Collider[] colliders = heldColliders;
-
-        heldObject = null;
-        heldPainting = null;
-        heldRigidbody = null;
-        heldColliders = null;
-
-        foreach (Collider collider in colliders)
-        {
-            collider.enabled = true;
-        }
-
-        RestoreRigidbody(rigidbody, kinematic: true, useGravity: false);
-        mount.PlacePainting(objectToPlace, rigidbody);
-    }
-
-    private void DropHeldObject()
-    {
-        Transform droppedObject = heldObject;
-        Rigidbody rigidbody = heldRigidbody;
-        Collider[] colliders = heldColliders;
-
-        heldObject = null;
-        heldPainting = null;
-        heldRigidbody = null;
-        heldColliders = null;
-
-        foreach (Collider collider in colliders)
-        {
-            collider.enabled = true;
-        }
-
-        RestoreRigidbody(rigidbody, kinematic: false, useGravity: true);
-
-        // Nudge slightly forward so the painting clears the player's collider when dropped.
-        if (droppedObject != null)
-        {
-            droppedObject.position += playerCamera.transform.forward * 0.25f;
-        }
     }
 
     private static void RestoreRigidbody(Rigidbody rigidbody, bool kinematic, bool useGravity)
