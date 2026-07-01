@@ -24,11 +24,16 @@ public class ArtPickup : MonoBehaviour
     [SerializeField] private float throwUpwardBoost = 1.5f;
     [SerializeField] private float throwSpin = 4f;
 
+    [Header("Carry Feel")]
+    [SerializeField] private float carryBobAmplitude = 0.022f;
+    [SerializeField] private float carryBobFrequency = 7f;
+
     private Camera playerCamera;
     private int interactableLayerMask;
     private readonly List<CarriedEntry> carryStack = new List<CarriedEntry>();
     private readonly Stack<UndoRecord> placementUndoStack = new Stack<UndoRecord>();
     private int activeStackIndex;
+    private Vector3 holdPointRestLocalPos;
 
     public bool IsHolding => carryStack.Count > 0;
     public int CarryCount => carryStack.Count;
@@ -94,6 +99,7 @@ public class ArtPickup : MonoBehaviour
 
     private void LateUpdate()
     {
+        ApplyCarryBob();
         ApplyCarryPoses();
     }
 
@@ -238,6 +244,57 @@ public class ArtPickup : MonoBehaviour
 
         PaintingMount[] mounts = FindObjectsByType<PaintingMount>(FindObjectsSortMode.None);
         return MuseumWingGuide.BuildGuidance(HeldPainting, mounts);
+    }
+
+    /// <summary>Hold Tab / View while aiming at art for lore and wing details.</summary>
+    public string GetInspectLine()
+    {
+        if (!MuseumInput.IsInspecting() || !TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return string.Empty;
+        }
+
+        InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+        if (painting != null)
+        {
+            return $"\"{painting.PaintingTitle}\" · {painting.Wing}\n{painting.InspectDescription}";
+        }
+
+        PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+        if (mount != null)
+        {
+            if (mount.IsOccupied && mount.Occupant != null)
+            {
+                InteractablePainting occupant = mount.Occupant;
+                return $"Hung: \"{occupant.PaintingTitle}\" · {occupant.Wing}\n{occupant.InspectDescription}";
+            }
+
+            if (mount.HasSpecificSlot)
+            {
+                return $"{mount.RequiredWing} mount — reserved for \"{mount.SlotDisplayTitle}\"";
+            }
+
+            return $"{mount.RequiredWing} wing mount — empty";
+        }
+
+        return string.Empty;
+    }
+
+    private void ApplyCarryBob()
+    {
+        if (holdPoint == null)
+        {
+            return;
+        }
+
+        if (!IsHolding || MuseumInput.MoveInput().sqrMagnitude < 0.05f)
+        {
+            holdPoint.localPosition = holdPointRestLocalPos;
+            return;
+        }
+
+        float bob = Mathf.Sin(Time.time * carryBobFrequency) * carryBobAmplitude;
+        holdPoint.localPosition = holdPointRestLocalPos + new Vector3(0f, bob, 0f);
     }
 
     private string BuildCarryPrompt(string action)
@@ -578,6 +635,7 @@ public class ArtPickup : MonoBehaviour
 
         holdPoint.localPosition = new Vector3(0.42f, -0.2f, 0.58f);
         holdPoint.localRotation = Quaternion.identity;
+        holdPointRestLocalPos = holdPoint.localPosition;
     }
 
     private static void SuspendRigidbody(Rigidbody rigidbody)

@@ -8,6 +8,27 @@ using UnityEngine.TestTools;
 /// </summary>
 public class MuseumPlayModeSmokeTests
 {
+    [SetUp]
+    public void SetUp()
+    {
+        MuseumTimeScale.ForceUnfreeze();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        MuseumTimeScale.ForceUnfreeze();
+    }
+
+    [Test]
+    public void TimeScale_PushPopFreezesAndRestores()
+    {
+        MuseumTimeScale.PushFreeze();
+        Assert.AreEqual(0f, Time.timeScale);
+        MuseumTimeScale.PopFreeze();
+        Assert.AreEqual(1f, Time.timeScale);
+    }
+
     [UnityTest]
     public IEnumerator PlacementPopFeedback_ReturnsToBaseScale()
     {

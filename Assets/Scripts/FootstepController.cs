@@ -49,8 +49,11 @@ public class FootstepController : MonoBehaviour
         }
 
         stepTimer = stepInterval;
+        float pitch = Random.Range(0.92f, 1.08f);
         float volume = PlayerSettingsStore.MasterVolume * 0.35f;
+        audioSource.pitch = pitch;
         audioSource.PlayOneShot(footstepClip, volume);
+        audioSource.pitch = 1f;
     }
 
     private static bool ShouldBlockFootsteps()

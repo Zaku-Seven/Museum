@@ -17,12 +17,13 @@ public class ControlsHelpController : MonoBehaviour
         "E — pick up / stack    Scroll — active item\n" +
         "Click — place/drop     Q — throw\n" +
         "Right-click — undo     Esc — pause\n" +
-        "WASD — move            Space — jump\n\n" +
+        "WASD — move            Space — jump\n" +
+        "Shift — sprint         Tab — inspect art\n\n" +
         "GAMEPAD\n" +
         "A — pick up    B — throw    X — place    Y — undo\n" +
         "LB / RB — stack item    Start — pause\n" +
         "Left stick — move    Right stick — look\n" +
-        "L3 (stick click) — jump\n\n" +
+        "L3 (stick click) — jump    LT — sprint    View — inspect\n\n" +
         "DEV (Editor / Development build)\n" +
         "F9 — fill one section    F10 — auto-hang all    F8 — save";
 
@@ -47,11 +48,19 @@ public class ControlsHelpController : MonoBehaviour
         }
     }
 
+    private bool freezeActive;
+
     public void Open()
     {
         if (panel != null)
         {
             panel.SetActive(true);
+        }
+
+        if (!freezeActive)
+        {
+            MuseumTimeScale.PushFreeze();
+            freezeActive = true;
         }
 
         Cursor.lockState = CursorLockMode.None;
@@ -63,6 +72,12 @@ public class ControlsHelpController : MonoBehaviour
         if (panel != null)
         {
             panel.SetActive(false);
+        }
+
+        if (freezeActive)
+        {
+            MuseumTimeScale.PopFreeze();
+            freezeActive = false;
         }
 
         if (MainMenuController.Instance != null && MainMenuController.Instance.IsMainMenuOpen)

@@ -60,6 +60,11 @@ public class MainMenuController : MonoBehaviour
 
     public void OpenMainMenu()
     {
+        if (!IsMainMenuOpen)
+        {
+            MuseumTimeScale.PushFreeze();
+        }
+
         IsMainMenuOpen = true;
 
         if (mainMenuPanel != null)
@@ -119,6 +124,11 @@ public class MainMenuController : MonoBehaviour
 
     private void CloseAllMenus()
     {
+        if (IsMainMenuOpen)
+        {
+            MuseumTimeScale.PopFreeze();
+        }
+
         IsMainMenuOpen = false;
 
         if (mainMenuPanel != null)

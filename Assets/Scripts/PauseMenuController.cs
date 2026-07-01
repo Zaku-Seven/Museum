@@ -165,7 +165,17 @@ public class PauseMenuController : MonoBehaviour
             return;
         }
 
+        bool wasPaused = IsPaused;
         IsPaused = paused;
+
+        if (paused && !wasPaused)
+        {
+            MuseumTimeScale.PushFreeze();
+        }
+        else if (!paused && wasPaused)
+        {
+            MuseumTimeScale.PopFreeze();
+        }
 
         if (!paused)
         {

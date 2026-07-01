@@ -58,6 +58,8 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Right click / **Y** (gamepad) | Undo last wall placement |
 | LB / RB or D-pad | Change stack item (gamepad) |
 | Space / **L3** (stick click) | Jump |
+| Shift / **LT** (hold) | Sprint |
+| Tab / **View** (hold) | Inspect painting or mount |
 | Esc / **Start** (gamepad) | Pause / resume (Settings, Controls, New Game) |
 
 **Dev cheats** (Editor / Development builds only): **F9** fill one section, **F10** auto-hang all matching, **F8** manual save.

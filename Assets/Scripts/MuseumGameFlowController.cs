@@ -38,6 +38,8 @@ public class MuseumGameFlowController : MonoBehaviour
 
         IsWinModalActive = true;
 
+        MuseumTimeScale.PushFreeze();
+
         PauseMenuController.Instance?.ForceUnpause();
 
         if (winPanel != null)
@@ -52,6 +54,11 @@ public class MuseumGameFlowController : MonoBehaviour
 
     public void ExitWinModal()
     {
+        if (IsWinModalActive)
+        {
+            MuseumTimeScale.PopFreeze();
+        }
+
         IsWinModalActive = false;
 
         if (winPanel != null)

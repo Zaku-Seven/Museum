@@ -397,6 +397,13 @@ public static class MuseumGameplaySetup
         wingGuideText.color = new Color(0.72f, 0.82f, 0.72f);
         wingGuideText.enabled = false;
 
+        Text inspectText = EnsureUiText(canvasTransform, "InspectPanel", defaultFont, 16, TextAnchor.MiddleCenter,
+            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            anchoredPosition: new Vector2(0f, -40f), sizeDelta: new Vector2(520f, 72f));
+        inspectText.color = new Color(0.92f, 0.9f, 0.82f);
+        inspectText.alignment = TextAnchor.MiddleCenter;
+        inspectText.enabled = false;
+
         GameObject winPanel = EnsureWinPanel(canvasTransform, defaultFont, out Text winText);
         GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont, out GameObject settingsPanel);
         UpgradeSettingsPanel(settingsPanel, defaultFont);
@@ -431,6 +438,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(serializedHud, "tutorialText", tutorialText);
         SetObjectReference(serializedHud, "objectiveText", objectiveText);
         SetObjectReference(serializedHud, "wingGuideText", wingGuideText);
+        SetObjectReference(serializedHud, "inspectText", inspectText);
         SetObjectReference(serializedHud, "winPanel", winPanel);
         SetObjectReference(serializedHud, "winText", winText);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();

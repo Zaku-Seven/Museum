@@ -2,8 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// First-person character controller using Unity's CharacterController (no Rigidbody).
-/// Handles WASD movement, mouse look, gravity, jumping, and configurable FOV.
-/// Uses the Input System package (this project's active input handler).
+/// Handles WASD movement, mouse look, gravity, jumping, sprint, and subtle head bob.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
@@ -13,35 +12,31 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private Transform playerCamera;
 
     [Header("Movement")]
-    [Tooltip("Horizontal movement speed in units per second.")]
     [SerializeField] private float moveSpeed = 5f;
-
-    [Tooltip("Upward velocity applied when the player jumps.")]
+    [SerializeField] private float sprintMultiplier = 1.45f;
     [SerializeField] private float jumpForce = 6f;
-
-    [Tooltip("Downward acceleration while airborne or grounded.")]
     [SerializeField] private float gravity = -20f;
 
     [Header("Mouse Look")]
-    [Tooltip("Multiplier applied to mouse delta each frame.")]
     [SerializeField] private float mouseSensitivity = 2f;
-
-    [Tooltip("Minimum vertical look angle (looking down).")]
     [SerializeField] private float minPitch = -85f;
-
-    [Tooltip("Maximum vertical look angle (looking up).")]
     [SerializeField] private float maxPitch = 85f;
 
+    [Header("Head Bob")]
+    [SerializeField] private float headBobAmount = 0.035f;
+    [SerializeField] private float headBobFrequency = 11f;
+
     [Header("Camera")]
-    [Tooltip("Field of view applied to the player camera on start.")]
     [SerializeField] private float fieldOfView = 75f;
 
     private CharacterController characterController;
+    private ArtPickup artPickup;
     private float verticalVelocity;
     private float pitch;
     private float mouseSensitivity;
     private float fieldOfView;
     private bool invertY;
+    private Vector3 cameraRestLocalPos;
 
     private void Awake()
     {
@@ -57,13 +52,13 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
+        artPickup = playerCamera.GetComponent<ArtPickup>();
+        cameraRestLocalPos = playerCamera.localPosition;
         ApplyPlayerSettings();
 
-        // Lock and hide the cursor for standard FPS controls.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Initialize pitch from the camera's current local rotation.
         pitch = playerCamera.localEulerAngles.x;
         if (pitch > 180f)
         {
@@ -88,11 +83,30 @@ public class FirstPersonController : MonoBehaviour
     {
         if (ShouldBlockGameplay())
         {
+            ResetHeadBob();
             return;
         }
 
         HandleMouseLook();
         HandleMovement();
+    }
+
+    private void LateUpdate()
+    {
+        if (ShouldBlockGameplay())
+        {
+            return;
+        }
+
+        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete
+            && MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
+        {
+            return;
+        }
+
+        ApplyHeadBob();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private bool ShouldBlockGameplay()
@@ -120,26 +134,6 @@ public class FirstPersonController : MonoBehaviour
         return false;
     }
 
-    private void LateUpdate()
-    {
-        if (ShouldBlockGameplay())
-        {
-            return;
-        }
-
-        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete
-            && MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
-        {
-            return;
-        }
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
-    /// <summary>
-    /// Rotates the body on Y (yaw) and the camera on X (pitch), with pitch clamping.
-    /// </summary>
     private void HandleMouseLook()
     {
         Vector2 lookDelta = MuseumInput.LookDelta();
@@ -155,19 +149,13 @@ public class FirstPersonController : MonoBehaviour
             mouseY = -mouseY;
         }
 
-        // Yaw rotates the entire player body left/right.
         transform.Rotate(Vector3.up * mouseX);
 
-        // Pitch rotates only the camera up/down, clamped to prevent over-rotation.
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
         playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
-    /// <summary>
-    /// Applies WASD movement relative to the camera's forward/right on the XZ plane,
-    /// plus gravity and jumping via CharacterController.Move.
-    /// </summary>
     private void HandleMovement()
     {
         bool isGrounded = characterController.isGrounded;
@@ -185,8 +173,11 @@ public class FirstPersonController : MonoBehaviour
         verticalVelocity += gravity * Time.deltaTime;
 
         Vector2 moveInput = MuseumInput.MoveInput();
-        float horizontal = moveInput.x;
-        float vertical = moveInput.y;
+        float speed = moveSpeed;
+        if (MuseumInput.IsSprinting() && moveInput.sqrMagnitude > 0.01f && isGrounded)
+        {
+            speed *= sprintMultiplier;
+        }
 
         Vector3 forward = playerCamera.forward;
         Vector3 right = playerCamera.right;
@@ -195,14 +186,53 @@ public class FirstPersonController : MonoBehaviour
         forward.Normalize();
         right.Normalize();
 
-        Vector3 moveDirection = (forward * vertical + right * horizontal).normalized * moveSpeed;
+        Vector3 moveDirection = (forward * moveInput.y + right * moveInput.x).normalized * speed;
         Vector3 velocity = moveDirection + Vector3.up * verticalVelocity;
         characterController.Move(velocity * Time.deltaTime);
+    }
+
+    private void ApplyHeadBob()
+    {
+        if (playerCamera == null)
+        {
+            return;
+        }
+
+        if (artPickup != null && artPickup.IsHolding)
+        {
+            ResetHeadBob();
+            return;
+        }
+
+        if (!characterController.isGrounded)
+        {
+            ResetHeadBob();
+            return;
+        }
+
+        Vector2 moveInput = MuseumInput.MoveInput();
+        if (moveInput.sqrMagnitude < 0.05f)
+        {
+            ResetHeadBob();
+            return;
+        }
+
+        float bob = Mathf.Sin(Time.time * headBobFrequency) * headBobAmount;
+        playerCamera.localPosition = cameraRestLocalPos + Vector3.up * bob;
+    }
+
+    private void ResetHeadBob()
+    {
+        if (playerCamera != null)
+        {
+            playerCamera.localPosition = cameraRestLocalPos;
+        }
     }
 
     private void OnDisable()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        MuseumTimeScale.ForceUnfreeze();
     }
 }

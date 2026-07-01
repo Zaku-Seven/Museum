@@ -198,6 +198,43 @@ public class MuseumGameplayTests
     }
 
     [Test]
+    public void HangProgress_CountsCorrectlyOccupiedMounts()
+    {
+        var mountA = new GameObject("MountA");
+        var mountB = new GameObject("MountB");
+        var paintingA = new GameObject("PaintingA");
+        var paintingB = new GameObject("PaintingB");
+        try
+        {
+            PaintingMount mountComponentA = mountA.AddComponent<PaintingMount>();
+            PaintingMount mountComponentB = mountB.AddComponent<PaintingMount>();
+            InteractablePainting paintingComponentA = paintingA.AddComponent<InteractablePainting>();
+            InteractablePainting paintingComponentB = paintingB.AddComponent<InteractablePainting>();
+            paintingA.AddComponent<Rigidbody>();
+            paintingB.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mountComponentA, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(mountComponentB, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(paintingComponentA, "wing", GalleryWing.Modern);
+            SetPrivateEnum(paintingComponentB, "wing", GalleryWing.Classical);
+
+            mountComponentA.PlacePainting(paintingA.transform, paintingA.GetComponent<Rigidbody>());
+            mountComponentB.PlacePainting(paintingB.transform, paintingB.GetComponent<Rigidbody>());
+
+            Assert.AreEqual(2, MuseumHangProgress.TotalMountSlots);
+            Assert.AreEqual(1, MuseumHangProgress.CorrectlyHungCount);
+            Assert.AreEqual(50, MuseumHangProgress.CompletionPercent);
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountA);
+            Object.DestroyImmediate(mountB);
+            Object.DestroyImmediate(paintingA);
+            Object.DestroyImmediate(paintingB);
+        }
+    }
+
+    [Test]
     public void WingGuide_CountsAcceptingMounts()
     {
         var mountObject = new GameObject("TestMount");

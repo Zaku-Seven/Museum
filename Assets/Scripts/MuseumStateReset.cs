@@ -25,6 +25,8 @@ public static class MuseumStateReset
         MuseumStatistics.Instance?.ResetStatistics();
         MuseumGameFlowController.Instance?.ExitWinModal();
 
+        MuseumTimeScale.ForceUnfreeze();
+
         if (clearTutorialHints)
         {
             TutorialHints.ClearAllHints();

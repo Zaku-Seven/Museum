@@ -20,13 +20,14 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text tutorialText;
     [SerializeField] private Text objectiveText;
     [SerializeField] private Text wingGuideText;
+    [SerializeField] private Text inspectText;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private Text winText;
 
     [Header("Hints")]
     [Tooltip("Constant hint shown at the top of the screen.")]
     [SerializeField] private string hintMessage =
-        "E — pick up  ·  Scroll/LB RB — stack  ·  Click — place  ·  Q/B — throw  ·  Right-click/Y — undo  ·  Esc/Start — pause  ·  Space/L3 — jump";
+        "E — pick up  ·  Shift/LT — sprint  ·  Tab/View — inspect  ·  Q/B — throw  ·  Esc/Start — pause  ·  Space/L3 — jump";
 
     [Header("Completion banner")]
     [SerializeField] private float bannerDuration = 4f;
@@ -111,6 +112,13 @@ public class InteractionHUD : MonoBehaviour
             string guide = artPickup.GetWingGuidanceLine();
             wingGuideText.text = guide;
             wingGuideText.enabled = !string.IsNullOrEmpty(guide);
+        }
+
+        if (inspectText != null)
+        {
+            string inspect = artPickup.GetInspectLine();
+            inspectText.text = inspect;
+            inspectText.enabled = !string.IsNullOrEmpty(inspect);
         }
 
         if (stackText != null)
@@ -313,6 +321,7 @@ public class InteractionHUD : MonoBehaviour
             return "Objective: Hang paintings on matching wing walls.";
         }
 
-        return $"Objective: Complete every wing ({completeSections}/{totalSections} done).";
+        string mountProgress = MuseumHangProgress.BuildSummaryLine();
+        return $"Objective: Complete every wing ({completeSections}/{totalSections} done) · {mountProgress}";
     }
 }

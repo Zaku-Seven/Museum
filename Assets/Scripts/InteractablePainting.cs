@@ -24,6 +24,9 @@ public class InteractablePainting : MonoBehaviour
     public string PaintingTitle => definition != null ? definition.Title : paintingTitle;
     public GalleryWing Wing => definition != null ? definition.Wing : wing;
     public string PaintingId => definition != null ? definition.PaintingId : SaveId;
+    public string InspectDescription => definition != null && !string.IsNullOrWhiteSpace(definition.Description)
+        ? definition.Description
+        : $"Curator note: belongs in the {Wing} gallery wing.";
     public PaintingMount CurrentMount { get; private set; }
     public string SaveId => GetComponent<MuseumEntityId>()?.EntityId ?? gameObject.name;
 

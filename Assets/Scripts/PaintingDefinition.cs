@@ -12,9 +12,13 @@ public class PaintingDefinition : ScriptableObject
     [SerializeField] private Color displayColor = Color.gray;
     [SerializeField] private GameObject prefab;
 
+    [TextArea(2, 5)]
+    [SerializeField] private string description = string.Empty;
+
     public string PaintingId => string.IsNullOrEmpty(paintingId) ? name : paintingId;
     public string Title => title;
     public GalleryWing Wing => wing;
     public Color DisplayColor => displayColor;
     public GameObject Prefab => prefab;
+    public string Description => description;
 }

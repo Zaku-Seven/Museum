@@ -67,6 +67,28 @@ public static class MuseumInput
         return Gamepad.current != null && Gamepad.current.leftStickButton.wasPressedThisFrame;
     }
 
+    /// <summary>Shift on keyboard, left trigger on gamepad.</summary>
+    public static bool IsSprinting()
+    {
+        if (Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed))
+        {
+            return true;
+        }
+
+        return Gamepad.current != null && Gamepad.current.leftTrigger.ReadValue() > 0.5f;
+    }
+
+    /// <summary>Tab on keyboard, View/Select on gamepad — hold to inspect art.</summary>
+    public static bool IsInspecting()
+    {
+        if (Keyboard.current != null && Keyboard.current.tabKey.isPressed)
+        {
+            return true;
+        }
+
+        return Gamepad.current != null && Gamepad.current.selectButton.isPressed;
+    }
+
     /// <summary>Mouse wheel Y, or gamepad bumpers / d-pad for stack selection.</summary>
     public static float StackScrollDelta()
     {
