@@ -8,11 +8,19 @@ public class PaintingMount : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform snapPoint;
 
+    [Header("Sorting")]
+    [Tooltip("Only a painting whose wing matches this value can be hung here.")]
+    [SerializeField] private GalleryWing requiredWing = GalleryWing.Modern;
+
     [Header("State")]
     [SerializeField] private bool isOccupied;
 
     public bool IsOccupied => isOccupied;
+    public GalleryWing RequiredWing => requiredWing;
     public Transform SnapPoint => snapPoint != null ? snapPoint : transform;
+
+    /// <summary>The painting currently hung on this mount, or null when empty.</summary>
+    public InteractablePainting Occupant { get; private set; }
 
     private void Awake()
     {
@@ -21,6 +29,14 @@ public class PaintingMount : MonoBehaviour
             Transform existing = transform.Find("SnapPoint");
             snapPoint = existing != null ? existing : transform;
         }
+    }
+
+    /// <summary>
+    /// True when this mount is empty and the painting's wing matches <see cref="RequiredWing"/>.
+    /// </summary>
+    public bool CanAccept(InteractablePainting painting)
+    {
+        return !isOccupied && painting != null && painting.Wing == requiredWing;
     }
 
     /// <summary>
@@ -52,6 +68,7 @@ public class PaintingMount : MonoBehaviour
             interactablePainting.SetMount(this);
         }
 
+        Occupant = interactablePainting;
         isOccupied = true;
     }
 
@@ -61,5 +78,6 @@ public class PaintingMount : MonoBehaviour
     public void ClearOccupant()
     {
         isOccupied = false;
+        Occupant = null;
     }
 }

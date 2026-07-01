@@ -34,6 +34,7 @@ public class ArtPickup : MonoBehaviour
     private Camera playerCamera;
     private int interactableLayerMask;
     private Transform heldObject;
+    private InteractablePainting heldPainting;
     private Rigidbody heldRigidbody;
     private Collider[] heldColliders;
     private bool heldRigidbodyWasEnabled;
@@ -64,12 +65,7 @@ public class ArtPickup : MonoBehaviour
 
         if (heldObject != null)
         {
-            if (TryPlaceOnMount())
-            {
-                return;
-            }
-
-            DropHeldObject();
+            HandleHeldClick();
             return;
         }
 
@@ -106,9 +102,19 @@ public class ArtPickup : MonoBehaviour
         if (IsHolding)
         {
             PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
-            if (mount != null && !mount.IsOccupied)
+            if (mount != null)
             {
-                return "Click to place on wall";
+                if (mount.IsOccupied)
+                {
+                    return "Gallery spot taken";
+                }
+
+                if (mount.CanAccept(heldPainting))
+                {
+                    return "Click to place on wall";
+                }
+
+                return "Wrong gallery";
             }
 
             return "Click to drop";
@@ -172,21 +178,31 @@ public class ArtPickup : MonoBehaviour
         PickUpObject(painting.transform);
     }
 
-    private bool TryPlaceOnMount()
+    /// <summary>
+    /// Handles a left-click while carrying a painting. Placing is wing-gated: aiming at a
+    /// valid empty mount hangs the painting; aiming at an occupied or wrong-wing mount
+    /// rejects the click and keeps the painting in hand (cozy, forgiving — never a silent
+    /// or accidental drop). Clicking while not aimed at any mount drops the painting.
+    /// </summary>
+    private void HandleHeldClick()
     {
-        if (!TryGetCenterRayHit(out RaycastHit hit))
+        if (TryGetCenterRayHit(out RaycastHit hit))
         {
-            return false;
+            PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+            if (mount != null)
+            {
+                if (mount.CanAccept(heldPainting))
+                {
+                    PlaceOnMount(mount);
+                }
+
+                // Occupied or wrong wing: reject but keep holding. The HUD prompt
+                // ("Wrong gallery" / "Gallery spot taken") already explains why.
+                return;
+            }
         }
 
-        PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
-        if (mount == null || mount.IsOccupied)
-        {
-            return false;
-        }
-
-        PlaceOnMount(mount);
-        return true;
+        DropHeldObject();
     }
 
     private void PickUpObject(Transform target)
@@ -196,6 +212,7 @@ public class ArtPickup : MonoBehaviour
         heldColliders = heldObject.GetComponentsInChildren<Collider>();
 
         InteractablePainting painting = heldObject.GetComponent<InteractablePainting>();
+        heldPainting = painting;
         if (painting != null && painting.CurrentMount != null)
         {
             painting.CurrentMount.ClearOccupant();
@@ -233,6 +250,7 @@ public class ArtPickup : MonoBehaviour
         bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
 
         heldObject = null;
+        heldPainting = null;
         heldRigidbody = null;
         heldColliders = null;
 
@@ -253,6 +271,7 @@ public class ArtPickup : MonoBehaviour
         bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
 
         heldObject = null;
+        heldPainting = null;
         heldRigidbody = null;
         heldColliders = null;
 

@@ -50,9 +50,11 @@ public static class MuseumGameplaySetup
         }
 
         Transform museumRoot = GetOrCreateRoot("MuseumFeatures");
-        CreateWallMounts(museumRoot, interactableLayer);
+        // The three north-wall mounts form a small Modern wall so the existing menu already
+        // demonstrates wing sorting (TestPainting = Modern fits; TestPainting_2 = Classical is rejected).
+        CreateWallMounts(museumRoot, interactableLayer, GalleryWing.Modern);
         UpgradeExistingPaintings(interactableLayer);
-        CreateFloorPainting("TestPainting_2", "Blue Horizon", new Vector3(3f, 0.025f, 5f), new Color(0.2f, 0.35f, 0.75f), interactableLayer);
+        CreateFloorPainting("TestPainting_2", "Blue Horizon", new Vector3(3f, 0.025f, 5f), new Color(0.2f, 0.35f, 0.75f), GalleryWing.Classical, interactableLayer);
         SetupInteractionHud();
         FixExistingHoldPoint();
 
@@ -74,7 +76,7 @@ public static class MuseumGameplaySetup
         return new GameObject(rootName).transform;
     }
 
-    private static void CreateWallMounts(Transform parent, int interactableLayer)
+    private static void CreateWallMounts(Transform parent, int interactableLayer, GalleryWing wing)
     {
         float[] mountPositionsX = { -8f, 0f, 8f };
         for (int i = 0; i < mountPositionsX.Length; i++)
@@ -85,11 +87,11 @@ public static class MuseumGameplaySetup
                 continue;
             }
 
-            CreateWallMount(parent, mountName, new Vector3(mountPositionsX[i], 1.5f, 24f), interactableLayer);
+            CreateWallMount(parent, mountName, new Vector3(mountPositionsX[i], 1.5f, 24f), wing, interactableLayer);
         }
     }
 
-    private static void CreateWallMount(Transform parent, string mountName, Vector3 position, int interactableLayer)
+    private static void CreateWallMount(Transform parent, string mountName, Vector3 position, GalleryWing wing, int interactableLayer)
     {
         GameObject mountRoot = new GameObject(mountName);
         mountRoot.transform.SetParent(parent, false);
@@ -116,8 +118,15 @@ public static class MuseumGameplaySetup
         if (snapProperty != null)
         {
             snapProperty.objectReferenceValue = snapPoint.transform;
-            serializedMount.ApplyModifiedPropertiesWithoutUndo();
         }
+
+        SerializedProperty wingProperty = serializedMount.FindProperty("requiredWing");
+        if (wingProperty != null)
+        {
+            wingProperty.enumValueIndex = (int)wing;
+        }
+
+        serializedMount.ApplyModifiedPropertiesWithoutUndo();
 
         BoxCollider mountCollider = mountRoot.AddComponent<BoxCollider>();
         mountCollider.size = new Vector3(0.9f, 0.7f, 0.1f);
@@ -132,10 +141,10 @@ public static class MuseumGameplaySetup
 
     private static void UpgradeExistingPaintings(int interactableLayer)
     {
-        ConfigurePainting(GameObject.Find("TestPainting"), "Sunset Study", new Color(0.85f, 0.55f, 0.2f), interactableLayer);
+        ConfigurePainting(GameObject.Find("TestPainting"), "Sunset Study", new Color(0.85f, 0.55f, 0.2f), GalleryWing.Modern, interactableLayer);
     }
 
-    private static void CreateFloorPainting(string objectName, string title, Vector3 position, Color color, int interactableLayer)
+    private static void CreateFloorPainting(string objectName, string title, Vector3 position, Color color, GalleryWing wing, int interactableLayer)
     {
         if (GameObject.Find(objectName) != null)
         {
@@ -148,10 +157,10 @@ public static class MuseumGameplaySetup
         painting.transform.position = position;
         painting.transform.localScale = new Vector3(0.6f, 0.05f, 0.4f);
 
-        ConfigurePaintingComponents(painting, title, color);
+        ConfigurePaintingComponents(painting, title, color, wing);
     }
 
-    private static void ConfigurePainting(GameObject painting, string title, Color color, int interactableLayer)
+    private static void ConfigurePainting(GameObject painting, string title, Color color, GalleryWing wing, int interactableLayer)
     {
         if (painting == null)
         {
@@ -159,10 +168,10 @@ public static class MuseumGameplaySetup
         }
 
         painting.layer = interactableLayer;
-        ConfigurePaintingComponents(painting, title, color);
+        ConfigurePaintingComponents(painting, title, color, wing);
     }
 
-    private static void ConfigurePaintingComponents(GameObject painting, string title, Color color)
+    private static void ConfigurePaintingComponents(GameObject painting, string title, Color color, GalleryWing wing)
     {
         Rigidbody rigidbody = painting.GetComponent<Rigidbody>();
         if (rigidbody == null)
@@ -184,8 +193,15 @@ public static class MuseumGameplaySetup
         if (titleProperty != null)
         {
             titleProperty.stringValue = title;
-            serializedPainting.ApplyModifiedPropertiesWithoutUndo();
         }
+
+        SerializedProperty wingProperty = serializedPainting.FindProperty("wing");
+        if (wingProperty != null)
+        {
+            wingProperty.enumValueIndex = (int)wing;
+        }
+
+        serializedPainting.ApplyModifiedPropertiesWithoutUndo();
 
         Renderer renderer = painting.GetComponent<Renderer>();
         if (renderer != null)
