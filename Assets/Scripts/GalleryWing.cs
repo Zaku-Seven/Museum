@@ -7,5 +7,6 @@ public enum GalleryWing
 {
     Modern,
     Classical,
-    Impressionist
+    Impressionist,
+    Fossil
 }

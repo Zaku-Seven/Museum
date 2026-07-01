@@ -484,6 +484,29 @@ public class MuseumGameplayTests
         Assert.IsFalse(PlayerSettingsStore.ReduceMotion);
     }
 
+    [Test]
+    public void CanAccept_FossilWing_MatchingSpecimen_ReturnsTrue()
+    {
+        var mountObject = new GameObject("FossilMount");
+        var fossilObject = new GameObject("FossilPiece");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting fossil = fossilObject.AddComponent<InteractablePainting>();
+            fossilObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Fossil);
+            SetPrivateEnum(fossil, "wing", GalleryWing.Fossil);
+
+            Assert.IsTrue(mount.CanAccept(fossil));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(fossilObject);
+        }
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");
