@@ -1,0 +1,277 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+/// <summary>
+/// Raycast-based pick-up, carry, wall-mount placement, and drop for museum paintings.
+/// Attach to the player camera. Uses the "Interactable" layer and a HoldPoint child transform.
+/// </summary>
+[RequireComponent(typeof(Camera))]
+public class ArtPickup : MonoBehaviour
+{
+    [Header("Pickup Settings")]
+    [Tooltip("Maximum distance from the camera center ray to pick up or place objects.")]
+    [SerializeField] private float maxPickupDistance = 3.5f;
+
+    [Tooltip("Empty transform in front of the camera representing the player's hands.")]
+    [SerializeField] private Transform holdPoint;
+
+    [Header("Carry Feel")]
+    [Tooltip("Local rotation applied while carrying so the canvas faces the player naturally.")]
+    [SerializeField] private Vector3 carryLocalEuler = new Vector3(-90f, 0f, 0f);
+
+    [Tooltip("How quickly the painting catches up to the hold point. Higher = tighter to the camera.")]
+    [SerializeField] private float carryFollowSharpness = 28f;
+
+    private Camera playerCamera;
+    private int interactableLayerMask;
+    private Transform heldObject;
+    private Rigidbody heldRigidbody;
+    private Collider[] heldColliders;
+    private bool heldRigidbodyWasEnabled;
+    private Quaternion carryLocalRotation;
+
+    public bool IsHolding => heldObject != null;
+
+    private void Awake()
+    {
+        playerCamera = GetComponent<Camera>();
+        interactableLayerMask = LayerMask.GetMask("Interactable");
+        carryLocalRotation = Quaternion.Euler(carryLocalEuler);
+
+        if (interactableLayerMask == 0)
+        {
+            Debug.LogWarning("ArtPickup: 'Interactable' layer not found. Create it in Project Settings > Tags and Layers.");
+        }
+
+        EnsureHoldPointExists();
+    }
+
+    private void Update()
+    {
+        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            return;
+        }
+
+        if (heldObject != null)
+        {
+            if (TryPlaceOnMount())
+            {
+                return;
+            }
+
+            DropHeldObject();
+            return;
+        }
+
+        TryPickupFromRaycast();
+    }
+
+    /// <summary>
+    /// Keeps the carried painting glued to the hold point after camera movement.
+    /// Runs after FirstPersonController updates the camera rotation.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (heldObject == null || holdPoint == null)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = holdPoint.rotation * carryLocalRotation;
+        float followFactor = 1f - Mathf.Exp(-carryFollowSharpness * Time.deltaTime);
+        heldObject.position = Vector3.Lerp(heldObject.position, holdPoint.position, followFactor);
+        heldObject.rotation = Quaternion.Slerp(heldObject.rotation, targetRotation, followFactor);
+    }
+
+    /// <summary>
+    /// Returns a context-sensitive prompt based on what the player is looking at.
+    /// </summary>
+    public string GetInteractionPrompt()
+    {
+        if (!TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return IsHolding ? "Click to drop" : string.Empty;
+        }
+
+        if (IsHolding)
+        {
+            PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+            if (mount != null && !mount.IsOccupied)
+            {
+                return "Click to place on wall";
+            }
+
+            return "Click to drop";
+        }
+
+        if (hit.collider.GetComponentInParent<InteractablePainting>() != null)
+        {
+            InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+            return $"Click to pick up \"{painting.PaintingTitle}\"";
+        }
+
+        return string.Empty;
+    }
+
+    private void EnsureHoldPointExists()
+    {
+        if (holdPoint == null)
+        {
+            Transform existing = transform.Find("HoldPoint");
+            holdPoint = existing;
+        }
+
+        if (holdPoint == null)
+        {
+            GameObject holdPointObject = new GameObject("HoldPoint");
+            holdPointObject.transform.SetParent(transform, false);
+            holdPoint = holdPointObject.transform;
+        }
+
+        ApplyHoldPointDefaults();
+    }
+
+    /// <summary>
+    /// Positions the hold point at chest height, arm's length, with a slight tilt toward the player.
+    /// </summary>
+    private void ApplyHoldPointDefaults()
+    {
+        holdPoint.localPosition = new Vector3(0f, -0.22f, 0.68f);
+        holdPoint.localRotation = Quaternion.Euler(6f, 0f, 0f);
+    }
+
+    private bool TryGetCenterRayHit(out RaycastHit hit)
+    {
+        Ray centerRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        return Physics.Raycast(centerRay, out hit, maxPickupDistance, interactableLayerMask);
+    }
+
+    private void TryPickupFromRaycast()
+    {
+        if (!TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return;
+        }
+
+        InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+        if (painting == null)
+        {
+            return;
+        }
+
+        PickUpObject(painting.transform);
+    }
+
+    private bool TryPlaceOnMount()
+    {
+        if (!TryGetCenterRayHit(out RaycastHit hit))
+        {
+            return false;
+        }
+
+        PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
+        if (mount == null || mount.IsOccupied)
+        {
+            return false;
+        }
+
+        PlaceOnMount(mount);
+        return true;
+    }
+
+    private void PickUpObject(Transform target)
+    {
+        heldObject = target;
+        heldRigidbody = heldObject.GetComponent<Rigidbody>();
+        heldColliders = heldObject.GetComponentsInChildren<Collider>();
+
+        InteractablePainting painting = heldObject.GetComponent<InteractablePainting>();
+        if (painting != null && painting.CurrentMount != null)
+        {
+            painting.CurrentMount.ClearOccupant();
+            painting.ClearMount();
+        }
+
+        // Detach from any parent so the carry system fully controls the transform.
+        heldObject.SetParent(null);
+
+        foreach (Collider collider in heldColliders)
+        {
+            collider.enabled = false;
+        }
+
+        // Disabling the Rigidbody prevents physics from fighting camera movement while carried.
+        if (heldRigidbody != null)
+        {
+            heldRigidbody.linearVelocity = Vector3.zero;
+            heldRigidbody.angularVelocity = Vector3.zero;
+            heldRigidbodyWasEnabled = heldRigidbody.enabled;
+            heldRigidbody.isKinematic = true;
+            heldRigidbody.useGravity = false;
+            heldRigidbody.enabled = false;
+        }
+
+        // Snap immediately so there is no pop-in lag on pickup.
+        heldObject.SetPositionAndRotation(holdPoint.position, holdPoint.rotation * carryLocalRotation);
+    }
+
+    private void PlaceOnMount(PaintingMount mount)
+    {
+        Transform objectToPlace = heldObject;
+        Rigidbody rigidbody = heldRigidbody;
+        Collider[] colliders = heldColliders;
+        bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
+
+        heldObject = null;
+        heldRigidbody = null;
+        heldColliders = null;
+
+        foreach (Collider collider in colliders)
+        {
+            collider.enabled = true;
+        }
+
+        RestoreRigidbody(rigidbody, rigidbodyWasEnabled, kinematic: true, useGravity: false);
+        mount.PlacePainting(objectToPlace, rigidbody);
+    }
+
+    private void DropHeldObject()
+    {
+        Transform droppedObject = heldObject;
+        Rigidbody rigidbody = heldRigidbody;
+        Collider[] colliders = heldColliders;
+        bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
+
+        heldObject = null;
+        heldRigidbody = null;
+        heldColliders = null;
+
+        foreach (Collider collider in colliders)
+        {
+            collider.enabled = true;
+        }
+
+        RestoreRigidbody(rigidbody, rigidbodyWasEnabled, kinematic: false, useGravity: true);
+
+        // Nudge slightly forward so the painting clears the player's collider when dropped.
+        if (droppedObject != null)
+        {
+            droppedObject.position += playerCamera.transform.forward * 0.25f;
+        }
+    }
+
+    private static void RestoreRigidbody(Rigidbody rigidbody, bool wasEnabled, bool kinematic, bool useGravity)
+    {
+        if (rigidbody == null)
+        {
+            return;
+        }
+
+        rigidbody.enabled = wasEnabled;
+        rigidbody.isKinematic = kinematic;
+        rigidbody.useGravity = useGravity;
+        rigidbody.linearVelocity = Vector3.zero;
+        rigidbody.angularVelocity = Vector3.zero;
+    }
+}
