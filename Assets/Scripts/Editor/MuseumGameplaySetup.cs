@@ -647,7 +647,7 @@ public static class MuseumGameplaySetup
         RectTransform rect = settingsPanel.GetComponent<RectTransform>();
         if (rect != null)
         {
-            rect.sizeDelta = new Vector2(420f, 380f);
+            rect.sizeDelta = new Vector2(420f, 420f);
         }
 
         if (settingsPanel.transform.Find("GamepadLookRow") == null)
@@ -659,13 +659,21 @@ public static class MuseumGameplaySetup
 
         if (settingsPanel.transform.Find("ResetDefaultsButton") == null)
         {
-            CreateMenuButton(settingsPanel.transform, "ResetDefaultsButton", "Reset defaults", font, new Vector2(0f, -170f));
+            CreateMenuButton(settingsPanel.transform, "ResetDefaultsButton", "Reset defaults", font, new Vector2(0f, -190f));
+        }
+
+        EnsureSynthesizedSfxToggle(settingsPanel.transform, font);
+
+        Transform resetButton = settingsPanel.transform.Find("ResetDefaultsButton");
+        if (resetButton != null)
+        {
+            resetButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -190f);
         }
 
         Transform closeButton = settingsPanel.transform.Find("CloseSettingsButton");
         if (closeButton != null)
         {
-            closeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -220f);
+            closeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -240f);
         }
 
         Transform invertLabel = settingsPanel.transform.Find("InvertYLabel");
@@ -679,6 +687,35 @@ public static class MuseumGameplaySetup
         {
             invertToggle.GetComponent<RectTransform>().anchoredPosition = new Vector2(-24f, -100f);
         }
+    }
+
+    private static void EnsureSynthesizedSfxToggle(Transform settingsPanel, Font font)
+    {
+        if (settingsPanel.Find("SynthesizedSfxToggle") != null)
+        {
+            return;
+        }
+
+        GameObject labelRow = CreateUiText(settingsPanel, "SynthesizedSfxLabel", font, 18, TextAnchor.MiddleLeft);
+        RectTransform labelRect = labelRow.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.5f);
+        labelRect.anchorMax = new Vector2(0f, 0.5f);
+        labelRect.pivot = new Vector2(0f, 0.5f);
+        labelRect.anchoredPosition = new Vector2(24f, -130f);
+        labelRect.sizeDelta = new Vector2(260f, 30f);
+        Text label = labelRow.GetComponent<Text>();
+        label.text = "Placeholder SFX";
+        label.color = Color.white;
+
+        GameObject toggleObject = new GameObject("SynthesizedSfxToggle");
+        toggleObject.transform.SetParent(settingsPanel, false);
+        RectTransform toggleRect = toggleObject.AddComponent<RectTransform>();
+        toggleRect.anchorMin = new Vector2(1f, 0.5f);
+        toggleRect.anchorMax = new Vector2(1f, 0.5f);
+        toggleRect.pivot = new Vector2(1f, 0.5f);
+        toggleRect.anchoredPosition = new Vector2(-24f, -130f);
+        toggleRect.sizeDelta = new Vector2(40f, 40f);
+        toggleObject.AddComponent<Toggle>();
     }
 
     private static GameObject EnsureControlsHelpPanel(Transform canvas, Font font)
@@ -1002,6 +1039,7 @@ public static class MuseumGameplaySetup
         SetObjectReference(settings, "fovSlider", settingsPanel.transform.Find("FovRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "masterVolumeSlider", settingsPanel.transform.Find("VolumeRow/Slider")?.GetComponent<Slider>());
         SetObjectReference(settings, "invertYToggle", settingsPanel.transform.Find("InvertYToggle")?.GetComponent<Toggle>());
+        SetObjectReference(settings, "synthesizedSfxToggle", settingsPanel.transform.Find("SynthesizedSfxToggle")?.GetComponent<Toggle>());
         SetObjectReference(settings, "sensitivityValueText", settingsPanel.transform.Find("MouseSensitivityRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "gamepadLookValueText", settingsPanel.transform.Find("GamepadLookRow/Value")?.GetComponent<Text>());
         SetObjectReference(settings, "fovValueText", settingsPanel.transform.Find("FovRow/Value")?.GetComponent<Text>());

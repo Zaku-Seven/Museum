@@ -33,6 +33,6 @@ A ~15-minute human checklist. Gameplay is **feature-complete** after setup; see 
 
 ## Remaining work after this passes
 
-**Visual/audio only** — assign clips (`docs/AUDIO_SETUP.md`), replace greybox art, lighting polish (`docs/VISUAL_POLISH.md`).
+**Visual/audio only** — optional real clips replace synthesized placeholders (`docs/AUDIO_SETUP.md`); replace greybox art, lighting polish (`docs/VISUAL_POLISH.md`).
 
 Multiplayer / VoIP: out of scope (`docs/MULTIPLAYER_VOIP.md`).

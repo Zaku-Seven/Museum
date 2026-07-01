@@ -12,6 +12,7 @@ public class SettingsMenuController : MonoBehaviour
     [SerializeField] private Toggle invertYToggle;
     [SerializeField] private Slider fovSlider;
     [SerializeField] private Slider masterVolumeSlider;
+    [SerializeField] private Toggle synthesizedSfxToggle;
     [SerializeField] private Text sensitivityValueText;
     [SerializeField] private Text gamepadLookValueText;
     [SerializeField] private Text fovValueText;
@@ -63,6 +64,11 @@ public class SettingsMenuController : MonoBehaviour
         if (masterVolumeSlider != null)
         {
             masterVolumeSlider.onValueChanged.AddListener(OnVolumeChanged);
+        }
+
+        if (synthesizedSfxToggle != null)
+        {
+            synthesizedSfxToggle.onValueChanged.AddListener(OnSynthesizedSfxChanged);
         }
     }
 
@@ -119,6 +125,11 @@ public class SettingsMenuController : MonoBehaviour
             masterVolumeSlider.SetValueWithoutNotify(PlayerSettingsStore.MasterVolume);
         }
 
+        if (synthesizedSfxToggle != null)
+        {
+            synthesizedSfxToggle.SetIsOnWithoutNotify(PlayerSettingsStore.UseSynthesizedSfx);
+        }
+
         RefreshValueLabels();
     }
 
@@ -153,6 +164,11 @@ public class SettingsMenuController : MonoBehaviour
         PlayerSettingsStore.MasterVolume = value;
         audioDirector?.ApplyVolume();
         RefreshValueLabels();
+    }
+
+    private void OnSynthesizedSfxChanged(bool value)
+    {
+        PlayerSettingsStore.UseSynthesizedSfx = value;
     }
 
     private void RefreshValueLabels()

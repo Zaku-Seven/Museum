@@ -1,12 +1,12 @@
 using UnityEngine;
 
 /// <summary>
-/// Subscribes to <see cref="MuseumGameEvents"/> and plays optional one-shot clips (null-safe).
+/// Subscribes to <see cref="MuseumGameEvents"/> and plays clips or synthesized fallbacks.
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class MuseumAudioDirector : MonoBehaviour
 {
-    [Header("Clips (optional)")]
+    [Header("Clips (optional — leave empty to use synthesized placeholders)")]
     [SerializeField] private AudioClip pickupClip;
     [SerializeField] private AudioClip placeClip;
     [SerializeField] private AudioClip dropClip;
@@ -21,6 +21,7 @@ public class MuseumAudioDirector : MonoBehaviour
 
     [Header("Mix")]
     [SerializeField] private float sfxVolume = 1f;
+    [SerializeField] private bool useSynthesizedFallback = true;
 
     private AudioSource audioSource;
 
@@ -66,64 +67,32 @@ public class MuseumAudioDirector : MonoBehaviour
         audioSource.volume = Mathf.Clamp01(sfxVolume * master);
     }
 
-    private void HandlePickup(InteractablePainting painting)
-    {
-        PlayOneShot(pickupClip);
-    }
+    private void HandlePickup(InteractablePainting painting) => Play(pickupClip, MuseumProceduralSfx.SfxKind.Pickup);
+    private void HandlePlace(InteractablePainting painting, PaintingMount mount) => Play(placeClip, MuseumProceduralSfx.SfxKind.Place);
+    private void HandleDrop(InteractablePainting painting) => Play(dropClip, MuseumProceduralSfx.SfxKind.Drop);
+    private void HandleSectionComplete(GallerySection section) => Play(sectionCompleteClip, MuseumProceduralSfx.SfxKind.SectionComplete);
+    private void HandleMuseumWin() => Play(museumWinClip, MuseumProceduralSfx.SfxKind.MuseumWin);
+    private void HandleUndo(InteractablePainting painting, PaintingMount mount) => Play(undoClip, MuseumProceduralSfx.SfxKind.Undo);
+    private void HandleWrongWing() => Play(wrongWingClip, MuseumProceduralSfx.SfxKind.Wrong);
+    private void HandleWrongSlot() => Play(wrongSlotClip != null ? wrongSlotClip : wrongWingClip, MuseumProceduralSfx.SfxKind.Wrong);
+    private void HandleThrow(InteractablePainting painting) => Play(throwClip, MuseumProceduralSfx.SfxKind.Throw);
+    private void HandleStaged(InteractablePainting painting) => Play(stageClip, MuseumProceduralSfx.SfxKind.Stage);
 
-    private void HandlePlace(InteractablePainting painting, PaintingMount mount)
-    {
-        PlayOneShot(placeClip);
-    }
+    public void PlayUiClick() => Play(uiClickClip, MuseumProceduralSfx.SfxKind.UiClick);
 
-    private void HandleDrop(InteractablePainting painting)
+    private void Play(AudioClip clip, MuseumProceduralSfx.SfxKind fallbackKind)
     {
-        PlayOneShot(dropClip);
-    }
+        if (audioSource == null)
+        {
+            return;
+        }
 
-    private void HandleSectionComplete(GallerySection section)
-    {
-        PlayOneShot(sectionCompleteClip);
-    }
+        if (clip == null && useSynthesizedFallback)
+        {
+            clip = MuseumProceduralSfx.ResolveOrFallback(null, fallbackKind);
+        }
 
-    private void HandleMuseumWin()
-    {
-        PlayOneShot(museumWinClip);
-    }
-
-    private void HandleUndo(InteractablePainting painting, PaintingMount mount)
-    {
-        PlayOneShot(undoClip);
-    }
-
-    private void HandleWrongWing()
-    {
-        PlayOneShot(wrongWingClip);
-    }
-
-    private void HandleWrongSlot()
-    {
-        PlayOneShot(wrongSlotClip != null ? wrongSlotClip : wrongWingClip);
-    }
-
-    private void HandleThrow(InteractablePainting painting)
-    {
-        PlayOneShot(throwClip);
-    }
-
-    private void HandleStaged(InteractablePainting painting)
-    {
-        PlayOneShot(stageClip);
-    }
-
-    public void PlayUiClick()
-    {
-        PlayOneShot(uiClickClip);
-    }
-
-    private void PlayOneShot(AudioClip clip)
-    {
-        if (clip == null || audioSource == null)
+        if (clip == null)
         {
             return;
         }

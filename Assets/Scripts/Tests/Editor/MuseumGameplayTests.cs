@@ -353,6 +353,35 @@ public class MuseumGameplayTests
         Assert.AreEqual(PlayerSettingsStore.DefaultMouseSensitivity, PlayerSettingsStore.MouseSensitivity);
     }
 
+    [Test]
+    public void PlayerSettingsStore_ResetToDefaults_RestoresSynthesizedSfx()
+    {
+        PlayerSettingsStore.UseSynthesizedSfx = false;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.IsTrue(PlayerSettingsStore.UseSynthesizedSfx);
+    }
+
+    [Test]
+    public void ProceduralSfx_Get_ReturnsNonNullClip()
+    {
+        AudioClip clip = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.Pickup);
+        Assert.IsNotNull(clip);
+        Assert.Greater(clip.length, 0f);
+        Assert.AreEqual(44100, clip.frequency);
+    }
+
+    [Test]
+    public void ProceduralSfx_ResolveOrFallback_RespectsSettingsToggle()
+    {
+        PlayerSettingsStore.UseSynthesizedSfx = true;
+        Assert.IsNotNull(MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.UiClick));
+
+        PlayerSettingsStore.UseSynthesizedSfx = false;
+        Assert.IsNull(MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.UiClick));
+
+        PlayerSettingsStore.ResetToDefaults();
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");

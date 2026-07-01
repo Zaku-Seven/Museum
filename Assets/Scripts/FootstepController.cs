@@ -9,6 +9,7 @@ public class FootstepController : MonoBehaviour
     [SerializeField] private AudioClip footstepClip;
     [SerializeField] private float stepInterval = 0.42f;
     [SerializeField] private float minMoveInput = 0.15f;
+    [SerializeField] private bool useSynthesizedFallback = true;
 
     private CharacterController characterController;
     private AudioSource footstepSource;
@@ -42,7 +43,13 @@ public class FootstepController : MonoBehaviour
 
     private void Update()
     {
-        if (footstepClip == null || characterController == null || !characterController.isGrounded)
+        if (characterController == null || !characterController.isGrounded)
+        {
+            return;
+        }
+
+        AudioClip clip = ResolveFootstepClip();
+        if (clip == null)
         {
             return;
         }
@@ -67,8 +74,20 @@ public class FootstepController : MonoBehaviour
         float pitch = Random.Range(0.92f, 1.08f);
         float volume = PlayerSettingsStore.MasterVolume * 0.35f;
         footstepSource.pitch = pitch;
-        footstepSource.PlayOneShot(footstepClip, volume);
+        footstepSource.PlayOneShot(clip, volume);
         footstepSource.pitch = 1f;
+    }
+
+    private AudioClip ResolveFootstepClip()
+    {
+        if (footstepClip != null)
+        {
+            return footstepClip;
+        }
+
+        return useSynthesizedFallback
+            ? MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.Footstep)
+            : null;
     }
 
     private static bool ShouldBlockFootsteps()

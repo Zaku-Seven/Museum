@@ -9,6 +9,7 @@ public static class PlayerSettingsStore
     private const string InvertYKey = "Museum_InvertY";
     private const string FieldOfViewKey = "Museum_FieldOfView";
     private const string MasterVolumeKey = "Museum_MasterVolume";
+    private const string UseSynthesizedSfxKey = "Museum_UseSynthesizedSfx";
 
     public const float DefaultMouseSensitivity = 2f;
     public const float DefaultFieldOfView = 75f;
@@ -65,6 +66,19 @@ public static class PlayerSettingsStore
         }
     }
 
+    /// <summary>
+    /// When true, missing SFX clips use tiny runtime-generated tones (see <see cref="MuseumProceduralSfx"/>).
+    /// </summary>
+    public static bool UseSynthesizedSfx
+    {
+        get => PlayerPrefs.GetInt(UseSynthesizedSfxKey, 1) == 1;
+        set
+        {
+            PlayerPrefs.SetInt(UseSynthesizedSfxKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+    }
+
     public static void ResetToDefaults()
     {
         MouseSensitivity = DefaultMouseSensitivity;
@@ -72,5 +86,6 @@ public static class PlayerSettingsStore
         InvertY = false;
         FieldOfView = DefaultFieldOfView;
         MasterVolume = DefaultMasterVolume;
+        UseSynthesizedSfx = true;
     }
 }

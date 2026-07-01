@@ -39,7 +39,7 @@ Gamepad **Collection**: pause → **Collection**. Close overlays: **Esc / Start 
 
 - Multiplayer / VoIP (`docs/MULTIPLAYER_VOIP.md`)  
 - Real 3D art, lighting rigs, baked GI  
-- Licensed audio (hooks exist; clips are optional)  
+- Licensed audio (hooks exist; **synthesized placeholders play by default** until clips are assigned)  
 - Input rebinding UI  
 
 ## Human sign-off

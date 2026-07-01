@@ -18,14 +18,14 @@ Gameplay systems are complete. This document is the art/audio/environment checkl
 - [ ] Subtle fog or post-processing (URP Volume) for “arcane museum” mood  
 - [ ] Win / section-complete moment: optional particle burst (code hooks via `MuseumGameEvents`)  
 
-## Audio (assign in Inspector)
+## Audio (assign in Inspector to replace placeholders)
 
-See `docs/AUDIO_SETUP.md`. All hooks are null-safe until clips are assigned.
+See `docs/AUDIO_SETUP.md`. **Synthesized one-shots play automatically** when clips are empty; assign real assets to replace them.
 
-- [ ] Pickup, place, drop, wrong wing/slot, throw, stage  
-- [ ] Section complete, museum win, UI click  
-- [ ] Footsteps (surface variants optional)  
-- [ ] Jump / land  
+- [ ] Pickup, place, drop, wrong wing/slot, throw, stage *(placeholders ship in code)*
+- [ ] Section complete, museum win, UI click *(placeholders ship in code)*
+- [ ] Footsteps (surface variants optional) *(placeholder footstep tone)*
+- [ ] Jump / land *(placeholder tones)*
 - [ ] Optional ambient loop on `MuseumAudioDirector` or dedicated `AudioSource`  
 
 ## UI polish

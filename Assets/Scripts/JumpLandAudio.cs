@@ -9,6 +9,7 @@ public class JumpLandAudio : MonoBehaviour
     [SerializeField] private AudioClip jumpClip;
     [SerializeField] private AudioClip landClip;
     [SerializeField] private float landClipMinFallSpeed = 4f;
+    [SerializeField] private bool useSynthesizedFallback = true;
 
     private CharacterController characterController;
     private AudioSource audioSource;
@@ -37,12 +38,12 @@ public class JumpLandAudio : MonoBehaviour
 
         if (!wasGrounded && grounded && verticalVelocity <= -landClipMinFallSpeed)
         {
-            PlayOneShot(landClip, 0.45f);
+            PlayOneShot(ResolveClip(landClip, MuseumProceduralSfx.SfxKind.Land), 0.45f);
         }
 
         if (wasGrounded && MuseumInput.JumpPressedThisFrame())
         {
-            PlayOneShot(jumpClip, 0.55f);
+            PlayOneShot(ResolveClip(jumpClip, MuseumProceduralSfx.SfxKind.Jump), 0.55f);
         }
 
         wasGrounded = grounded;
@@ -53,6 +54,16 @@ public class JumpLandAudio : MonoBehaviour
         return MuseumTimeScale.IsFrozen
             || (MainMenuController.Instance != null && MainMenuController.Instance.IsMainMenuOpen)
             || (PauseMenuController.Instance != null && PauseMenuController.Instance.IsPaused);
+    }
+
+    private AudioClip ResolveClip(AudioClip clip, MuseumProceduralSfx.SfxKind kind)
+    {
+        if (clip != null)
+        {
+            return clip;
+        }
+
+        return useSynthesizedFallback ? MuseumProceduralSfx.ResolveOrFallback(null, kind) : null;
     }
 
     private void PlayOneShot(AudioClip clip, float volumeScale)
