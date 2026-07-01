@@ -6,6 +6,11 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Adds wall mounts, interaction HUD, and extra test paintings to the museum prototype.
+///
+/// Recommended setup run order: Setup Zero-to-One Prototype → Setup Art Pickup Test →
+/// Setup Museum Gameplay (this) → Setup Gallery Wings (<see cref="GalleryContentSetup"/>).
+/// This step builds the north-wall Modern mounts and the shared HUD (including the
+/// per-wing progress line); Gallery Wings then adds the full 3-wing sorting content.
 /// </summary>
 public static class MuseumGameplaySetup
 {

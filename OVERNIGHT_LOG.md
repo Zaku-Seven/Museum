@@ -83,3 +83,22 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Blockers:** none (cannot verify glow visually on VM — documented for morning test).
 
 **Morning test steps:** run Game → Setup Gallery Wings (Phase 4), fill one wing's 3 mounts with matching paintings → that wing's frames pulse blue and the HUD line shows "X: 3/3 hung - done".
+
+## 2026-07-01T06:28Z Phase 4 — Staging + content (P1)
+
+**Status:** done
+
+**Files changed:**
+- `Assets/Scripts/Editor/GalleryContentSetup.cs` (new) — menu **Game → Setup Gallery Wings**. Builds 3 wings (Modern/Classical/Impressionist), each = 3 wall mounts + 3 matching floor paintings grouped under a `GallerySection`. Wires section `sectionWing`, `mounts`, and `glowRenderers` via `SerializedObject`. Idempotent (every object guarded by unique name; re-run reports created/skipped counts).
+- `Assets/Scripts/Editor/MuseumGameplaySetup.cs` — documented the recommended run order (Zero-to-One → Art Pickup → Museum Gameplay → Gallery Wings).
+- `README.md` — added the new menu item and a "Gallery wings (sorting)" section.
+
+**Layout decisions (assumptions):**
+- Wings placed on separate walls to avoid colliding with the existing north-wall Museum Gameplay mounts: Modern = south (z=-24), Classical = east (x=+24), Impressionist = west (x=-24). Mount rotations chosen so frames face into the room.
+- 9 distinct colors; each painting/frame gets its own `new Material(URP/Lit)` instance (falls back to Standard) to avoid the shared-default-material color-bleed bug and to give the glow an independent emission target. **Assumption:** Unity serializes these referenced non-asset materials inline into the scene on save (standard behaviour for procedural editor content); if a material ever reverts, re-run the menu.
+- Floor paintings scattered in a front pile (avoiding the existing TestPainting spots) so the room reads as "mid-sorting."
+- `SortingTable` left as an optional Phase 5 item.
+
+**Blockers:** none (cannot compile/verify in Unity on the VM).
+
+**Morning test steps:** Game → Setup Gallery Wings; confirm 3 walls each show 3 empty frames and ~9 colored slabs on the floor; sort each pile onto its wall; each completed wing glows and the HUD shows all three at "3/3 hung - done".
