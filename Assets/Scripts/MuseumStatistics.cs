@@ -10,6 +10,7 @@ public class MuseumStatistics : MonoBehaviour
     public int PaintingsHung { get; private set; }
     public int WrongWingAttempts { get; private set; }
     public int UndosUsed { get; private set; }
+    public int PaintingsThrown { get; private set; }
     public float SessionSeconds { get; private set; }
 
     private void OnEnable()
@@ -18,6 +19,7 @@ public class MuseumStatistics : MonoBehaviour
         MuseumGameEvents.PaintingPlaced += HandlePlaced;
         MuseumGameEvents.WrongWingRejected += HandleWrongWing;
         MuseumGameEvents.PlacementUndone += HandleUndo;
+        MuseumGameEvents.PaintingThrown += HandleThrow;
     }
 
     private void OnDisable()
@@ -25,6 +27,7 @@ public class MuseumStatistics : MonoBehaviour
         MuseumGameEvents.PaintingPlaced -= HandlePlaced;
         MuseumGameEvents.WrongWingRejected -= HandleWrongWing;
         MuseumGameEvents.PlacementUndone -= HandleUndo;
+        MuseumGameEvents.PaintingThrown -= HandleThrow;
 
         if (Instance == this)
         {
@@ -42,6 +45,7 @@ public class MuseumStatistics : MonoBehaviour
         PaintingsHung = 0;
         WrongWingAttempts = 0;
         UndosUsed = 0;
+        PaintingsThrown = 0;
         SessionSeconds = 0f;
     }
 
@@ -49,7 +53,7 @@ public class MuseumStatistics : MonoBehaviour
     {
         int minutes = Mathf.FloorToInt(SessionSeconds / 60f);
         int seconds = Mathf.FloorToInt(SessionSeconds % 60f);
-        return $"{PaintingsHung} hung · {UndosUsed} undos · {minutes}m {seconds:D2}s";
+        return $"{PaintingsHung} hung · {PaintingsThrown} thrown · {UndosUsed} undos · {minutes}m {seconds:D2}s";
     }
 
     private void HandlePlaced(InteractablePainting painting, PaintingMount mount)
@@ -66,5 +70,10 @@ public class MuseumStatistics : MonoBehaviour
     {
         UndosUsed++;
         PaintingsHung = Mathf.Max(0, PaintingsHung - 1);
+    }
+
+    private void HandleThrow(InteractablePainting painting)
+    {
+        PaintingsThrown++;
     }
 }

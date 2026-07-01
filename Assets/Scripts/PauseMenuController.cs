@@ -54,6 +54,11 @@ public class PauseMenuController : MonoBehaviour
             return;
         }
 
+        if (MainMenuController.Instance != null && MainMenuController.Instance.IsMainMenuOpen)
+        {
+            return;
+        }
+
         if (settingsMenu != null && settingsMenu.IsSettingsOpen)
         {
             settingsMenu.CloseSettings();

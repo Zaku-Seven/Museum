@@ -39,4 +39,34 @@ public class MuseumUiActions : MonoBehaviour
     {
         PauseMenuController.Instance?.RequestNewGameFromPause();
     }
+
+    public void MainMenuContinue()
+    {
+        MainMenuController.Instance?.ContinueSavedGame();
+    }
+
+    public void MainMenuStartFresh()
+    {
+        MainMenuController.Instance?.StartFreshSession();
+    }
+
+    public void MainMenuShowNewGameConfirm()
+    {
+        MainMenuController.Instance?.ShowNewGameConfirm();
+    }
+
+    public void MainMenuCancelNewGameConfirm()
+    {
+        MainMenuController.Instance?.CancelNewGameConfirm();
+    }
+
+    public void MainMenuConfirmNewGame()
+    {
+        MainMenuController.Instance?.ConfirmNewGame();
+    }
+
+    public void MainMenuOpenSettings()
+    {
+        MainMenuController.Instance?.OpenSettingsFromMainMenu();
+    }
 }

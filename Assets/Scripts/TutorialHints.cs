@@ -25,6 +25,11 @@ public static class TutorialHints
         TryShowOnce("StackScroll", "Tip: Scroll the mouse wheel to change which painting you're holding forward.");
     }
 
+    public static void TryShowThrowHint()
+    {
+        TryShowOnce("Throw", "Tip: Press Q to throw the active painting — aim at the sorting table to catch it.");
+    }
+
     public static void TryShowCompleteHint()
     {
         TryShowOnce("MuseumWin", "The museum is open! Every wing is hung. Cozy work.");
@@ -32,7 +37,7 @@ public static class TutorialHints
 
     public static void ClearAllHints()
     {
-        string[] keys = { "Pickup", "WrongWing", "StackScroll", "MuseumWin" };
+        string[] keys = { "Pickup", "WrongWing", "StackScroll", "Throw", "MuseumWin" };
         for (int i = 0; i < keys.Length; i++)
         {
             PlayerPrefs.DeleteKey(Prefix + keys[i]);

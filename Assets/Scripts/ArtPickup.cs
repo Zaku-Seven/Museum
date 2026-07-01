@@ -19,6 +19,11 @@ public class ArtPickup : MonoBehaviour
     [SerializeField] private float activeItemForwardBoost = 0.08f;
     [SerializeField] private float activeItemScaleBoost = 1.06f;
 
+    [Header("Throw")]
+    [SerializeField] private float throwForce = 9f;
+    [SerializeField] private float throwUpwardBoost = 1.5f;
+    [SerializeField] private float throwSpin = 4f;
+
     private Camera playerCamera;
     private int interactableLayerMask;
     private readonly List<CarriedEntry> carryStack = new List<CarriedEntry>();
@@ -79,6 +84,11 @@ public class ArtPickup : MonoBehaviour
         if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
         {
             TryUndoLastPlacement();
+        }
+
+        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame && IsHolding)
+        {
+            ThrowActiveObject();
         }
     }
 
@@ -195,11 +205,11 @@ public class ArtPickup : MonoBehaviour
     {
         if (carryStack.Count <= 1)
         {
-            return action;
+            return $"{action} · Q throw";
         }
 
         string title = HeldPainting != null ? HeldPainting.PaintingTitle : "item";
-        return $"{action} ({title}, {activeStackIndex + 1}/{carryStack.Count})";
+        return $"{action} ({title}, {activeStackIndex + 1}/{carryStack.Count}) · Q throw";
     }
 
     public bool TryGetCenterRayHit(out RaycastHit hit)
@@ -412,6 +422,46 @@ public class ArtPickup : MonoBehaviour
         if (!SortingTable.TryStageOnAnyTable(entry.Transform) && entry.Painting != null)
         {
             MuseumGameEvents.RaisePaintingDropped(entry.Painting);
+        }
+
+        ClampActiveIndex();
+        ApplyCarryPoses();
+    }
+
+    private void ThrowActiveObject()
+    {
+        if (carryStack.Count == 0)
+        {
+            return;
+        }
+
+        CarriedEntry entry = carryStack[activeStackIndex];
+        carryStack.RemoveAt(activeStackIndex);
+
+        foreach (Collider collider in entry.Colliders)
+        {
+            collider.enabled = true;
+        }
+
+        entry.Transform.localScale = entry.BaseLocalScale;
+        entry.Transform.position = holdPoint != null ? holdPoint.position : entry.Transform.position;
+
+        Vector3 throwDirection = playerCamera.transform.forward + Vector3.up * (throwUpwardBoost / Mathf.Max(throwForce, 0.01f));
+        throwDirection.Normalize();
+
+        if (entry.Rigidbody != null)
+        {
+            entry.Rigidbody.isKinematic = false;
+            entry.Rigidbody.useGravity = true;
+            entry.Rigidbody.detectCollisions = true;
+            entry.Rigidbody.linearVelocity = throwDirection * throwForce;
+            entry.Rigidbody.angularVelocity = playerCamera.transform.right * throwSpin;
+        }
+
+        if (entry.Painting != null)
+        {
+            MuseumGameEvents.RaisePaintingThrown(entry.Painting);
+            TutorialHints.TryShowThrowHint();
         }
 
         ClampActiveIndex();

@@ -385,6 +385,7 @@ public static class MuseumGameplaySetup
 
         GameObject winPanel = EnsureWinPanel(canvasTransform, defaultFont, out Text winText);
         GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont, out GameObject settingsPanel);
+        GameObject mainMenuPanel = EnsureMainMenuPanel(canvasTransform, defaultFont, out GameObject newGameConfirmPanel, out Button continueButton, out Text mainMenuSubtitle);
         MuseumUiActions uiActions = EnsureUiActions(canvasTransform);
 
         GameObject cameraObject = GameObject.Find("PlayerCamera");
@@ -464,6 +465,21 @@ public static class MuseumGameplaySetup
 
             WirePauseButtons(pausePanel, uiActions);
             WireWinButtons(winPanel, uiActions);
+
+            MainMenuController mainMenu = playerObject.GetComponent<MainMenuController>();
+            if (mainMenu == null)
+            {
+                mainMenu = playerObject.AddComponent<MainMenuController>();
+            }
+
+            SerializedObject serializedMainMenu = new SerializedObject(mainMenu);
+            SetObjectReference(serializedMainMenu, "mainMenuPanel", mainMenuPanel);
+            SetObjectReference(serializedMainMenu, "newGameConfirmPanel", newGameConfirmPanel);
+            SetObjectReference(serializedMainMenu, "continueButton", continueButton);
+            SetObjectReference(serializedMainMenu, "subtitleText", mainMenuSubtitle);
+            serializedMainMenu.ApplyModifiedPropertiesWithoutUndo();
+
+            WireMainMenuButtons(mainMenuPanel, newGameConfirmPanel, uiActions);
         }
     }
 
@@ -674,6 +690,131 @@ public static class MuseumGameplaySetup
         }
 
         return actions;
+    }
+
+    private static void WireMainMenuButtons(GameObject mainMenuPanel, GameObject confirmPanel, MuseumUiActions actions)
+    {
+        WireButton(mainMenuPanel.transform, "MainMenuButtons/ContinueButton", actions, nameof(MuseumUiActions.MainMenuContinue));
+        WireButton(mainMenuPanel.transform, "MainMenuButtons/StartButton", actions, nameof(MuseumUiActions.MainMenuStartFresh));
+        WireButton(mainMenuPanel.transform, "MainMenuButtons/NewGameButton", actions, nameof(MuseumUiActions.MainMenuShowNewGameConfirm));
+        WireButton(mainMenuPanel.transform, "MainMenuButtons/SettingsButton", actions, nameof(MuseumUiActions.MainMenuOpenSettings));
+
+        if (confirmPanel != null)
+        {
+            WireButton(confirmPanel.transform, "ConfirmButtons/YesButton", actions, nameof(MuseumUiActions.MainMenuConfirmNewGame));
+            WireButton(confirmPanel.transform, "ConfirmButtons/NoButton", actions, nameof(MuseumUiActions.MainMenuCancelNewGameConfirm));
+        }
+    }
+
+    private static GameObject EnsureMainMenuPanel(Transform canvas, Font font, out GameObject confirmPanel, out Button continueButton, out Text subtitle)
+    {
+        Transform existing = canvas.Find("MainMenuPanel");
+        GameObject panelObject;
+        if (existing != null)
+        {
+            panelObject = existing.gameObject;
+            subtitle = panelObject.transform.Find("Subtitle")?.GetComponent<Text>();
+            continueButton = panelObject.transform.Find("MainMenuButtons/ContinueButton")?.GetComponent<Button>();
+            confirmPanel = EnsureNewGameConfirmPanel(panelObject.transform, font);
+            return panelObject;
+        }
+
+        panelObject = new GameObject("MainMenuPanel");
+        panelObject.transform.SetParent(canvas, false);
+        RectTransform panelRect = panelObject.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image backdrop = panelObject.AddComponent<Image>();
+        backdrop.color = new Color(0.04f, 0.06f, 0.1f, 0.92f);
+
+        GameObject titleObject = CreateUiText(panelObject.transform, "Title", font, 42, TextAnchor.UpperCenter);
+        RectTransform titleRect = titleObject.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 1f);
+        titleRect.anchorMax = new Vector2(0.5f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.anchoredPosition = new Vector2(0f, -80f);
+        titleRect.sizeDelta = new Vector2(700f, 60f);
+        titleObject.GetComponent<Text>().text = "Arcane Museum";
+        titleObject.GetComponent<Text>().color = new Color(0.9f, 0.95f, 1f);
+
+        GameObject subtitleObject = CreateUiText(panelObject.transform, "Subtitle", font, 20, TextAnchor.UpperCenter);
+        RectTransform subtitleRect = subtitleObject.GetComponent<RectTransform>();
+        subtitleRect.anchorMin = new Vector2(0.5f, 1f);
+        subtitleRect.anchorMax = new Vector2(0.5f, 1f);
+        subtitleRect.pivot = new Vector2(0.5f, 1f);
+        subtitleRect.anchoredPosition = new Vector2(0f, -140f);
+        subtitleRect.sizeDelta = new Vector2(700f, 40f);
+        subtitle = subtitleObject.GetComponent<Text>();
+        subtitle.color = new Color(0.75f, 0.82f, 0.95f);
+
+        GameObject buttonRow = new GameObject("MainMenuButtons");
+        buttonRow.transform.SetParent(panelObject.transform, false);
+        RectTransform rowRect = buttonRow.AddComponent<RectTransform>();
+        rowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+        rowRect.pivot = new Vector2(0.5f, 0.5f);
+        rowRect.anchoredPosition = new Vector2(0f, -20f);
+        rowRect.sizeDelta = new Vector2(520f, 220f);
+
+        CreateMenuButton(buttonRow.transform, "ContinueButton", "Continue", font, new Vector2(0f, 70f));
+        CreateMenuButton(buttonRow.transform, "StartButton", "Enter museum", font, new Vector2(0f, 15f));
+        CreateMenuButton(buttonRow.transform, "NewGameButton", "New game", font, new Vector2(0f, -40f));
+        CreateMenuButton(buttonRow.transform, "SettingsButton", "Settings", font, new Vector2(0f, -95f));
+
+        subtitle = panelObject.transform.Find("Subtitle")?.GetComponent<Text>();
+        continueButton = panelObject.transform.Find("MainMenuButtons/ContinueButton")?.GetComponent<Button>();
+
+        confirmPanel = EnsureNewGameConfirmPanel(panelObject.transform, font);
+        panelObject.SetActive(false);
+        return panelObject;
+    }
+
+    private static GameObject EnsureNewGameConfirmPanel(Transform mainMenuPanel, Font font)
+    {
+        Transform existing = mainMenuPanel.Find("NewGameConfirmPanel");
+        if (existing != null)
+        {
+            return existing.gameObject;
+        }
+
+        GameObject panel = new GameObject("NewGameConfirmPanel");
+        panel.transform.SetParent(mainMenuPanel, false);
+        RectTransform rect = panel.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image bg = panel.AddComponent<Image>();
+        bg.color = new Color(0f, 0f, 0f, 0.55f);
+
+        GameObject message = CreateUiText(panel.transform, "Message", font, 24, TextAnchor.MiddleCenter);
+        RectTransform messageRect = message.GetComponent<RectTransform>();
+        messageRect.anchorMin = new Vector2(0.5f, 0.5f);
+        messageRect.anchorMax = new Vector2(0.5f, 0.5f);
+        messageRect.pivot = new Vector2(0.5f, 0.5f);
+        messageRect.anchoredPosition = new Vector2(0f, 40f);
+        messageRect.sizeDelta = new Vector2(520f, 80f);
+        message.GetComponent<Text>().text = "Start a new museum?\nCurrent progress will be cleared.";
+        message.GetComponent<Text>().color = Color.white;
+
+        GameObject row = new GameObject("ConfirmButtons");
+        row.transform.SetParent(panel.transform, false);
+        RectTransform confirmRowRect = row.AddComponent<RectTransform>();
+        confirmRowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        confirmRowRect.anchorMax = new Vector2(0.5f, 0.5f);
+        confirmRowRect.pivot = new Vector2(0.5f, 0.5f);
+        confirmRowRect.anchoredPosition = new Vector2(0f, -40f);
+        confirmRowRect.sizeDelta = new Vector2(400f, 50f);
+
+        CreateMenuButton(row.transform, "YesButton", "Yes, reset", font, new Vector2(-110f, 0f));
+        CreateMenuButton(row.transform, "NoButton", "Cancel", font, new Vector2(110f, 0f));
+
+        panel.SetActive(false);
+        return panel;
     }
 
     private static void WirePauseButtons(GameObject pausePanel, MuseumUiActions actions)

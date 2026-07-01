@@ -108,6 +108,11 @@ public class FirstPersonController : MonoBehaviour
             return true;
         }
 
+        if (MainMenuController.Instance != null && MainMenuController.Instance.IsMainMenuOpen)
+        {
+            return true;
+        }
+
         return false;
     }
 

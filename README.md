@@ -7,7 +7,7 @@ First-person museum sorting prototype (Unity 6 / URP).
 1. Open in Unity 6000.5.1f1 or newer.
 2. Open `Assets/Scenes/SampleScene.unity`.
 3. Run **Game → Setup Full Museum** (one click), or the step-by-step menus below.
-4. Press Play.
+4. Press Play — **main menu** offers Continue (if save exists), Enter museum, New game, Settings.
 
 ## Editor menu items
 
@@ -48,6 +48,7 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Mouse | Look |
 | E | Pick up / add to stack (max 5, fans to your right) |
 | Scroll wheel | Change which stack item is forward (when carrying 2+) |
+| Q | Throw active painting (physics arc; sorting table catches slow lands) |
 | Left click | Place **active** stack item on wall / drop |
 | Right click | Undo last wall placement (returns painting to stack) |
 | Space | Jump |

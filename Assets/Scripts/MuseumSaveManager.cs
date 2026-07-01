@@ -35,10 +35,15 @@ public class MuseumSaveManager : MonoBehaviour
 
     private void Start()
     {
-        if (loadOnStart)
+        if (loadOnStart && !MainMenuController.ShouldDeferSaveLoad())
         {
             Load();
         }
+    }
+
+    public static bool HasExistingSave()
+    {
+        return PlayerPrefs.HasKey(SaveKeyV2) || PlayerPrefs.HasKey(SaveKeyV1);
     }
 
     private void OnApplicationQuit()

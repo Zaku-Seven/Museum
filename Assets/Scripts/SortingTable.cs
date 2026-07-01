@@ -73,6 +73,39 @@ public class SortingTable : MonoBehaviour
         GetComponent<BoxCollider>().isTrigger = true;
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        TryCatchLoosePainting(other.transform);
+    }
+
+    /// <summary>
+    /// Thrown or dropped paintings that enter the trigger at low speed snap to the grid.
+    /// </summary>
+    private void TryCatchLoosePainting(Transform candidate)
+    {
+        InteractablePainting painting = candidate.GetComponentInParent<InteractablePainting>();
+        if (painting == null || painting.CurrentMount != null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < stagedItems.Count; i++)
+        {
+            if (stagedItems[i] == painting.transform)
+            {
+                return;
+            }
+        }
+
+        Rigidbody rb = painting.GetComponent<Rigidbody>();
+        if (rb != null && rb.linearVelocity.magnitude > 3.5f)
+        {
+            return;
+        }
+
+        TryStagePainting(painting.transform);
+    }
+
     public bool Contains(Vector3 worldPosition)
     {
         BoxCollider box = GetComponent<BoxCollider>();
