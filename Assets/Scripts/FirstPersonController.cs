@@ -80,6 +80,17 @@ public class FirstPersonController : MonoBehaviour
         HandleMovement();
     }
 
+    private void LateUpdate()
+    {
+        if (PauseMenuController.Instance != null && PauseMenuController.Instance.IsPaused)
+        {
+            return;
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
     /// <summary>
     /// Rotates the body on Y (yaw) and the camera on X (pitch), with pitch clamping.
     /// </summary>

@@ -100,13 +100,13 @@ public static class ArtPickupSceneSetup
         {
             GameObject holdPointObject = new GameObject("HoldPoint");
             holdPointObject.transform.SetParent(cameraObject.transform, false);
-            holdPointObject.transform.localPosition = new Vector3(0.12f, -0.18f, 0.62f);
+            holdPointObject.transform.localPosition = new Vector3(0.42f, -0.2f, 0.58f);
             holdPointObject.transform.localRotation = Quaternion.identity;
             holdPoint = holdPointObject.transform;
         }
         else
         {
-            holdPoint.localPosition = new Vector3(0.12f, -0.18f, 0.62f);
+            holdPoint.localPosition = new Vector3(0.42f, -0.2f, 0.58f);
             holdPoint.localRotation = Quaternion.identity;
         }
 

@@ -22,6 +22,21 @@ public class PauseMenuController : MonoBehaviour
 
     public bool IsPaused { get; private set; }
 
+    public static PauseMenuController Instance { get; private set; }
+
+    private void OnEnable()
+    {
+        Instance = this;
+    }
+
+    private void OnDisable()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     private void Awake()
     {
         ResolveReferences();
@@ -36,6 +51,18 @@ public class PauseMenuController : MonoBehaviour
         }
 
         SetPaused(!IsPaused);
+    }
+
+    /// <summary>
+    /// Unity Editor often re-shows the OS cursor after UI clicks; re-lock every frame while playing.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (!IsPaused)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     private void ResolveReferences()

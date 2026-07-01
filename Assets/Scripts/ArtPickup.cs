@@ -324,8 +324,8 @@ public class ArtPickup : MonoBehaviour
             holdPoint = holdPointObject.transform;
         }
 
-        // Position-only rig: identity rotation keeps stack offsets aligned with the camera.
-        holdPoint.localPosition = new Vector3(0.12f, -0.18f, 0.62f);
+        // Position-only rig: shifted right so the stack reads as a view-model in the lower-right.
+        holdPoint.localPosition = new Vector3(0.42f, -0.2f, 0.58f);
         holdPoint.localRotation = Quaternion.identity;
     }
 
