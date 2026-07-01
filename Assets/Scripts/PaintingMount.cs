@@ -22,6 +22,17 @@ public class PaintingMount : MonoBehaviour
     /// <summary>The painting currently hung on this mount, or null when empty.</summary>
     public InteractablePainting Occupant { get; private set; }
 
+    private GallerySection section;
+
+    /// <summary>
+    /// Called by <see cref="GallerySection"/> so the mount can report placement/removal
+    /// back to its owning section for completion checks.
+    /// </summary>
+    public void SetSection(GallerySection owningSection)
+    {
+        section = owningSection;
+    }
+
     private void Awake()
     {
         if (snapPoint == null)
@@ -70,6 +81,8 @@ public class PaintingMount : MonoBehaviour
 
         Occupant = interactablePainting;
         isOccupied = true;
+
+        NotifySectionChanged();
     }
 
     /// <summary>
@@ -79,5 +92,15 @@ public class PaintingMount : MonoBehaviour
     {
         isOccupied = false;
         Occupant = null;
+
+        NotifySectionChanged();
+    }
+
+    private void NotifySectionChanged()
+    {
+        if (section != null)
+        {
+            section.CheckComplete();
+        }
     }
 }

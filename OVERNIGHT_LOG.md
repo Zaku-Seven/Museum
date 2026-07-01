@@ -62,3 +62,24 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Blockers:** none.
 
 **Morning test steps:** carry the Classical "Blue Horizon" to a Modern north-wall mount → HUD shows "Wrong gallery" and the click does not place or drop it. Carry Modern "Sunset Study" to the same mount → "Click to place on wall" → it snaps on.
+
+## 2026-07-01T06:12Z Phase 3 — Section completion feedback (P0)
+
+**Status:** done
+
+**Files changed:**
+- `Assets/Scripts/GallerySection.cs` (new) — groups mounts by wing; `CheckComplete()` sets `IsComplete` when all member mounts hold a correctly-sorted painting; pulsing URP emission glow; static `AllSections` registry + static `OnSectionCompleted` event; `CorrectlyFilledCount()` / `MountCount` for the HUD.
+- `Assets/Scripts/PaintingMount.cs` — re-added `section` reference, `SetSection()`, and `NotifySectionChanged()` (calls `section.CheckComplete()` on place/clear).
+- `Assets/Scripts/InteractionHUD.cs` — added `progressText` + `BuildProgressText()` producing lines like "Modern: 2/3 hung    Classical: 3/3 hung - done".
+- `Assets/Scripts/Editor/MuseumGameplaySetup.cs` — HUD builder now creates a bottom-left "Progress" Text and wires it to `InteractionHUD.progressText`.
+
+**Assumptions / decisions:**
+- Glow uses runtime material emission (`_EMISSION` keyword + `_EmissionColor`) — URP Lit compatible, no custom shader. `GallerySection` reads `renderer.material` (instance) only in play mode (no `[ExecuteAlways]`), so it never leaks materials in the editor.
+- Progress line polls `GallerySection.AllSections` each frame (simple + robust) rather than event-driven UI wiring; completion glow is event/edge-driven inside the section.
+- Completion is reversible: removing a painting un-completes the section and stops the glow.
+- Glow renderers default to each mount's child frame renderer when `glowRenderers` is not explicitly wired.
+- The existing north-wall `WallMount_1..3` (from Museum Gameplay) are NOT grouped into a section — sections are created by Phase 4's Gallery Wings setup. So the progress HUD only shows once Gallery Wings is run.
+
+**Blockers:** none (cannot verify glow visually on VM — documented for morning test).
+
+**Morning test steps:** run Game → Setup Gallery Wings (Phase 4), fill one wing's 3 mounts with matching paintings → that wing's frames pulse blue and the HUD line shows "X: 3/3 hung - done".

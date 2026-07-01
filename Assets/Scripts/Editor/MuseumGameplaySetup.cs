@@ -271,6 +271,16 @@ public static class MuseumGameplaySetup
         Text promptText = promptObject.GetComponent<Text>();
         promptText.color = Color.white;
 
+        GameObject progressObject = CreateUiText(canvasObject.transform, "Progress", defaultFont, 18, TextAnchor.LowerLeft);
+        RectTransform progressRect = progressObject.GetComponent<RectTransform>();
+        progressRect.anchorMin = new Vector2(0f, 0f);
+        progressRect.anchorMax = new Vector2(0f, 0f);
+        progressRect.pivot = new Vector2(0f, 0f);
+        progressRect.anchoredPosition = new Vector2(24f, 24f);
+        progressRect.sizeDelta = new Vector2(900f, 30f);
+        Text progressText = progressObject.GetComponent<Text>();
+        progressText.color = new Color(0.85f, 0.9f, 1f);
+
         GameObject cameraObject = GameObject.Find("PlayerCamera");
         if (cameraObject == null)
         {
@@ -289,6 +299,7 @@ public static class MuseumGameplaySetup
         SerializedProperty pickupProperty = serializedHud.FindProperty("artPickup");
         SerializedProperty promptProperty = serializedHud.FindProperty("promptText");
         SerializedProperty crosshairProperty = serializedHud.FindProperty("crosshairText");
+        SerializedProperty progressProperty = serializedHud.FindProperty("progressText");
 
         if (pickupProperty != null)
         {
@@ -303,6 +314,11 @@ public static class MuseumGameplaySetup
         if (crosshairProperty != null)
         {
             crosshairProperty.objectReferenceValue = crosshairText;
+        }
+
+        if (progressProperty != null)
+        {
+            progressProperty.objectReferenceValue = progressText;
         }
 
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
