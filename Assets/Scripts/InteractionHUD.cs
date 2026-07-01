@@ -1,8 +1,10 @@
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Displays a crosshair and context-sensitive interaction prompt for the art pickup system.
+/// Displays a crosshair, context-sensitive prompt, per-wing progress line, completion banner,
+/// stack/staging info, one-shot tutorial tips, and the museum win overlay.
 /// </summary>
 public class InteractionHUD : MonoBehaviour
 {
@@ -10,6 +12,42 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private ArtPickup artPickup;
     [SerializeField] private Text promptText;
     [SerializeField] private Text crosshairText;
+    [SerializeField] private Text progressText;
+    [SerializeField] private Text hintText;
+    [SerializeField] private Text bannerText;
+    [SerializeField] private Text stackText;
+    [SerializeField] private Text stagingText;
+    [SerializeField] private Text tutorialText;
+    [SerializeField] private Text objectiveText;
+    [SerializeField] private Text nextObjectiveText;
+    [SerializeField] private Text wingBreakdownText;
+    [SerializeField] private Text wingGuideText;
+    [SerializeField] private Text inspectText;
+    [SerializeField] private Image progressFillImage;
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private Text winText;
+
+    [Header("Hints")]
+    [Tooltip("Constant hint shown at the top of the screen.")]
+    [SerializeField] private string hintMessage =
+        "E — pick up  ·  Shift/LT — sprint  ·  Tab — inspect  ·  J — journal  ·  Q/B — throw  ·  Esc — pause";
+
+    [Header("Completion banner")]
+    [SerializeField] private float bannerDuration = 4f;
+    [SerializeField] private float saveToastDuration = 2f;
+    [SerializeField] private float saveToastCooldown = 12f;
+
+    [Header("Tutorial tips")]
+    [SerializeField] private float tutorialDuration = 5f;
+
+    [Header("Win overlay")]
+    [SerializeField] private string winMessage = "Museum complete!\nEvery wing is hung. Cozy work.";
+
+    private static readonly StringBuilder ProgressBuilder = new StringBuilder();
+    private float bannerTimer;
+    private float tutorialTimer;
+    private float saveToastTimer;
+    private float saveToastCooldownTimer;
 
     private void Awake()
     {
@@ -17,6 +55,22 @@ public class InteractionHUD : MonoBehaviour
         {
             artPickup = GetComponent<ArtPickup>();
         }
+    }
+
+    private void OnEnable()
+    {
+        GallerySection.OnSectionCompleted += HandleSectionCompleted;
+        MuseumGameEvents.MuseumCompleted += HandleMuseumCompleted;
+        MuseumGameEvents.GameSaved += HandleGameSaved;
+        TutorialHints.OnShowHint += HandleTutorialHint;
+    }
+
+    private void OnDisable()
+    {
+        GallerySection.OnSectionCompleted -= HandleSectionCompleted;
+        MuseumGameEvents.MuseumCompleted -= HandleMuseumCompleted;
+        MuseumGameEvents.GameSaved -= HandleGameSaved;
+        TutorialHints.OnShowHint -= HandleTutorialHint;
     }
 
     private void Update()
@@ -32,7 +86,267 @@ public class InteractionHUD : MonoBehaviour
 
         if (crosshairText != null)
         {
-            crosshairText.enabled = true;
+            bool hideCrosshair = MuseumGameFlowController.Instance != null
+                && MuseumGameFlowController.Instance.IsWinModalActive;
+            crosshairText.enabled = !hideCrosshair;
         }
+
+        if (progressText != null)
+        {
+            string progress = BuildProgressText();
+            progressText.text = progress;
+            progressText.enabled = !string.IsNullOrEmpty(progress);
+        }
+
+        if (hintText != null)
+        {
+            hintText.text = hintMessage;
+            hintText.enabled = !string.IsNullOrEmpty(hintMessage);
+        }
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = BuildObjectiveText();
+            objectiveText.enabled = !string.IsNullOrEmpty(objectiveText.text);
+        }
+
+        if (nextObjectiveText != null)
+        {
+            string next = MuseumObjectiveGuide.BuildNextObjectiveLine(artPickup);
+            nextObjectiveText.text = next;
+            nextObjectiveText.enabled = !string.IsNullOrEmpty(next);
+        }
+
+        if (wingBreakdownText != null)
+        {
+            string breakdown = MuseumObjectiveGuide.BuildWingProgressBreakdown();
+            wingBreakdownText.text = breakdown;
+            wingBreakdownText.enabled = !string.IsNullOrEmpty(breakdown)
+                && !(MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete);
+        }
+
+        if (wingGuideText != null)
+        {
+            string guide = artPickup.GetWingGuidanceLine();
+            wingGuideText.text = guide;
+            wingGuideText.enabled = !string.IsNullOrEmpty(guide);
+        }
+
+        if (inspectText != null)
+        {
+            string inspect = artPickup.GetInspectLine();
+            inspectText.text = inspect;
+            inspectText.enabled = !string.IsNullOrEmpty(inspect);
+        }
+
+        if (progressFillImage != null)
+        {
+            float progress = MuseumHangProgress.Completion01;
+            progressFillImage.fillAmount = progress;
+            progressFillImage.enabled = progress > 0.001f && !(MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete);
+        }
+
+        if (stackText != null)
+        {
+            string stackLabel = artPickup.GetActiveStackLabel();
+            stackText.text = stackLabel;
+            stackText.enabled = !string.IsNullOrEmpty(stackLabel);
+        }
+
+        if (stagingText != null)
+        {
+            int staged = SortingTable.TotalStagedCount;
+            stagingText.text = staged > 0 ? $"Sorting table: {staged} staged" : string.Empty;
+            stagingText.enabled = staged > 0;
+        }
+
+        UpdateBanner();
+        UpdateTutorialBanner();
+        UpdateSaveToastCooldown();
+    }
+
+    private void HandleGameSaved()
+    {
+        if (bannerText == null || saveToastCooldownTimer > 0f)
+        {
+            return;
+        }
+
+        bannerText.text = "Progress saved — safe to take a break";
+        bannerText.enabled = true;
+        saveToastTimer = saveToastDuration;
+        saveToastCooldownTimer = saveToastCooldown;
+    }
+
+    private void UpdateSaveToastCooldown()
+    {
+        if (saveToastCooldownTimer > 0f)
+        {
+            saveToastCooldownTimer -= Time.deltaTime;
+        }
+    }
+
+    private void HandleSectionCompleted(GallerySection section)
+    {
+        if (section == null || bannerText == null || saveToastTimer > 0f)
+        {
+            return;
+        }
+
+        bannerText.text = $"{section.DisplayName} wing complete!";
+        bannerText.enabled = true;
+        bannerTimer = bannerDuration;
+    }
+
+    private void HandleMuseumCompleted()
+    {
+        TutorialHints.TryShowCompleteHint();
+
+        if (winText != null)
+        {
+            string stats = MuseumStatistics.Instance != null
+                ? MuseumStatistics.Instance.BuildWinStatsLine()
+                : string.Empty;
+            winText.text = string.IsNullOrEmpty(stats)
+                ? winMessage
+                : $"{winMessage}\n\n{stats}";
+        }
+
+        // Win modal + input blocking handled by MuseumGameFlowController.
+    }
+
+    private void HandleTutorialHint(string message)
+    {
+        if (tutorialText == null || string.IsNullOrEmpty(message))
+        {
+            return;
+        }
+
+        tutorialText.text = message;
+        tutorialText.enabled = true;
+        tutorialTimer = tutorialDuration;
+    }
+
+    private void UpdateBanner()
+    {
+        if (bannerText == null)
+        {
+            return;
+        }
+
+        if (saveToastTimer > 0f)
+        {
+            saveToastTimer -= Time.deltaTime;
+            if (saveToastTimer <= 0f)
+            {
+                bannerText.enabled = false;
+            }
+
+            return;
+        }
+
+        if (bannerTimer <= 0f)
+        {
+            bannerText.enabled = false;
+            return;
+        }
+
+        bannerTimer -= Time.deltaTime;
+        if (bannerTimer <= 0f)
+        {
+            bannerText.enabled = false;
+        }
+    }
+
+    private void UpdateTutorialBanner()
+    {
+        if (tutorialText == null || tutorialTimer <= 0f)
+        {
+            if (tutorialText != null && tutorialTimer <= 0f)
+            {
+                tutorialText.enabled = false;
+            }
+
+            return;
+        }
+
+        tutorialTimer -= Time.deltaTime;
+        if (tutorialTimer <= 0f)
+        {
+            tutorialText.enabled = false;
+        }
+    }
+
+    /// <summary>
+    /// Builds the per-wing progress line from every active <see cref="GallerySection"/>.
+    /// </summary>
+    private static string BuildProgressText()
+    {
+        var sections = GallerySection.AllSections;
+        if (sections == null || sections.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        ProgressBuilder.Clear();
+        for (int i = 0; i < sections.Count; i++)
+        {
+            GallerySection section = sections[i];
+            if (section == null)
+            {
+                continue;
+            }
+
+            if (ProgressBuilder.Length > 0)
+            {
+                ProgressBuilder.Append("    ");
+            }
+
+            ProgressBuilder
+                .Append(section.DisplayName)
+                .Append(": ")
+                .Append(section.CorrectlyFilledCount())
+                .Append('/')
+                .Append(section.MountCount)
+                .Append(" hung");
+
+            if (section.IsComplete)
+            {
+                ProgressBuilder.Append(" - done");
+            }
+        }
+
+        return ProgressBuilder.ToString();
+    }
+
+    private static string BuildObjectiveText()
+    {
+        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete)
+        {
+            return "Objective complete — the museum is open.";
+        }
+
+        int completeSections = 0;
+        int totalSections = 0;
+        if (GallerySection.AllSections != null)
+        {
+            totalSections = GallerySection.AllSections.Count;
+            for (int i = 0; i < GallerySection.AllSections.Count; i++)
+            {
+                GallerySection section = GallerySection.AllSections[i];
+                if (section != null && section.IsComplete)
+                {
+                    completeSections++;
+                }
+            }
+        }
+
+        if (totalSections == 0)
+        {
+            return "Objective: Hang paintings on matching wing walls.";
+        }
+
+        string mountProgress = MuseumHangProgress.BuildSummaryLine();
+        return $"Objective: Complete every wing ({completeSections}/{totalSections} done) · {mountProgress}";
     }
 }

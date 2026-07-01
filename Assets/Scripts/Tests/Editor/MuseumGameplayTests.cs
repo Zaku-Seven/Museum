@@ -1,0 +1,551 @@
+using NUnit.Framework;
+using UnityEngine;
+
+/// <summary>
+/// Edit-mode tests for mount acceptance and section completion math (no Play mode required).
+/// </summary>
+public class MuseumGameplayTests
+{
+    [Test]
+    public void CanAccept_EmptyMatchingWing_ReturnsTrue()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            Assert.IsTrue(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void CanAccept_WrongWing_ReturnsFalse()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Classical);
+
+            Assert.IsFalse(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void CanAccept_NullPainting_ReturnsFalse()
+    {
+        var mountObject = new GameObject("TestMount");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            Assert.IsFalse(mount.CanAccept(null));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+        }
+    }
+
+    [Test]
+    public void Section_CompletesWhenAllMountsFilledWithMatchingWing()
+    {
+        var sectionObject = new GameObject("TestSection");
+        var mountA = CreateMountWithPainting(GalleryWing.Classical, GalleryWing.Classical);
+        var mountB = CreateMountWithPainting(GalleryWing.Classical, GalleryWing.Classical);
+
+        try
+        {
+            GallerySection section = sectionObject.AddComponent<GallerySection>();
+            SetPrivateEnum(section, "sectionWing", GalleryWing.Classical);
+            SetPrivateList(section, "mounts", new[] { mountA.Mount, mountB.Mount });
+
+            mountA.Mount.SetSection(section);
+            mountB.Mount.SetSection(section);
+            section.CheckComplete();
+
+            Assert.IsTrue(section.IsComplete);
+            Assert.AreEqual(2, section.CorrectlyFilledCount());
+        }
+        finally
+        {
+            Object.DestroyImmediate(sectionObject);
+            Object.DestroyImmediate(mountA.Root);
+            Object.DestroyImmediate(mountB.Root);
+        }
+    }
+
+    [Test]
+    public void Section_IncompleteWhenOneMountEmpty()
+    {
+        var sectionObject = new GameObject("TestSection");
+        var filled = CreateMountWithPainting(GalleryWing.Impressionist, GalleryWing.Impressionist);
+        var emptyMountObject = new GameObject("EmptyMount");
+        PaintingMount emptyMount = emptyMountObject.AddComponent<PaintingMount>();
+
+        try
+        {
+            GallerySection section = sectionObject.AddComponent<GallerySection>();
+            SetPrivateEnum(section, "sectionWing", GalleryWing.Impressionist);
+            SetPrivateList(section, "mounts", new[] { filled.Mount, emptyMount });
+
+            filled.Mount.SetSection(section);
+            emptyMount.SetSection(section);
+            section.CheckComplete();
+
+            Assert.IsFalse(section.IsComplete);
+            Assert.AreEqual(1, section.CorrectlyFilledCount());
+        }
+        finally
+        {
+            Object.DestroyImmediate(sectionObject);
+            Object.DestroyImmediate(filled.Root);
+            Object.DestroyImmediate(emptyMountObject);
+        }
+    }
+
+    [Test]
+    public void EntityRegistry_FindsRegisteredId()
+    {
+        var entityObject = new GameObject("EntityTest");
+        try
+        {
+            MuseumEntityId entity = entityObject.AddComponent<MuseumEntityId>();
+            entity.SetEntityId("test_entity_01");
+            entity.enabled = true;
+
+            MuseumEntityId found = MuseumEntityId.Registry.Find("test_entity_01");
+            Assert.IsNotNull(found);
+            Assert.AreEqual(entity, found);
+        }
+        finally
+        {
+            Object.DestroyImmediate(entityObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
+    [Test]
+    public void CanAccept_SpecificSlot_WrongPainting_ReturnsFalse()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+            paintingObject.AddComponent<MuseumEntityId>().SetEntityId("painting_cobalt_field");
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            SetPrivateString(mount, "requiredPaintingId", "painting_steel_lines");
+
+            Assert.IsFalse(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
+    [Test]
+    public void CanAccept_SpecificSlot_MatchingPainting_ReturnsTrue()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+            paintingObject.AddComponent<MuseumEntityId>().SetEntityId("painting_cobalt_field");
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            SetPrivateString(mount, "requiredPaintingId", "painting_cobalt_field");
+
+            Assert.IsTrue(mount.CanAccept(painting));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
+    [Test]
+    public void SaveSummary_ReadsHungCountFromPlayerPrefs()
+    {
+        const string testKey = "MuseumMountSave_v2";
+        string prior = PlayerPrefs.HasKey(testKey) ? PlayerPrefs.GetString(testKey) : null;
+        try
+        {
+            string json = "{\"version\":2,\"museumComplete\":false,\"mountAssignments\":[{\"mountId\":\"m1\",\"paintingId\":\"p1\"}],\"stagedPaintingIds\":[\"s1\"]}";
+            PlayerPrefs.SetString(testKey, json);
+            PlayerPrefs.Save();
+
+            string summary = MuseumSaveManager.BuildContinueSummary();
+            Assert.IsTrue(summary.Contains("1 hung"));
+            Assert.IsTrue(summary.Contains("1 staged"));
+        }
+        finally
+        {
+            if (prior != null)
+            {
+                PlayerPrefs.SetString(testKey, prior);
+            }
+            else
+            {
+                PlayerPrefs.DeleteKey(testKey);
+            }
+
+            PlayerPrefs.Save();
+        }
+    }
+
+    [Test]
+    public void NearestMountFinder_PicksClosestAcceptingMount()
+    {
+        var nearMountObject = new GameObject("NearMount");
+        var farMountObject = new GameObject("FarMount");
+        var paintingObject = new GameObject("Painting");
+        try
+        {
+            PaintingMount nearMount = nearMountObject.AddComponent<PaintingMount>();
+            PaintingMount farMount = farMountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+
+            nearMountObject.transform.position = new Vector3(0f, 0f, 2f);
+            farMountObject.transform.position = new Vector3(0f, 0f, 20f);
+            SetPrivateEnum(nearMount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(farMount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            bool found = MuseumNearestMountFinder.TryFindNearestAcceptingMount(
+                painting,
+                Vector3.zero,
+                out PaintingMount result,
+                out float distance);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(nearMount, result);
+            Assert.Less(distance, 5f);
+        }
+        finally
+        {
+            Object.DestroyImmediate(nearMountObject);
+            Object.DestroyImmediate(farMountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void CollectionLog_ContainsPaintingTitle()
+    {
+        var paintingObject = new GameObject("LogPainting");
+        try
+        {
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            SetPrivateString(painting, "paintingTitle", "Test Masterpiece");
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            string log = MuseumCollectionLog.BuildJournalText();
+            Assert.IsTrue(log.Contains("Test Masterpiece"));
+            Assert.IsTrue(log.Contains("COLLECTION LOG"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void HangProgress_CountsCorrectlyOccupiedMounts()
+    {
+        var mountA = new GameObject("MountA");
+        var mountB = new GameObject("MountB");
+        var paintingA = new GameObject("PaintingA");
+        var paintingB = new GameObject("PaintingB");
+        try
+        {
+            PaintingMount mountComponentA = mountA.AddComponent<PaintingMount>();
+            PaintingMount mountComponentB = mountB.AddComponent<PaintingMount>();
+            InteractablePainting paintingComponentA = paintingA.AddComponent<InteractablePainting>();
+            InteractablePainting paintingComponentB = paintingB.AddComponent<InteractablePainting>();
+            paintingA.AddComponent<Rigidbody>();
+            paintingB.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mountComponentA, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(mountComponentB, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(paintingComponentA, "wing", GalleryWing.Modern);
+            SetPrivateEnum(paintingComponentB, "wing", GalleryWing.Classical);
+
+            mountComponentA.PlacePainting(paintingA.transform, paintingA.GetComponent<Rigidbody>());
+            mountComponentB.PlacePainting(paintingB.transform, paintingB.GetComponent<Rigidbody>());
+
+            Assert.AreEqual(2, MuseumHangProgress.TotalMountSlots);
+            Assert.AreEqual(1, MuseumHangProgress.CorrectlyHungCount);
+            Assert.AreEqual(50, MuseumHangProgress.CompletionPercent);
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountA);
+            Object.DestroyImmediate(mountB);
+            Object.DestroyImmediate(paintingA);
+            Object.DestroyImmediate(paintingB);
+        }
+    }
+
+    [Test]
+    public void WingGuide_CountsAcceptingMounts()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            int count = MuseumWingGuide.CountAcceptingMounts(painting, new[] { mount });
+            Assert.AreEqual(1, count);
+            Assert.IsFalse(string.IsNullOrEmpty(MuseumWingGuide.BuildGuidance(painting, new[] { mount })));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
+    public void PlayerSettingsStore_ResetToDefaults_RestoresDefaults()
+    {
+        PlayerSettingsStore.MouseSensitivity = 7f;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.AreEqual(PlayerSettingsStore.DefaultMouseSensitivity, PlayerSettingsStore.MouseSensitivity);
+    }
+
+    [Test]
+    public void PlayerSettingsStore_ResetToDefaults_RestoresSynthesizedSfx()
+    {
+        PlayerSettingsStore.UseSynthesizedSfx = false;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.IsTrue(PlayerSettingsStore.UseSynthesizedSfx);
+    }
+
+    [Test]
+    public void ProceduralSfx_Get_ReturnsNonNullClip()
+    {
+        AudioClip clip = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.Pickup);
+        Assert.IsNotNull(clip);
+        Assert.Greater(clip.length, 0f);
+        Assert.AreEqual(44100, clip.frequency);
+    }
+
+    [Test]
+    public void ProceduralSfx_ResolveOrFallback_RespectsSettingsToggle()
+    {
+        PlayerSettingsStore.UseSynthesizedSfx = true;
+        Assert.IsNotNull(MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.UiClick));
+
+        PlayerSettingsStore.UseSynthesizedSfx = false;
+        Assert.IsNull(MuseumProceduralSfx.ResolveOrFallback(null, MuseumProceduralSfx.SfxKind.UiClick));
+
+        PlayerSettingsStore.ResetToDefaults();
+    }
+
+    [Test]
+    public void ProceduralSfx_GetRandomFootstepVariant_ReturnsDistinctClips()
+    {
+        AudioClip a = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.Footstep);
+        AudioClip b = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.FootstepB);
+        AudioClip c = MuseumProceduralSfx.Get(MuseumProceduralSfx.SfxKind.FootstepC);
+        Assert.IsNotNull(a);
+        Assert.IsNotNull(b);
+        Assert.IsNotNull(c);
+        Assert.AreNotEqual(a.length, b.length);
+    }
+
+    [Test]
+    public void ProceduralSfx_ComputeSprintStepInterval_ShortensWhileSprinting()
+    {
+        const float baseInterval = 0.42f;
+        float walk = MuseumProceduralSfx.ComputeSprintStepInterval(baseInterval, 1.45f, false);
+        float sprint = MuseumProceduralSfx.ComputeSprintStepInterval(baseInterval, 1.45f, true);
+        Assert.AreEqual(baseInterval, walk, 0.0001f);
+        Assert.Less(sprint, walk);
+    }
+
+    [Test]
+    public void ProceduralSfx_GetAmbienceLoop_ReturnsLoopingClip()
+    {
+        AudioClip loop = MuseumProceduralSfx.GetAmbienceLoop();
+        Assert.IsNotNull(loop);
+        Assert.Greater(loop.length, 8f);
+        Assert.AreEqual(44100, loop.frequency);
+    }
+
+    [Test]
+    public void FootstepSurface_ResolveProceduralKind_MapsSurfaces()
+    {
+        Assert.AreEqual(
+            MuseumProceduralSfx.SfxKind.FootstepWood,
+            FootstepSurface.ResolveProceduralKind(FootstepSurface.SurfaceKind.Wood));
+        Assert.AreEqual(
+            MuseumProceduralSfx.SfxKind.FootstepCarpet,
+            FootstepSurface.ResolveProceduralKind(FootstepSurface.SurfaceKind.Carpet));
+    }
+
+    [Test]
+    public void GallerySection_GetCelebrationPosition_AveragesMountPositions()
+    {
+        var sectionObject = new GameObject("TestSection");
+        var mountA = new GameObject("MountA");
+        var mountB = new GameObject("MountB");
+        mountA.transform.position = new Vector3(0f, 2f, 0f);
+        mountB.transform.position = new Vector3(4f, 2f, 0f);
+
+        try
+        {
+            GallerySection section = sectionObject.AddComponent<GallerySection>();
+            PaintingMount paintingMountA = mountA.AddComponent<PaintingMount>();
+            PaintingMount paintingMountB = mountB.AddComponent<PaintingMount>();
+            SetPrivateList(section, "mounts", new[] { paintingMountA, paintingMountB });
+
+            Vector3 center = section.GetCelebrationPosition();
+            Assert.AreEqual(2f, center.x, 0.01f);
+            Assert.AreEqual(2f, center.y, 0.01f);
+        }
+        finally
+        {
+            Object.DestroyImmediate(sectionObject);
+            Object.DestroyImmediate(mountA);
+            Object.DestroyImmediate(mountB);
+        }
+    }
+
+    [Test]
+    public void CollectionLog_MatchesFilter_FiltersByState()
+    {
+        var hung = new GameObject("Hung");
+        var painting = hung.AddComponent<InteractablePainting>();
+        var mountRoot = new GameObject("Mount");
+        var mount = mountRoot.AddComponent<PaintingMount>();
+        hung.AddComponent<Rigidbody>();
+        try
+        {
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+            mount.PlacePainting(hung.transform, hung.GetComponent<Rigidbody>());
+
+            Assert.IsTrue(MuseumCollectionLog.MatchesFilter(painting, MuseumJournalFilter.Hung));
+            Assert.IsFalse(MuseumCollectionLog.MatchesFilter(painting, MuseumJournalFilter.Unhung));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountRoot);
+            Object.DestroyImmediate(hung);
+        }
+    }
+
+    [Test]
+    public void PlayerSettingsStore_ReduceMotion_DefaultsFalse()
+    {
+        PlayerSettingsStore.ReduceMotion = true;
+        PlayerSettingsStore.ResetToDefaults();
+        Assert.IsFalse(PlayerSettingsStore.ReduceMotion);
+    }
+
+    [Test]
+    public void CanAccept_FossilWing_MatchingSpecimen_ReturnsTrue()
+    {
+        var mountObject = new GameObject("FossilMount");
+        var fossilObject = new GameObject("FossilPiece");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting fossil = fossilObject.AddComponent<InteractablePainting>();
+            fossilObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Fossil);
+            SetPrivateEnum(fossil, "wing", GalleryWing.Fossil);
+
+            Assert.IsTrue(mount.CanAccept(fossil));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(fossilObject);
+        }
+    }
+
+    private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
+    {
+        var mountRoot = new GameObject("Mount");
+        var paintingRoot = new GameObject("Painting");
+        paintingRoot.transform.SetParent(mountRoot.transform);
+
+        PaintingMount mount = mountRoot.AddComponent<PaintingMount>();
+        InteractablePainting painting = paintingRoot.AddComponent<InteractablePainting>();
+        paintingRoot.AddComponent<Rigidbody>();
+
+        SetPrivateEnum(mount, "requiredWing", mountWing);
+        SetPrivateEnum(painting, "wing", paintingWing);
+
+        mount.PlacePainting(paintingRoot.transform, paintingRoot.GetComponent<Rigidbody>());
+        return (mount, mountRoot);
+    }
+
+    private static void SetPrivateEnum(Object target, string fieldName, GalleryWing value)
+    {
+        var field = target.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(field, $"Field {fieldName} not found on {target.GetType().Name}");
+        field.SetValue(target, value);
+    }
+
+    private static void SetPrivateString(Object target, string fieldName, string value)
+    {
+        var field = target.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(field, $"Field {fieldName} not found on {target.GetType().Name}");
+        field.SetValue(target, value);
+    }
+
+    private static void SetPrivateList(Object target, string fieldName, PaintingMount[] mounts)
+    {
+        var field = target.GetType().GetField(fieldName,
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(field, $"Field {fieldName} not found on {target.GetType().Name}");
+        field.SetValue(target, new System.Collections.Generic.List<PaintingMount>(mounts));
+    }
+
+}
