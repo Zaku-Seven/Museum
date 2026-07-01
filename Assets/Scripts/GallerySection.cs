@@ -119,6 +119,20 @@ public class GallerySection : MonoBehaviour
         return IsComplete;
     }
 
+    /// <summary>Recomputes completion after a full scene reset (may clear glow).</summary>
+    public void ForceRefreshCompletion()
+    {
+        bool wasComplete = IsComplete;
+        IsComplete = false;
+        ApplyEmission(Color.black, false);
+        CheckComplete();
+
+        if (!IsComplete && wasComplete)
+        {
+            // Glow already cleared above.
+        }
+    }
+
     private void BindMounts()
     {
         if (mounts == null)

@@ -4,9 +4,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Toggles pause with Escape: unlocks the cursor, shows an overlay, and disables player
-/// movement / pickup without modifying <see cref="FirstPersonController"/> source.
-/// Works in standalone builds (Editor also frees the cursor on Esc, but the overlay
-/// makes pause obvious during testing).
+/// movement / pickup. Integrates settings and blocks pause during the win modal.
 /// </summary>
 public class PauseMenuController : MonoBehaviour
 {
@@ -16,6 +14,7 @@ public class PauseMenuController : MonoBehaviour
     [SerializeField] private FirstPersonController firstPersonController;
     [SerializeField] private ArtPickup artPickup;
     [SerializeField] private MountAimHighlighter mountAimHighlighter;
+    [SerializeField] private SettingsMenuController settingsMenu;
 
     [Header("Copy")]
     [SerializeField] private string pauseMessage = "PAUSED\nPress Esc to resume";
@@ -50,19 +49,68 @@ public class PauseMenuController : MonoBehaviour
             return;
         }
 
+        if (MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
+        {
+            return;
+        }
+
+        if (settingsMenu != null && settingsMenu.IsSettingsOpen)
+        {
+            settingsMenu.CloseSettings();
+            return;
+        }
+
         SetPaused(!IsPaused);
     }
 
-    /// <summary>
-    /// Unity Editor often re-shows the OS cursor after UI clicks; re-lock every frame while playing.
-    /// </summary>
     private void LateUpdate()
+    {
+        if (IsPaused || ShouldBlockCursorLock())
+        {
+            return;
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    public void ForceUnpause()
+    {
+        SetPaused(false, force: true);
+        settingsMenu?.CloseSettings();
+    }
+
+    public void OpenSettingsFromPause()
     {
         if (!IsPaused)
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            SetPaused(true);
         }
+
+        settingsMenu?.OpenSettings();
+    }
+
+    public void ResumeFromButton()
+    {
+        SetPaused(false);
+    }
+
+    public void RequestNewGameFromPause()
+    {
+        ForceUnpause();
+        MuseumGameFlowController.Instance?.StartNewGame(clearTutorialHints: false);
+    }
+
+    private bool ShouldBlockCursorLock()
+    {
+        if (MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
+        {
+            return true;
+        }
+
+        return MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete
+            && MuseumGameFlowController.Instance != null && !MuseumGameFlowController.Instance.IsWinModalActive
+            && settingsMenu != null && settingsMenu.IsSettingsOpen;
     }
 
     private void ResolveReferences()
@@ -70,6 +118,11 @@ public class PauseMenuController : MonoBehaviour
         if (firstPersonController == null)
         {
             firstPersonController = GetComponent<FirstPersonController>();
+        }
+
+        if (settingsMenu == null)
+        {
+            settingsMenu = GetComponent<SettingsMenuController>();
         }
 
         if (artPickup == null || mountAimHighlighter == null)
@@ -104,6 +157,11 @@ public class PauseMenuController : MonoBehaviour
 
         IsPaused = paused;
 
+        if (!paused)
+        {
+            settingsMenu?.CloseSettings();
+        }
+
         if (firstPersonController != null)
         {
             firstPersonController.enabled = !paused;
@@ -111,7 +169,7 @@ public class PauseMenuController : MonoBehaviour
 
         if (artPickup != null)
         {
-            artPickup.enabled = !paused;
+            artPickup.enabled = !paused && !(MuseumProgress.Instance?.IsMuseumComplete ?? false);
         }
 
         if (mountAimHighlighter != null)

@@ -74,7 +74,9 @@ public class InteractionHUD : MonoBehaviour
 
         if (crosshairText != null)
         {
-            crosshairText.enabled = winPanel == null || !winPanel.activeSelf;
+            bool hideCrosshair = MuseumGameFlowController.Instance != null
+                && MuseumGameFlowController.Instance.IsWinModalActive;
+            crosshairText.enabled = !hideCrosshair;
         }
 
         if (progressText != null)
@@ -124,18 +126,12 @@ public class InteractionHUD : MonoBehaviour
     {
         TutorialHints.TryShowCompleteHint();
 
-        if (winPanel != null)
-        {
-            winPanel.SetActive(true);
-        }
-
         if (winText != null)
         {
             winText.text = winMessage;
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        // Win modal + input blocking handled by MuseumGameFlowController.
     }
 
     private void HandleTutorialHint(string message)

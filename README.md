@@ -22,6 +22,8 @@ Or run individually on an empty scene:
 
 - **Game → Fix Carry Settings** — reset hold point position
 - **Game → Validate Museum Scene** — read-only wiring check
+- **Game → Clear Museum Save** — wipe PlayerPrefs progress
+- **Game → Create Painting Definition Assets** — ScriptableObject catalog under `Assets/Data/Paintings/`
 - **Game → Add Player Bean Visual** — optional capsule mesh on Player
 
 ## Gallery wings (sorting)
@@ -49,6 +51,6 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Left click | Place **active** stack item on wall / drop |
 | Right click | Undo last wall placement (returns painting to stack) |
 | Space | Jump |
-| Esc | Pause / resume (unlocks cursor, shows overlay) |
+| Esc | Pause / resume (Settings, New Game) |
 
-When every gallery section is complete, a **win overlay** appears and pickup is disabled. Progress and mount assignments persist between sessions via `MuseumSaveManager` (PlayerPrefs).
+When every gallery section is complete, a **win overlay** appears with **Continue exploring** or **New game**. Pickup stays disabled after win unless you start a new game. Progress (mounts, sorting table staging, win state) persists via **save v2** (`MuseumSaveManager` + stable `MuseumEntityId`s). Pause menu includes **mouse sensitivity**, **FOV**, **invert Y**, and **master volume**. Optional SFX hooks live on `MuseumAudioDirector` (assign clips in Inspector).

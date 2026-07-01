@@ -22,6 +22,8 @@ public class PaintingMount : MonoBehaviour
     /// <summary>The painting currently hung on this mount, or null when empty.</summary>
     public InteractablePainting Occupant { get; private set; }
 
+    public string SaveId => GetComponent<MuseumEntityId>()?.EntityId ?? gameObject.name;
+
     private GallerySection section;
 
     /// <summary>

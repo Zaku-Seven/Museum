@@ -30,6 +30,17 @@ public static class TutorialHints
         TryShowOnce("MuseumWin", "The museum is open! Every wing is hung. Cozy work.");
     }
 
+    public static void ClearAllHints()
+    {
+        string[] keys = { "Pickup", "WrongWing", "StackScroll", "MuseumWin" };
+        for (int i = 0; i < keys.Length; i++)
+        {
+            PlayerPrefs.DeleteKey(Prefix + keys[i]);
+        }
+
+        PlayerPrefs.Save();
+    }
+
     private static void TryShowOnce(string key, string message)
     {
         string prefKey = Prefix + key;

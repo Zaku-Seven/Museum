@@ -150,6 +150,16 @@ public class ArtPickup : MonoBehaviour
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
         if (painting != null)
         {
+            if (painting.CurrentMount != null)
+            {
+                if (carryStack.Count >= maxStackSize)
+                {
+                    return "Stack full — place or drop first";
+                }
+
+                return $"E — take down \"{painting.PaintingTitle}\"";
+            }
+
             if (carryStack.Count >= maxStackSize)
             {
                 return "Stack full — place or drop first";
@@ -193,6 +203,34 @@ public class ArtPickup : MonoBehaviour
         return Physics.Raycast(centerRay, out hit, maxPickupDistance, interactableLayerMask);
     }
 
+    /// <summary>Clears carry stack, undo history, and restores held colliders.</summary>
+    public void ClearSession()
+    {
+        for (int i = carryStack.Count - 1; i >= 0; i--)
+        {
+            CarriedEntry entry = carryStack[i];
+            if (entry.Transform == null)
+            {
+                continue;
+            }
+
+            foreach (Collider collider in entry.Colliders)
+            {
+                if (collider != null)
+                {
+                    collider.enabled = true;
+                }
+            }
+
+            entry.Transform.localScale = entry.BaseLocalScale;
+            RestoreRigidbody(entry.Rigidbody, kinematic: false, useGravity: true);
+        }
+
+        carryStack.Clear();
+        placementUndoStack.Clear();
+        activeStackIndex = 0;
+    }
+
     private void TryPickupFromRaycast()
     {
         if (carryStack.Count >= maxStackSize || !TryGetCenterRayHit(out RaycastHit hit))
@@ -223,6 +261,7 @@ public class ArtPickup : MonoBehaviour
                 else if (HeldPainting != null && mount.RequiredWing != HeldPainting.Wing)
                 {
                     TutorialHints.TryShowWrongWingHint();
+                    MuseumGameEvents.RaiseWrongWingRejected();
                 }
 
                 return;

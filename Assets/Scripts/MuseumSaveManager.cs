@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Saves which paintings are hung on which mounts (by GameObject name) via PlayerPrefs JSON.
+/// Saves mount assignments, staging, and win state using stable entity ids (PlayerPrefs JSON v2).
 /// </summary>
 public class MuseumSaveManager : MonoBehaviour
 {
-    private const string SaveKey = "MuseumMountSave_v1";
+    private const string SaveKeyV2 = "MuseumMountSave_v2";
+    private const string SaveKeyV1 = "MuseumMountSave_v1";
 
     public static MuseumSaveManager Instance { get; private set; }
 
@@ -63,63 +64,126 @@ public class MuseumSaveManager : MonoBehaviour
 
     public void Save()
     {
-        var data = new SaveData();
-        PaintingMount[] mounts = FindObjectsByType<PaintingMount>(FindObjectsSortMode.None);
-        foreach (PaintingMount mount in mounts)
+        var data = new SaveDataV2
         {
+            version = 2,
+            museumComplete = MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete
+        };
+
+        PaintingMount[] mounts = FindObjectsByType<PaintingMount>(FindObjectsSortMode.None);
+        for (int i = 0; i < mounts.Length; i++)
+        {
+            PaintingMount mount = mounts[i];
             if (mount == null || !mount.IsOccupied || mount.Occupant == null)
             {
                 continue;
             }
 
-            data.entries.Add(new MountEntry
+            data.mountAssignments.Add(new MountAssignmentEntry
             {
-                mountName = mount.gameObject.name,
-                paintingName = mount.Occupant.gameObject.name
+                mountId = mount.SaveId,
+                paintingId = mount.Occupant.SaveId
             });
         }
 
+        SortingTable[] tables = FindObjectsByType<SortingTable>(FindObjectsSortMode.None);
+        for (int t = 0; t < tables.Length; t++)
+        {
+            SortingTable table = tables[t];
+            if (table == null)
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> stagedIds = table.GetStagedSaveIds();
+            for (int s = 0; s < stagedIds.Count; s++)
+            {
+                data.stagedPaintingIds.Add(stagedIds[s]);
+            }
+        }
+
         string json = JsonUtility.ToJson(data);
-        PlayerPrefs.SetString(SaveKey, json);
+        PlayerPrefs.SetString(SaveKeyV2, json);
+        PlayerPrefs.DeleteKey(SaveKeyV1);
         PlayerPrefs.Save();
     }
 
     public void Load()
     {
-        if (!PlayerPrefs.HasKey(SaveKey))
+        if (PlayerPrefs.HasKey(SaveKeyV2))
         {
+            LoadV2(PlayerPrefs.GetString(SaveKeyV2));
             return;
         }
 
-        string json = PlayerPrefs.GetString(SaveKey);
+        if (PlayerPrefs.HasKey(SaveKeyV1))
+        {
+            LoadV1(PlayerPrefs.GetString(SaveKeyV1));
+            Save();
+        }
+    }
+
+    private void LoadV2(string json)
+    {
         if (string.IsNullOrEmpty(json))
         {
             return;
         }
 
-        SaveData data = JsonUtility.FromJson<SaveData>(json);
+        SaveDataV2 data = JsonUtility.FromJson<SaveDataV2>(json);
+        if (data == null)
+        {
+            return;
+        }
+
+        ApplyMountAssignments(data.mountAssignments);
+        ApplyStagedPaintings(data.stagedPaintingIds);
+
+        if (MuseumProgress.Instance != null)
+        {
+            MuseumProgress.Instance.RestoreMuseumCompleteFromSave(data.museumComplete);
+        }
+    }
+
+    private void LoadV1(string json)
+    {
+        SaveDataV1 data = JsonUtility.FromJson<SaveDataV1>(json);
         if (data?.entries == null)
         {
             return;
         }
 
-        foreach (MountEntry entry in data.entries)
+        var assignments = new List<MountAssignmentEntry>();
+        for (int i = 0; i < data.entries.Count; i++)
         {
-            if (string.IsNullOrEmpty(entry.mountName) || string.IsNullOrEmpty(entry.paintingName))
+            MountEntryV1 entry = data.entries[i];
+            assignments.Add(new MountAssignmentEntry
+            {
+                mountId = entry.mountName,
+                paintingId = entry.paintingName
+            });
+        }
+
+        ApplyMountAssignments(assignments);
+    }
+
+    private static void ApplyMountAssignments(List<MountAssignmentEntry> assignments)
+    {
+        if (assignments == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < assignments.Count; i++)
+        {
+            MountAssignmentEntry entry = assignments[i];
+            if (string.IsNullOrEmpty(entry.mountId) || string.IsNullOrEmpty(entry.paintingId))
             {
                 continue;
             }
 
-            GameObject mountObject = GameObject.Find(entry.mountName);
-            GameObject paintingObject = GameObject.Find(entry.paintingName);
-            if (mountObject == null || paintingObject == null)
-            {
-                continue;
-            }
-
-            PaintingMount mount = mountObject.GetComponent<PaintingMount>();
-            InteractablePainting painting = paintingObject.GetComponent<InteractablePainting>();
-            Rigidbody rigidbody = paintingObject.GetComponent<Rigidbody>();
+            PaintingMount mount = ResolveMount(entry.mountId);
+            InteractablePainting painting = ResolvePainting(entry.paintingId);
             if (mount == null || painting == null || mount.IsOccupied)
             {
                 continue;
@@ -130,24 +194,90 @@ public class MuseumSaveManager : MonoBehaviour
                 continue;
             }
 
-            mount.PlacePainting(paintingObject.transform, rigidbody);
+            mount.PlacePainting(painting.transform, painting.GetComponent<Rigidbody>());
         }
+    }
+
+    private static void ApplyStagedPaintings(List<string> stagedIds)
+    {
+        if (stagedIds == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < stagedIds.Count; i++)
+        {
+            string paintingId = stagedIds[i];
+            InteractablePainting painting = ResolvePainting(paintingId);
+            if (painting == null)
+            {
+                continue;
+            }
+
+            if (painting.CurrentMount != null)
+            {
+                continue;
+            }
+
+            SortingTable.TryStageOnAnyTable(painting.transform);
+        }
+    }
+
+    private static PaintingMount ResolveMount(string id)
+    {
+        MuseumEntityId entity = MuseumEntityId.Registry.Find(id);
+        if (entity != null)
+        {
+            return entity.GetComponent<PaintingMount>();
+        }
+
+        GameObject found = GameObject.Find(id);
+        return found != null ? found.GetComponent<PaintingMount>() : null;
+    }
+
+    private static InteractablePainting ResolvePainting(string id)
+    {
+        MuseumEntityId entity = MuseumEntityId.Registry.Find(id);
+        if (entity != null)
+        {
+            return entity.GetComponent<InteractablePainting>();
+        }
+
+        GameObject found = GameObject.Find(id);
+        return found != null ? found.GetComponent<InteractablePainting>() : null;
     }
 
     public void ClearSave()
     {
-        PlayerPrefs.DeleteKey(SaveKey);
+        PlayerPrefs.DeleteKey(SaveKeyV2);
+        PlayerPrefs.DeleteKey(SaveKeyV1);
         PlayerPrefs.Save();
     }
 
     [Serializable]
-    private class SaveData
+    private class SaveDataV2
     {
-        public List<MountEntry> entries = new List<MountEntry>();
+        public int version = 2;
+        public bool museumComplete;
+        public List<MountAssignmentEntry> mountAssignments = new List<MountAssignmentEntry>();
+        public List<string> stagedPaintingIds = new List<string>();
     }
 
     [Serializable]
-    private class MountEntry
+    private class MountAssignmentEntry
+    {
+        public string mountId;
+        public string paintingId;
+    }
+
+    [Serializable]
+    private class SaveDataV1
+    {
+        public List<MountEntryV1> entries = new List<MountEntryV1>();
+    }
+
+    [Serializable]
+    private class MountEntryV1
     {
         public string mountName;
         public string paintingName;

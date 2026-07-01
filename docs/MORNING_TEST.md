@@ -64,26 +64,27 @@ Re-running menus is safe (idempotent). Re-run **Setup Museum Gameplay** to upgra
 | Classical (East) | East | Gilded Saints, Marble Study, Old Masters |
 | Impressionist (West) | West | Garden Light, Rose Morning, Water Lilies |
 
-## Night 3 + 4 features (verify)
+## Night 5 features (verify)
 
-- Scroll wheel stack selection (primary / forward item)
-- Right-click undo last wall placement
-- Sorting table grid snap + staged count HUD
-- One-shot tutorial tips (first pickup, wrong wing, scroll)
-- Museum win overlay when all sections complete
-- Mount save/load via `MuseumSaveManager`
-- **Game → Validate Museum Scene**
-- EditMode tests in Test Runner
+- **Pause menu:** Resume, Settings, New Game buttons
+- **Settings:** mouse sensitivity, FOV, invert Y, master volume (persist in PlayerPrefs)
+- **Win overlay:** Continue exploring / New game; movement blocked until choice
+- **Save v2:** stable entity ids; staging table + win flag restore after reload
+- **New game:** resets mounts, floor positions, staging, carry, progress
+- **E on hung painting:** take down from wall
+- **Game → Clear Museum Save** / **Create Painting Definition Assets**
+- EditMode tests (6+) in Test Runner
 
 ## Known gaps
 
 - Agent did not compile/Play-test. Report Console errors.
 - Procedural materials may need re-run of setup if colors revert.
-- No audio clips yet (events are wired in `MuseumGameEvents` for future SFX).
+- SFX clips not assigned — `MuseumAudioDirector` is null-safe until you add AudioClips.
+- Re-run **Setup Museum Gameplay** after pull to wire pause/win buttons and settings panel.
 
 ## Manual fixes if wiring is missing
 
-- **Banner / pause / win missing:** re-run **Setup Museum Gameplay**.
+- **Banner / pause / win / buttons missing:** re-run **Setup Museum Gameplay** or **Setup Full Museum**.
 - **`MountAimHighlighter` missing:** confirm `PlayerCamera` has the component.
-- **No save/restore:** confirm `Player` has `MuseumSaveManager`.
+- **No save/restore:** confirm `Player` has `MuseumSaveManager` + paintings have `MuseumEntityId`.
 - **Section not completing:** re-run **Setup Gallery Wings**; check `GallerySection` mount lists in Inspector.

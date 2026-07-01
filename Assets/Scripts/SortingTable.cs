@@ -20,6 +20,24 @@ public class SortingTable : MonoBehaviour
     public string ZoneLabel => zoneLabel;
     public int StagedCount => stagedItems.Count;
 
+    public IReadOnlyList<string> GetStagedSaveIds()
+    {
+        var ids = new List<string>(stagedItems.Count);
+        for (int i = 0; i < stagedItems.Count; i++)
+        {
+            Transform item = stagedItems[i];
+            if (item == null)
+            {
+                continue;
+            }
+
+            InteractablePainting painting = item.GetComponent<InteractablePainting>();
+            ids.Add(painting != null ? painting.SaveId : item.name);
+        }
+
+        return ids;
+    }
+
     public static int TotalStagedCount
     {
         get
@@ -112,6 +130,20 @@ public class SortingTable : MonoBehaviour
         {
             ActiveTables[i]?.RemoveStaged(painting);
         }
+    }
+
+    public void ClearAllStaged()
+    {
+        for (int i = stagedItems.Count - 1; i >= 0; i--)
+        {
+            Transform item = stagedItems[i];
+            if (item != null)
+            {
+                item.SetParent(null, true);
+            }
+        }
+
+        stagedItems.Clear();
     }
 
     private void RemoveStaged(Transform painting)

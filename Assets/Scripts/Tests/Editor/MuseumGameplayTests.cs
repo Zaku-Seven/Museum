@@ -124,6 +124,27 @@ public class MuseumGameplayTests
         }
     }
 
+    [Test]
+    public void EntityRegistry_FindsRegisteredId()
+    {
+        var entityObject = new GameObject("EntityTest");
+        try
+        {
+            MuseumEntityId entity = entityObject.AddComponent<MuseumEntityId>();
+            entity.SetEntityId("test_entity_01");
+            entity.enabled = true;
+
+            MuseumEntityId found = MuseumEntityId.Registry.Find("test_entity_01");
+            Assert.IsNotNull(found);
+            Assert.AreEqual(entity, found);
+        }
+        finally
+        {
+            Object.DestroyImmediate(entityObject);
+            MuseumEntityId.Registry.ClearForTests();
+        }
+    }
+
     private static (PaintingMount Mount, GameObject Root) CreateMountWithPainting(GalleryWing mountWing, GalleryWing paintingWing)
     {
         var mountRoot = new GameObject("Mount");

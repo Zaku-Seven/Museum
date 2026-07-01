@@ -31,7 +31,34 @@ public class MuseumProgress : MonoBehaviour
 
         if (AreAllSectionsComplete())
         {
-            IsMuseumComplete = true;
+            SetMuseumComplete(true);
+        }
+    }
+
+    public void ResetProgress()
+    {
+        SetMuseumComplete(false);
+    }
+
+    public void RestoreMuseumCompleteFromSave(bool complete)
+    {
+        if (complete)
+        {
+            SetMuseumComplete(true, fireEvent: false);
+            MuseumGameFlowController.Instance?.EnterWinModal();
+        }
+        else
+        {
+            SetMuseumComplete(false);
+        }
+    }
+
+    private void SetMuseumComplete(bool complete, bool fireEvent = true)
+    {
+        IsMuseumComplete = complete;
+
+        if (complete && fireEvent)
+        {
             MuseumGameEvents.RaiseMuseumCompleted();
         }
     }

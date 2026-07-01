@@ -49,11 +49,14 @@ public static class MuseumSceneValidator
             warnings += WarnIfMissing<PauseMenuController>(player, report, "PauseMenuController");
             warnings += WarnIfMissing<MuseumProgress>(player, report, "MuseumProgress");
             warnings += WarnIfMissing<MuseumSaveManager>(player, report, "MuseumSaveManager");
+            warnings += WarnIfMissing<MuseumGameFlowController>(player, report, "MuseumGameFlowController");
+            warnings += WarnIfMissing<MuseumAudioDirector>(player, report, "MuseumAudioDirector");
+            warnings += WarnIfMissing<SettingsMenuController>(player, report, "SettingsMenuController");
         }
 
-        if (GameObject.Find("InteractionHUD") == null)
+        if (GameObject.Find("InteractionHUD")?.GetComponent<MuseumUiActions>() == null)
         {
-            report.AppendLine("WARN: InteractionHUD canvas missing (run Setup Museum Gameplay).");
+            report.AppendLine("WARN: InteractionHUD missing MuseumUiActions (re-run Setup Museum Gameplay).");
             warnings++;
         }
 
@@ -75,6 +78,13 @@ public static class MuseumSceneValidator
         if (paintings.Length == 0)
         {
             report.AppendLine("WARN: No InteractablePainting instances.");
+            warnings++;
+        }
+
+        MuseumEntityId[] entityIds = Object.FindObjectsByType<MuseumEntityId>(FindObjectsSortMode.None);
+        if (entityIds.Length < paintings.Length)
+        {
+            report.AppendLine("WARN: Some paintings/mounts lack MuseumEntityId (re-run Setup Full Museum).");
             warnings++;
         }
 

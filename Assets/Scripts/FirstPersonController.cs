@@ -40,6 +40,9 @@ public class FirstPersonController : MonoBehaviour
     private CharacterController characterController;
     private float verticalVelocity;
     private float pitch;
+    private float mouseSensitivity;
+    private float fieldOfView;
+    private bool invertY;
 
     private void Awake()
     {
@@ -55,12 +58,7 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
-        // Apply configured FOV to the child camera.
-        Camera cam = playerCamera.GetComponent<Camera>();
-        if (cam != null)
-        {
-            cam.fieldOfView = fieldOfView;
-        }
+        ApplyPlayerSettings();
 
         // Lock and hide the cursor for standard FPS controls.
         Cursor.lockState = CursorLockMode.Locked;
@@ -74,15 +72,54 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    public void ApplyPlayerSettings()
+    {
+        mouseSensitivity = PlayerSettingsStore.MouseSensitivity;
+        fieldOfView = PlayerSettingsStore.FieldOfView;
+        invertY = PlayerSettingsStore.InvertY;
+
+        Camera cam = playerCamera != null ? playerCamera.GetComponent<Camera>() : null;
+        if (cam != null)
+        {
+            cam.fieldOfView = fieldOfView;
+        }
+    }
+
     private void Update()
     {
+        if (ShouldBlockGameplay())
+        {
+            return;
+        }
+
         HandleMouseLook();
         HandleMovement();
     }
 
-    private void LateUpdate()
+    private bool ShouldBlockGameplay()
     {
         if (PauseMenuController.Instance != null && PauseMenuController.Instance.IsPaused)
+        {
+            return true;
+        }
+
+        if (MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.BlockGameplayInput)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void LateUpdate()
+    {
+        if (ShouldBlockGameplay())
+        {
+            return;
+        }
+
+        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete
+            && MuseumGameFlowController.Instance != null && MuseumGameFlowController.Instance.IsWinModalActive)
         {
             return;
         }
@@ -104,6 +141,10 @@ public class FirstPersonController : MonoBehaviour
         Vector2 lookDelta = Mouse.current.delta.ReadValue();
         float mouseX = lookDelta.x * mouseSensitivity * 0.1f;
         float mouseY = lookDelta.y * mouseSensitivity * 0.1f;
+        if (invertY)
+        {
+            mouseY = -mouseY;
+        }
 
         // Yaw rotates the entire player body left/right.
         transform.Rotate(Vector3.up * mouseX);

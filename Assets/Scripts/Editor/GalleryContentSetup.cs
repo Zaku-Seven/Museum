@@ -249,6 +249,7 @@ public static class GalleryContentSetup
         }
 
         table.AddComponent<SortingTable>();
+        MuseumEntityIdUtility.EnsureEntityId(table, "sorting_table_main");
         counter.Created++;
     }
 
@@ -322,7 +323,14 @@ public static class GalleryContentSetup
         mountCollider.size = new Vector3(0.9f, 0.7f, 0.1f);
         mountCollider.center = Vector3.zero;
 
+        MuseumEntityIdUtility.EnsureEntityId(mountRoot, BuildMountEntityId(wing, mountName));
+
         return mountRoot;
+    }
+
+    private static string BuildMountEntityId(GalleryWing wing, string mountName)
+    {
+        return $"mount_{wing.ToString().ToLowerInvariant()}_{SanitizeName(mountName)}";
     }
 
     private static void CreateFloorPainting(Transform parent, string objectName, Art art, GalleryWing wing, int interactableLayer)
@@ -364,6 +372,13 @@ public static class GalleryContentSetup
         {
             renderer.sharedMaterial = CreateColorMaterial(art.Color);
         }
+
+        MuseumEntityIdUtility.EnsureEntityId(painting, BuildPaintingEntityId(art.Title));
+    }
+
+    private static string BuildPaintingEntityId(string title)
+    {
+        return "painting_" + SanitizeName(title).ToLowerInvariant();
     }
 
     private static void WireSection(GallerySection section, GalleryWing wing, string displayName, List<PaintingMount> mounts, List<Renderer> frameRenderers)

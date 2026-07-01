@@ -184,3 +184,24 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Assumptions:** Scroll uses Input System `Mouse.current.scroll`; save keys objects by `GameObject.name` (stable after setup menus). Undo stack is in-memory (not persisted across sessions).
 
 **Cannot verify on VM:** compile, Play mode, Test Runner — see `docs/MORNING_TEST.md`.
+
+---
+
+## 2026-07-01 Night 5 — Game loop closure + save v2 + settings + audio hooks
+
+**Status:** done (code-only)
+
+**Delivered:**
+1. **New game / reset** — `MuseumStateReset`, pause + win **New game** buttons, `MuseumGameFlowController`.
+2. **Win flow** — modal win blocks movement; **Continue exploring** or **New game**; win state saved in v2 save.
+3. **Save v2** — stable `MuseumEntityId` on mounts/paintings; staged sorting-table items + `museumComplete` flag; v1 migration.
+4. **PaintingDefinition SO** + **Game → Create Painting Definition Assets** catalog.
+5. **Settings** — pause submenu: sensitivity, FOV, invert Y, volume (`PlayerSettingsStore`).
+6. **SFX stub** — `MuseumAudioDirector` on `MuseumGameEvents` (clips optional in Inspector).
+7. **Take down from wall** — HUD prompt `E — take down "…"` for hung paintings.
+8. **North demo** — third Modern floor painting `TestPainting_3` (Amber Grid) for 3 north mounts.
+9. **Menus** — **Clear Museum Save**; validator checks flow/audio/settings/entity ids.
+
+**Assumptions:** UI buttons wired via persistent UnityEvents during setup menu. Sliders use minimal Unity UI (may need graphic tuning in Editor). Audio clips not bundled — assign when ready.
+
+**Cannot verify on VM:** Play mode, button wiring, settings sliders — re-run **Setup Museum Gameplay** or **Setup Full Museum** after pull.
