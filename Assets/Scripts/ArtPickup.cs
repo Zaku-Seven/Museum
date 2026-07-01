@@ -37,7 +37,6 @@ public class ArtPickup : MonoBehaviour
     private InteractablePainting heldPainting;
     private Rigidbody heldRigidbody;
     private Collider[] heldColliders;
-    private bool heldRigidbodyWasEnabled;
     private Quaternion carryLocalRotation;
 
     public bool IsHolding => heldObject != null;
@@ -229,15 +228,14 @@ public class ArtPickup : MonoBehaviour
             collider.enabled = false;
         }
 
-        // Disabling the Rigidbody prevents physics from fighting camera movement while carried.
+        // Kinematic + no collisions prevents physics from fighting camera movement while carried.
         if (heldRigidbody != null)
         {
             heldRigidbody.linearVelocity = Vector3.zero;
             heldRigidbody.angularVelocity = Vector3.zero;
-            heldRigidbodyWasEnabled = heldRigidbody.enabled;
             heldRigidbody.isKinematic = true;
             heldRigidbody.useGravity = false;
-            heldRigidbody.enabled = false;
+            heldRigidbody.detectCollisions = false;
         }
 
         // Snap immediately so there is no pop-in lag on pickup.
@@ -249,7 +247,6 @@ public class ArtPickup : MonoBehaviour
         Transform objectToPlace = heldObject;
         Rigidbody rigidbody = heldRigidbody;
         Collider[] colliders = heldColliders;
-        bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
 
         heldObject = null;
         heldPainting = null;
@@ -261,7 +258,7 @@ public class ArtPickup : MonoBehaviour
             collider.enabled = true;
         }
 
-        RestoreRigidbody(rigidbody, rigidbodyWasEnabled, kinematic: true, useGravity: false);
+        RestoreRigidbody(rigidbody, kinematic: true, useGravity: false);
         mount.PlacePainting(objectToPlace, rigidbody);
     }
 
@@ -270,7 +267,6 @@ public class ArtPickup : MonoBehaviour
         Transform droppedObject = heldObject;
         Rigidbody rigidbody = heldRigidbody;
         Collider[] colliders = heldColliders;
-        bool rigidbodyWasEnabled = heldRigidbodyWasEnabled;
 
         heldObject = null;
         heldPainting = null;
@@ -282,7 +278,7 @@ public class ArtPickup : MonoBehaviour
             collider.enabled = true;
         }
 
-        RestoreRigidbody(rigidbody, rigidbodyWasEnabled, kinematic: false, useGravity: true);
+        RestoreRigidbody(rigidbody, kinematic: false, useGravity: true);
 
         // Nudge slightly forward so the painting clears the player's collider when dropped.
         if (droppedObject != null)
@@ -291,16 +287,16 @@ public class ArtPickup : MonoBehaviour
         }
     }
 
-    private static void RestoreRigidbody(Rigidbody rigidbody, bool wasEnabled, bool kinematic, bool useGravity)
+    private static void RestoreRigidbody(Rigidbody rigidbody, bool kinematic, bool useGravity)
     {
         if (rigidbody == null)
         {
             return;
         }
 
-        rigidbody.enabled = wasEnabled;
         rigidbody.isKinematic = kinematic;
         rigidbody.useGravity = useGravity;
+        rigidbody.detectCollisions = true;
         rigidbody.linearVelocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
     }

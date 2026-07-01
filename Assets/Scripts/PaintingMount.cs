@@ -66,9 +66,9 @@ public class PaintingMount : MonoBehaviour
 
         if (rigidbody != null)
         {
-            rigidbody.enabled = true;
             rigidbody.isKinematic = true;
             rigidbody.useGravity = false;
+            rigidbody.detectCollisions = true;
             rigidbody.linearVelocity = Vector3.zero;
             rigidbody.angularVelocity = Vector3.zero;
         }
