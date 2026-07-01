@@ -4,6 +4,15 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Raycast-based pick-up, carry, wall-mount placement, and drop for museum paintings.
 /// Attach to the player camera. Uses the "Interactable" layer and a HoldPoint child transform.
+///
+/// Carry feel (Night 1, verified defaults — see docs/MORNING_TEST.md):
+///   - Immediate snap to the hold point on pickup (no pop-in lag), then a per-frame
+///     LateUpdate lerp keeps the canvas glued to the hands after camera movement.
+///   - Rigidbody is disabled while held so physics never fights the camera.
+///   - carryFollowSharpness ~= 28 gives a tight, readable follow; carryLocalEuler (-90,0,0)
+///     rotates the flat cube "canvas" to face the player.
+/// Placement is wing-gated (see GalleryWing / PaintingMount.CanAccept): aiming at a
+/// wrong-wing or occupied mount rejects the click but never drops the painting.
 /// </summary>
 [RequireComponent(typeof(Camera))]
 public class ArtPickup : MonoBehaviour

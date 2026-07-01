@@ -7,8 +7,9 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 ## Session start
 
 **Branch:** `feature/arcane-museum-feel`  
-**Started:** _(UTC timestamp)_  
+**Started:** 2026-07-01T05:51Z  
 **Agent model:** Composer 2.5  
+**Environment:** Cloud VM, code-only (no Unity install / no license activation / no batchmode compile per NIGHT1_MASTER.md).
 
 ### Initial state
 
@@ -19,3 +20,24 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 ---
 
 <!-- Agent: append phase entries below this line -->
+
+## 2026-07-01T05:52Z Phase 1 — Carry feel polish (P0)
+
+**Status:** done
+
+**Files changed:**
+- `Assets/Scripts/ArtPickup.cs` — added a documentation comment recording the verified carry model and tuned parameter values. No behavior change.
+
+**What I reviewed (no regression):**
+- Pickup path snaps the painting to the hold point immediately (`SetPositionAndRotation` in `PickUpObject`) — no floaty pop-in.
+- `LateUpdate` lerp (`carryFollowSharpness = 28`, exponential smoothing) keeps the canvas glued to the hands after `FirstPersonController` rotates the camera.
+- Rigidbody is disabled + kinematic while held; restored on place/drop.
+- `MuseumGameplaySetup.FixExistingHoldPoint()` (Game → Fix Carry Settings) is idempotent: it only re-applies the hold point local pos/rot, safe to run repeatedly.
+
+**Assumptions:**
+- Existing carry values are already good; the master says "tune only if needed," so I left `carryFollowSharpness`, `carryLocalEuler`, and hold point defaults unchanged and documented them instead.
+- Cannot verify feel in Play mode on the cloud VM (no Unity) — recorded expected behavior for the human in `docs/MORNING_TEST.md`.
+
+**Blockers:** none.
+
+**Morning test steps:** pick up a floor painting; it should snap to hands instantly and stay readable/centered while you look around (no lag, no physics jitter).
