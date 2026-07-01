@@ -165,6 +165,30 @@ public class SortingTable : MonoBehaviour
         }
     }
 
+    public static bool IsStaged(Transform painting)
+    {
+        if (painting == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < ActiveTables.Count; i++)
+        {
+            SortingTable table = ActiveTables[i];
+            if (table != null && table.ContainsStaged(painting))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool ContainsStaged(Transform painting)
+    {
+        return painting != null && stagedItems.Contains(painting);
+    }
+
     public void ClearAllStaged()
     {
         for (int i = stagedItems.Count - 1; i >= 0; i--)

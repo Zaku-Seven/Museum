@@ -13,6 +13,17 @@ public static class PlayerSettingsStore
     public const float DefaultMouseSensitivity = 2f;
     public const float DefaultFieldOfView = 75f;
     public const float DefaultMasterVolume = 0.8f;
+    public const float DefaultGamepadLookSensitivity = 2.5f;
+
+    public static float GamepadLookSensitivity
+    {
+        get => PlayerPrefs.GetFloat("Museum_GamepadLook", DefaultGamepadLookSensitivity);
+        set
+        {
+            PlayerPrefs.SetFloat("Museum_GamepadLook", Mathf.Clamp(value, 0.5f, 8f));
+            PlayerPrefs.Save();
+        }
+    }
 
     public static float MouseSensitivity
     {

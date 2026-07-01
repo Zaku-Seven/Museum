@@ -44,7 +44,12 @@ public class PauseMenuController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current == null && Gamepad.current == null)
+        {
+            return;
+        }
+
+        if (!MuseumInput.PausePressedThisFrame())
         {
             return;
         }

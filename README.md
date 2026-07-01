@@ -24,6 +24,8 @@ Or run individually on an empty scene:
 - **Game → Validate Museum Scene** — read-only wiring check
 - **Game → Clear Museum Save** — wipe PlayerPrefs progress
 - **Game → Create Painting Definition Assets** — ScriptableObject catalog under `Assets/Data/Paintings/`
+- **Game → Link Painting Definitions To Scene** — apply SO data to scene paintings
+- **Game → Add Mount Wing Placards** — world-space wing labels on frames
 - **Game → Add Player Bean Visual** — optional capsule mesh on Player
 
 ## Gallery wings (sorting)
@@ -55,3 +57,5 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | Esc | Pause / resume (Settings, New Game) |
 
 When every gallery section is complete, a **win overlay** appears with **Continue exploring** or **New game**. Pickup stays disabled after win unless you start a new game. Progress (mounts, sorting table staging, win state) persists via **save v2** (`MuseumSaveManager` + stable `MuseumEntityId`s). Pause menu includes **mouse sensitivity**, **FOV**, **invert Y**, and **master volume**. Optional SFX hooks live on `MuseumAudioDirector` (assign clips in Inspector).
+
+See `docs/MULTIPLAYER_VOIP.md` for multiplayer / voice chat scope (not implemented yet).

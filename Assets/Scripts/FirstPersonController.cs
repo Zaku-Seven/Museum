@@ -138,12 +138,12 @@ public class FirstPersonController : MonoBehaviour
     /// </summary>
     private void HandleMouseLook()
     {
-        if (Mouse.current == null)
+        Vector2 lookDelta = MuseumInput.LookDelta();
+        if (lookDelta.sqrMagnitude < 0.0001f)
         {
             return;
         }
 
-        Vector2 lookDelta = Mouse.current.delta.ReadValue();
         float mouseX = lookDelta.x * mouseSensitivity * 0.1f;
         float mouseY = lookDelta.y * mouseSensitivity * 0.1f;
         if (invertY)
@@ -166,29 +166,24 @@ public class FirstPersonController : MonoBehaviour
     /// </summary>
     private void HandleMovement()
     {
-        if (Keyboard.current == null)
-        {
-            return;
-        }
-
         bool isGrounded = characterController.isGrounded;
 
-        // Reset downward velocity when grounded so we don't accumulate gravity while standing.
         if (isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = -2f;
         }
 
-        // Jump on Space when grounded.
-        if (isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (isGrounded && Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             verticalVelocity = jumpForce;
         }
 
-        // Accumulate gravity every frame.
         verticalVelocity += gravity * Time.deltaTime;
 
-        // Build movement direction from camera orientation (ignore pitch for walking).
+        Vector2 moveInput = MuseumInput.MoveInput();
+        float horizontal = moveInput.x;
+        float vertical = moveInput.y;
+
         Vector3 forward = playerCamera.forward;
         Vector3 right = playerCamera.right;
         forward.y = 0f;
@@ -196,29 +191,7 @@ public class FirstPersonController : MonoBehaviour
         forward.Normalize();
         right.Normalize();
 
-        // WASD (and arrow keys) relative to camera facing.
-        float horizontal = 0f;
-        float vertical = 0f;
-        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
-        {
-            horizontal -= 1f;
-        }
-        if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
-        {
-            horizontal += 1f;
-        }
-        if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed)
-        {
-            vertical -= 1f;
-        }
-        if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)
-        {
-            vertical += 1f;
-        }
-
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized * moveSpeed;
-
-        // Combine horizontal movement with vertical velocity (jump/gravity).
         Vector3 velocity = moveDirection + Vector3.up * verticalVelocity;
         characterController.Move(velocity * Time.deltaTime);
     }

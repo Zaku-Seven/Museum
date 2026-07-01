@@ -21,7 +21,9 @@ public class MountAimHighlighter : MonoBehaviour
 
     [Header("Floor painting (empty-handed)")]
     [SerializeField] private Color floorHighlightColor = new Color(1f, 1f, 1f);
+    [SerializeField] private Color stagedHighlightColor = new Color(0.55f, 0.85f, 0.95f);
     [SerializeField] private float floorHighlightIntensity = 0.35f;
+    [SerializeField] private float stagedHighlightIntensity = 0.5f;
     [SerializeField] private float floorPulseSpeed = 4f;
 
     [Header("Active stack item (while carrying)")]
@@ -42,7 +44,8 @@ public class MountAimHighlighter : MonoBehaviour
         MountValid,
         MountWrong,
         MountOccupied,
-        FloorPainting
+        FloorPainting,
+        StagedPainting
     }
 
     private void Awake()
@@ -159,7 +162,14 @@ public class MountAimHighlighter : MonoBehaviour
             return;
         }
 
+        bool staged = SortingTable.IsStaged(painting.transform);
         float pulse = 0.65f + 0.35f * Mathf.Sin(Time.time * floorPulseSpeed);
+        if (staged)
+        {
+            ApplyAimHighlight(canvasRenderer, HighlightMode.StagedPainting, stagedHighlightColor * pulse, pulse: true);
+            return;
+        }
+
         ApplyAimHighlight(canvasRenderer, HighlightMode.FloorPainting, floorHighlightColor * pulse, pulse: true);
     }
 
@@ -174,7 +184,9 @@ public class MountAimHighlighter : MonoBehaviour
 
         Color emission = mode == HighlightMode.FloorPainting
             ? color * floorHighlightIntensity
-            : color * (pulse ? mountHighlightIntensity : mountHighlightIntensity * 0.85f);
+            : mode == HighlightMode.StagedPainting
+                ? color * stagedHighlightIntensity
+                : color * (pulse ? mountHighlightIntensity : mountHighlightIntensity * 0.85f);
         propertyBlock.SetColor(EmissionColorId, emission);
         renderer.SetPropertyBlock(propertyBlock);
     }

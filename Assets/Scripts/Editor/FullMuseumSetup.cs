@@ -17,6 +17,9 @@ public static class FullMuseumSetup
         ArtPickupSceneSetup.SetupFromMenu();
         MuseumGameplaySetup.SetupFromMenu();
         GalleryContentSetup.SetupFromMenu();
+        PaintingCatalogSetup.CreateDefaultCatalog();
+        PaintingDefinitionLinker.LinkScenePaintings();
+        MountPlacardSetup.AddPlacardsFromMenu();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();

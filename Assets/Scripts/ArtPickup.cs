@@ -69,24 +69,24 @@ public class ArtPickup : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        if (MuseumInput.InteractPressedThisFrame())
         {
             TryPickupFromRaycast();
         }
 
         HandleScrollStackSelection();
 
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && IsHolding)
+        if (MuseumInput.PlacePressedThisFrame() && IsHolding)
         {
             HandleHeldClick();
         }
 
-        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        if (MuseumInput.UndoPressedThisFrame())
         {
             TryUndoLastPlacement();
         }
 
-        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame && IsHolding)
+        if (MuseumInput.ThrowPressedThisFrame() && IsHolding)
         {
             ThrowActiveObject();
         }
@@ -99,12 +99,12 @@ public class ArtPickup : MonoBehaviour
 
     private void HandleScrollStackSelection()
     {
-        if (carryStack.Count <= 1 || Mouse.current == null)
+        if (carryStack.Count <= 1 || Mouse.current == null && Gamepad.current == null)
         {
             return;
         }
 
-        float scroll = Mouse.current.scroll.ReadValue().y;
+        float scroll = MuseumInput.StackScrollDelta();
         if (scroll > 0.05f)
         {
             activeStackIndex = (activeStackIndex + 1) % carryStack.Count;
@@ -163,6 +163,11 @@ public class ArtPickup : MonoBehaviour
         }
 
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
+        if (painting != null && SortingTable.IsStaged(painting.transform))
+        {
+            return $"Staged: \"{painting.PaintingTitle}\" — E to pick up";
+        }
+
         if (painting != null)
         {
             if (painting.CurrentMount != null)

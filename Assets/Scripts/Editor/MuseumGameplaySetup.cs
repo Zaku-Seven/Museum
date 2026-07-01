@@ -144,6 +144,9 @@ public static class MuseumGameplaySetup
 
         MuseumEntityIdUtility.EnsureEntityId(mountRoot, $"mount_{mountName.ToLowerInvariant()}");
 
+        PaintingMount mountComponent = mountRoot.GetComponent<PaintingMount>();
+        MountPlacardSetup.EnsurePlacard(mountComponent);
+
         Renderer frameRenderer = frame.GetComponent<Renderer>();
         if (frameRenderer != null)
         {
@@ -957,6 +960,16 @@ public static class MuseumGameplaySetup
         if (playerObject.GetComponent<MuseumStatistics>() == null)
         {
             playerObject.AddComponent<MuseumStatistics>();
+        }
+
+        if (playerObject.GetComponent<MuseumDevCheats>() == null)
+        {
+            playerObject.AddComponent<MuseumDevCheats>();
+        }
+
+        if (cameraObject.GetComponent<ThrowCameraKick>() == null)
+        {
+            cameraObject.AddComponent<ThrowCameraKick>();
         }
     }
 

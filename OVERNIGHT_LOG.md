@@ -205,3 +205,15 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Assumptions:** UI buttons wired via persistent UnityEvents during setup menu. Sliders use minimal Unity UI (may need graphic tuning in Editor). Audio clips not bundled — assign when ready.
 
 **Cannot verify on VM:** Play mode, button wiring, settings sliders — re-run **Setup Museum Gameplay** or **Setup Full Museum** after pull.
+
+---
+
+## 2026-07-01 Night 6 — Gamepad, placards, throw juice, dev cheats
+
+**Delivered:**
+- **MuseumInput** — keyboard + gamepad (A pick up, B throw, X place, Y undo, bumpers stack, Start pause, right stick look)
+- **Mount wing placards** — world-space labels on frames; auto on setup
+- **Staged painting highlight** — cyan pulse + HUD prompt on sorting table items
+- **Throw camera kick** — brief FOV punch on throw
+- **Dev cheats** — F9/F10/F8 in Editor/Development builds
+- **PaintingDefinition linker** menu; Full Museum runs catalog + link + placards

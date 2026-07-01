@@ -358,6 +358,7 @@ public static class GalleryContentSetup
         mountCollider.center = Vector3.zero;
 
         MuseumEntityIdUtility.EnsureEntityId(mountRoot, BuildMountEntityId(wing, mountName));
+        MountPlacardSetup.EnsurePlacard(mountRoot.GetComponent<PaintingMount>());
 
         return mountRoot;
     }
