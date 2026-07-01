@@ -55,6 +55,30 @@ public static class PaintingCatalogSetup
         CreateDefinition("painting_lilac_field", "Lilac Field", GalleryWing.Impressionist, new Color(0.72f, 0.58f, 0.82f),
             "Purple meadow — south floor overflow.");
 
+        CreateDefinition("painting_crimson_portrait", "Crimson Portrait", GalleryWing.Classical, new Color(0.72f, 0.18f, 0.2f),
+            "Tall portrait — unsorted pile.");
+        CreateDefinition("painting_harbor_panorama", "Harbor Panorama", GalleryWing.Impressionist, new Color(0.35f, 0.55f, 0.78f),
+            "Wide seascape — unsorted pile.");
+        CreateDefinition("painting_grand_still_life", "Grand Still Life", GalleryWing.Classical, new Color(0.55f, 0.32f, 0.22f),
+            "Oversized square canvas.");
+
+        CreateDefinition("fossil_sauropodskull", "Sauropod Skull", GalleryWing.Fossil, new Color(0.68f, 0.64f, 0.58f),
+            "Hero skull for fossil dais mount.");
+        CreateDefinition("fossil_megafaunafemur", "Megafauna Femur", GalleryWing.Fossil, new Color(0.62f, 0.58f, 0.52f),
+            "Long bone segment.");
+        CreateDefinition("fossil_ribarch", "Rib Arch", GalleryWing.Fossil, new Color(0.58f, 0.55f, 0.5f),
+            "Curved rib cage section.");
+        CreateDefinition("fossil_ammonitespiral", "Ammonite Spiral", GalleryWing.Fossil, new Color(0.55f, 0.52f, 0.48f),
+            "Spiral shell fossil.");
+        CreateDefinition("fossil_trilobiteplate", "Trilobite Plate", GalleryWing.Fossil, new Color(0.42f, 0.48f, 0.46f),
+            "Small trilobite slab.");
+        CreateDefinition("fossil_mammothtusk", "Mammoth Tusk", GalleryWing.Fossil, new Color(0.78f, 0.74f, 0.68f),
+            "Ivory tusk specimen.");
+        CreateDefinition("fossil_archaeopteryxslab", "Archaeopteryx Slab", GalleryWing.Fossil, new Color(0.36f, 0.34f, 0.32f),
+            "Feathered imprint slab.");
+        CreateDefinition("fossil_bronzeidol", "Bronze Idol", GalleryWing.Fossil, new Color(0.52f, 0.38f, 0.22f),
+            "Antiquity statuette for fossil wing.");
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log($"Painting definitions created under {CatalogFolder}. Assign them on paintings when swapping to real art.");

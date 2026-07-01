@@ -37,15 +37,15 @@ public class MuseumStartupValidator : MonoBehaviour
         }
 
         PaintingMount[] mounts = FindObjectsByType<PaintingMount>(FindObjectsSortMode.None);
-        if (mounts.Length < 15)
+        if (mounts.Length < 21)
         {
-            LogIssue($"Expected ~15 wall mounts for expanded museum; found {mounts.Length}. Run Game → Expand Museum Building.");
+            LogIssue($"Expected ~21 mounts (paintings + fossil displays); found {mounts.Length}. Run Game → Setup Full Museum or Add Varied Paintings And Fossils.");
             issues++;
         }
 
-        if (GallerySection.AllSections.Count < 5)
+        if (GallerySection.AllSections.Count < 6)
         {
-            LogIssue($"Expected 5 gallery sections; found {GallerySection.AllSections.Count}. Run Game → Expand Museum Building.");
+            LogIssue($"Expected up to 6 gallery sections (incl. Fossil hall); found {GallerySection.AllSections.Count}. Run Game → Add Varied Paintings And Fossils.");
             issues++;
         }
 

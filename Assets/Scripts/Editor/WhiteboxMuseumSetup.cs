@@ -52,6 +52,7 @@ public static class WhiteboxMuseumSetup
         BuildFossilWing(fossilWing, fossilSlate, fossilFloor, daisMat);
         SetupMuseumLighting(lobby, artWing);
         PlacePlayerInLobby();
+        MuseumCollectionVarietySetup.EnsureCollectionVariety();
     }
 
     private static void BuildGrandLobby(Transform lobby, Material floorMat, Material pillarMat)

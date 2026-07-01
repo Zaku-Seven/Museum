@@ -24,6 +24,8 @@ public static class FullMuseumSetup
         MuseumArchitectureSetup.EnsureArchitecture();
         MuseumAtmosphereSetup.EnsureAtmosphereVolume();
         MuseumExpansionSetup.EnsureExpansion();
+        MuseumCollectionVarietySetup.EnsureCollectionVariety();
+        PaintingDefinitionLinker.LinkScenePaintings();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();

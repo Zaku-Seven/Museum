@@ -81,6 +81,7 @@ public class MountWingPlacard : MonoBehaviour
             GalleryWing.Modern => "Modern gallery",
             GalleryWing.Classical => "Classical hall",
             GalleryWing.Impressionist => "Impressionist wing",
+            GalleryWing.Fossil => "Fossil & antiquity",
             _ => $"{wing} wing"
         };
     }
