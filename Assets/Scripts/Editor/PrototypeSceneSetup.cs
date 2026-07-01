@@ -122,6 +122,9 @@ public static class PrototypeSceneSetup
         Object.DestroyImmediate(floor.GetComponent<MeshCollider>());
         BoxCollider floorCollider = floor.AddComponent<BoxCollider>();
         floorCollider.size = new Vector3(10f, 0.01f, 10f);
+
+        FootstepSurface footstepSurface = floor.AddComponent<FootstepSurface>();
+        footstepSurface.Configure(FootstepSurface.SurfaceKind.Stone);
     }
 
     private static void CreateWalls(Transform parent)
@@ -201,5 +204,7 @@ public static class PrototypeSceneSetup
         {
             Debug.LogWarning("PrototypeSceneSetup: Could not find playerCamera field on FirstPersonController.");
         }
+
+        PlayerVisualSetup.EnsurePlayerBean();
     }
 }

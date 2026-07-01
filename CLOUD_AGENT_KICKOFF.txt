@@ -1,0 +1,1 @@
+Read NIGHT1_MASTER.md in the repo root and execute it fully tonight on branch feature/arcane-museum-feel. Composer 2.5. Code-only: do NOT install Unity or activate licenses. Do NOT ask questions—document assumptions in OVERNIGHT_LOG.md. Commit and push after every phase. Open a PR to main when P0 (phases 1–3) is complete. Fill docs/MORNING_TEST.md before your final commit.
