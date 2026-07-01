@@ -812,6 +812,11 @@ public static class MuseumGameplaySetup
         {
             playerObject.AddComponent<SettingsMenuController>();
         }
+
+        if (playerObject.GetComponent<MuseumStatistics>() == null)
+        {
+            playerObject.AddComponent<MuseumStatistics>();
+        }
     }
 
     private static GameObject EnsureWinPanel(Transform canvas, Font font, out Text winText)

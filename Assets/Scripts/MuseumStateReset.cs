@@ -22,6 +22,7 @@ public static class MuseumStateReset
         }
 
         MuseumProgress.Instance?.ResetProgress();
+        MuseumStatistics.Instance?.ResetStatistics();
         MuseumGameFlowController.Instance?.ExitWinModal();
 
         if (clearTutorialHints)

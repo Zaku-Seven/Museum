@@ -131,6 +131,7 @@ public static class GalleryContentSetup
                 new Art("Water Lilies", new Color(0.4f, 0.75f, 0.7f), new Vector3(1.5f, 0.025f, 10f))
             });
 
+        CreateWingFloorZones(root);
         CreateSortingTable(root, counter);
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
@@ -217,6 +218,39 @@ public static class GalleryContentSetup
             default:
                 return wingName;
         }
+    }
+
+    private static void CreateWingFloorZones(Transform root)
+    {
+        CreateWingZone(root, "Zone_Modern", GalleryWing.Modern, "Modern paintings → South wall",
+            new Vector3(-6f, 0.011f, 6f), new Vector3(4f, 0.01f, 8f), new Color(0.12f, 0.18f, 0.32f, 0.45f));
+        CreateWingZone(root, "Zone_Classical", GalleryWing.Classical, "Classical paintings → East wall",
+            new Vector3(6f, 0.011f, 6f), new Vector3(4f, 0.01f, 8f), new Color(0.32f, 0.24f, 0.12f, 0.45f));
+        CreateWingZone(root, "Zone_Impressionist", GalleryWing.Impressionist, "Impressionist paintings → West wall",
+            new Vector3(0.75f, 0.011f, 10.75f), new Vector3(5f, 0.01f, 4f), new Color(0.12f, 0.28f, 0.22f, 0.45f));
+    }
+
+    private static void CreateWingZone(Transform parent, string name, GalleryWing wing, string label, Vector3 position, Vector3 scale, Color tint)
+    {
+        if (GameObject.Find(name) != null)
+        {
+            return;
+        }
+
+        GameObject zone = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        zone.name = name;
+        zone.transform.SetParent(parent, false);
+        zone.transform.position = position;
+        zone.transform.localScale = scale;
+
+        Collider collider = zone.GetComponent<Collider>();
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        WingZoneMarker marker = zone.AddComponent<WingZoneMarker>();
+        marker.Configure(wing, label, tint);
     }
 
     private static void CreateSortingTable(Transform parent, Counter counter)

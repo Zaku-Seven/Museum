@@ -128,7 +128,12 @@ public class InteractionHUD : MonoBehaviour
 
         if (winText != null)
         {
-            winText.text = winMessage;
+            string stats = MuseumStatistics.Instance != null
+                ? MuseumStatistics.Instance.BuildWinStatsLine()
+                : string.Empty;
+            winText.text = string.IsNullOrEmpty(stats)
+                ? winMessage
+                : $"{winMessage}\n\n{stats}";
         }
 
         // Win modal + input blocking handled by MuseumGameFlowController.

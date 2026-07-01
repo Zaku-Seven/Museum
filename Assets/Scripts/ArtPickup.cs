@@ -147,6 +147,11 @@ public class ArtPickup : MonoBehaviour
             return BuildCarryPrompt("Click to drop");
         }
 
+        if (hit.collider.GetComponentInParent<WingZoneMarker>() is WingZoneMarker zone)
+        {
+            return $"Floor zone: {zone.ZoneLabel}";
+        }
+
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
         if (painting != null)
         {
