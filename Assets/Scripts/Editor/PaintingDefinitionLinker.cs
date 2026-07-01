@@ -23,7 +23,15 @@ public static class PaintingDefinitionLinker
         { "painting_old_masters", "painting_old_masters" },
         { "painting_garden_light", "painting_garden_light" },
         { "painting_rose_morning", "painting_rose_morning" },
-        { "painting_water_lilies", "painting_water_lilies" }
+        { "painting_water_lilies", "painting_water_lilies" },
+        { "painting_twilight_arch", "painting_twilight_arch" },
+        { "painting_bronze_portrait", "painting_bronze_portrait" },
+        { "painting_ivory_column", "painting_ivory_column" },
+        { "painting_vermillion_block", "painting_vermillion_block" },
+        { "painting_carbon_study", "painting_carbon_study" },
+        { "painting_neon_grid", "painting_neon_grid" },
+        { "painting_misty_shore", "painting_misty_shore" },
+        { "painting_lilac_field", "painting_lilac_field" }
     };
 
     [MenuItem("Game/Link Painting Definitions To Scene")]

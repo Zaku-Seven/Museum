@@ -23,6 +23,7 @@ public static class FullMuseumSetup
 
         MuseumArchitectureSetup.EnsureArchitecture();
         MuseumAtmosphereSetup.EnsureAtmosphereVolume();
+        MuseumExpansionSetup.EnsureExpansion();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();

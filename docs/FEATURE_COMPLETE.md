@@ -31,9 +31,11 @@ Gamepad **Collection**: pause → **Collection**. Close overlays: **Esc / Start 
 ## Editor one-time setup (required once per machine / after pull)
 
 1. Open `Assets/Scenes/SampleScene.unity`  
-2. **Game → Setup Full Museum**  
-3. **Game → Validate Museum Scene** → 0 errors  
+2. **Game → Setup Full Museum** (includes architecture + north archive expansion)  
+3. **Game → Validate Museum Scene** → 0 errors (INFO lines for optional polish are OK)  
 4. **Test Runner** → EditMode + PlayMode → Run All  
+
+Expanded greybox: **5 gallery sections**, **15 wall mounts**, main + archive **sorting tables**, east/west alcoves with benches and vitrines.
 
 ## Explicitly out of scope (not needed for “visual polish only”)
 

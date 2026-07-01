@@ -12,14 +12,16 @@ One-click path after pulling latest:
 | Layer | Content |
 |-------|---------|
 | **Architecture** | Ceiling, atrium pillars, welcome sign, wing banners, floor inlay |
+| **Expansion** | North archive wing (3 mounts), east/west alcoves, corridor, wainscoting, vitrines, 2 sorting tables, accent lighting |
 | **Atmosphere** | Global URP Volume (`Assets/Settings/MuseumAtmosphereProfile.asset`) |
-| **Gameplay** | 4 sections, 12+ mounts, sorting table, full HUD guidance |
+| **Gameplay** | 5 sections, 15 wall mounts, sorting tables, full HUD guidance |
 | **Audio** | Procedural SFX + ambience until real clips assigned |
 | **Guidance** | Next objective line, wing breakdown, wrong-wing compass hints |
 | **Accessibility** | Settings → Reduce motion (less bob, FOV, particles, pulses) |
 
 ## Optional individual menus
 
+- **Game → Expand Museum Building** — north archive, alcoves, props, lighting (also runs inside Full Museum)
 - **Game → Setup Museum Architecture** — greybox ceiling/signage only
 - **Game → Setup Museum Atmosphere** — volume profile only
 - **Game → Create Painting Definition Assets** — refresh catalog SOs

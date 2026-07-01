@@ -27,8 +27,9 @@ Or run individually on an empty scene:
 - **Game → Link Painting Definitions To Scene** — apply SO data to scene paintings
 - **Game → Add Mount Wing Placards** — world-space wing labels on frames
 - **Game → Add Player Bean Visual** — optional capsule mesh on Player
-- **Game → Setup Museum Architecture** — ceiling, pillars, wing banners, welcome sign
+- **Game → Setup Museum Architecture** — ceiling, pillars, wing banners, welcome sign, archive ceiling extension
 - **Game → Setup Museum Atmosphere** — global URP Volume mood profile
+- **Game → Expand Museum Building** — north archive room, corridor, alcoves, vitrines, overflow art, gallery lighting
 
 See `docs/MUSEUM_THOROUGH_SETUP.md` for the full one-click museum pass.
 
@@ -47,7 +48,7 @@ Filling every mount in a section completes its `GallerySection`: frames **glow b
 
 While carrying, the **wing guide** (top-left, green) shows how many open mounts remain for that wing. A **compass** above the crosshair points to the nearest valid mount. Hold **Tab** / **View** to inspect art lore. Press **J** (or pause → **Collection**) for the full curator log. A **progress bar** under the objective tracks overall completion. Valid mounts show a **placement ghost** when you aim at them.
 
-Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Impressionist (West)** = west. **Modern (North)** = original north-wall mounts (3 frames).
+Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Impressionist (West)** = west. **Modern (North)** = original north-wall mounts (3 frames). **Modern (Archive)** = north annex past the corridor (3 reserved-slot mounts + archive sorting table).
 
 ## Controls
 

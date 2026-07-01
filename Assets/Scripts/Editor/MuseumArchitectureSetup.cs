@@ -36,7 +36,26 @@ public static class MuseumArchitectureSetup
         EnsureWingBanner(root, "Banner_Modern", "MODERN GALLERY", new Vector3(0f, 2.2f, -22f), new Vector3(8f, 0.8f, 0.15f), new Color(0.2f, 0.35f, 0.55f));
         EnsureWingBanner(root, "Banner_Classical", "CLASSICAL HALL", new Vector3(22f, 2.2f, 0f), new Vector3(0.15f, 0.8f, 8f), new Color(0.45f, 0.32f, 0.18f));
         EnsureWingBanner(root, "Banner_Impressionist", "IMPRESSIONIST WING", new Vector3(-22f, 2.2f, 0f), new Vector3(0.15f, 0.8f, 8f), new Color(0.22f, 0.42f, 0.32f));
+        EnsureWingBanner(root, "Banner_ModernArchive", "MODERN ARCHIVE", new Vector3(0f, 2.2f, 32f), new Vector3(6f, 0.8f, 0.15f), new Color(0.18f, 0.28f, 0.48f));
         EnsureAtriumMarker(root);
+        EnsureArchiveCeilingExtension(root);
+    }
+
+    private static void EnsureArchiveCeilingExtension(Transform root)
+    {
+        if (root.Find("Ceiling_ArchiveExtension") != null)
+        {
+            return;
+        }
+
+        GameObject ceiling = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        ceiling.name = "Ceiling_ArchiveExtension";
+        ceiling.transform.SetParent(root, false);
+        ceiling.transform.position = new Vector3(0f, 3f, 38f);
+        ceiling.transform.localScale = new Vector3(2.2f, 1f, 1.8f);
+        ceiling.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
+        ApplyMaterial(ceiling, new Color(0.1f, 0.11f, 0.14f));
+        Object.DestroyImmediate(ceiling.GetComponent<MeshCollider>());
     }
 
     private static void EnsureCeiling(Transform root)

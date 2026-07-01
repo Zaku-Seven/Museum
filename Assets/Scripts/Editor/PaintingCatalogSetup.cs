@@ -41,7 +41,19 @@ public static class PaintingCatalogSetup
         CreateDefinition("painting_twilight_arch", "Twilight Arch", GalleryWing.Modern, new Color(0.55f, 0.35f, 0.65f),
             "Violet structural study — stretch content for future north expansion.");
         CreateDefinition("painting_bronze_portrait", "Bronze Portrait", GalleryWing.Classical, new Color(0.62f, 0.42f, 0.28f),
-            "Patina classical bust study — optional east wing overflow.");
+            "Patina classical bust study — east alcove overflow.");
+        CreateDefinition("painting_ivory_column", "Ivory Column", GalleryWing.Classical, new Color(0.88f, 0.86f, 0.78f),
+            "Marble column study — south floor overflow.");
+        CreateDefinition("painting_vermillion_block", "Vermillion Block", GalleryWing.Modern, new Color(0.85f, 0.25f, 0.2f),
+            "Bold red modern block — south floor overflow.");
+        CreateDefinition("painting_carbon_study", "Carbon Study", GalleryWing.Modern, new Color(0.12f, 0.12f, 0.14f),
+            "Dark graphite modern — north archive slot.");
+        CreateDefinition("painting_neon_grid", "Neon Grid", GalleryWing.Modern, new Color(0.2f, 0.75f, 0.85f),
+            "Cyan lattice — north archive slot.");
+        CreateDefinition("painting_misty_shore", "Misty Shore", GalleryWing.Impressionist, new Color(0.5f, 0.72f, 0.78f),
+            "Coastal mist — west alcove overflow.");
+        CreateDefinition("painting_lilac_field", "Lilac Field", GalleryWing.Impressionist, new Color(0.72f, 0.58f, 0.82f),
+            "Purple meadow — south floor overflow.");
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();

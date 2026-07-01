@@ -74,6 +74,17 @@ public static class MuseumSceneValidator
             report.AppendLine("INFO: No MuseumAtmosphereVolume — run Game → Setup Museum Atmosphere (optional).");
         }
 
+        if (GameObject.Find("Environment")?.transform.Find("MuseumExpansion") == null)
+        {
+            report.AppendLine("INFO: No MuseumExpansion — run Game → Expand Museum Building (included in Setup Full Museum).");
+        }
+
+        if (GameObject.Find("Environment")?.transform.Find("MuseumExpansion/GalleryLighting") == null
+            && GameObject.Find("Environment")?.transform.Find("MuseumExpansion")?.Find("GalleryLighting") == null)
+        {
+            report.AppendLine("INFO: No gallery accent lighting — run Game → Expand Museum Building.");
+        }
+
         if (GameObject.Find("Environment")?.transform.Find("MuseumArchitecture") == null)
         {
             report.AppendLine("INFO: No MuseumArchitecture — run Game → Setup Museum Architecture (optional).");
@@ -111,6 +122,10 @@ public static class MuseumSceneValidator
             report.AppendLine("WARN: No PaintingMount instances in scene.");
             warnings++;
         }
+        else if (mounts.Length < 15)
+        {
+            report.AppendLine($"INFO: Found {mounts.Length} mounts — expanded museum expects ~15 (run Expand Museum Building).");
+        }
         else
         {
             warnings += ValidateMountSlots(mounts, report);
@@ -121,6 +136,10 @@ public static class MuseumSceneValidator
         {
             report.AppendLine("WARN: No GallerySection instances (run Setup Gallery Wings).");
             warnings++;
+        }
+        else if (sections.Length < 5)
+        {
+            report.AppendLine($"INFO: Found {sections.Length} gallery sections — expanded museum expects 5 (run Expand Museum Building).");
         }
 
         InteractablePainting[] paintings = Object.FindObjectsByType<InteractablePainting>(FindObjectsSortMode.None);
@@ -141,6 +160,10 @@ public static class MuseumSceneValidator
         if (tables.Length == 0)
         {
             report.AppendLine("INFO: No SortingTable (optional until Gallery Wings runs).");
+        }
+        else if (tables.Length == 1)
+        {
+            report.AppendLine("INFO: One sorting table — run Expand Museum Building for archive staging table.");
         }
 
         if (Object.FindFirstObjectByType<EventSystem>() == null)
