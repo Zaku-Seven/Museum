@@ -18,14 +18,22 @@ public class MuseumSaveManager : MonoBehaviour
     private void OnEnable()
     {
         Instance = this;
-        MuseumGameEvents.PaintingPlaced += HandlePaintingChanged;
-        MuseumGameEvents.PlacementUndone += HandleUndone;
+        MuseumGameEvents.PaintingPlaced += HandleAutoSave;
+        MuseumGameEvents.PlacementUndone += HandleAutoSaveUndone;
+        MuseumGameEvents.PaintingDropped += HandleAutoSavePainting;
+        MuseumGameEvents.PaintingThrown += HandleAutoSavePainting;
+        MuseumGameEvents.PaintingStaged += HandleAutoSavePainting;
+        MuseumGameEvents.PaintingPickedUp += HandleAutoSavePainting;
     }
 
     private void OnDisable()
     {
-        MuseumGameEvents.PaintingPlaced -= HandlePaintingChanged;
-        MuseumGameEvents.PlacementUndone -= HandleUndone;
+        MuseumGameEvents.PaintingPlaced -= HandleAutoSave;
+        MuseumGameEvents.PlacementUndone -= HandleAutoSaveUndone;
+        MuseumGameEvents.PaintingDropped -= HandleAutoSavePainting;
+        MuseumGameEvents.PaintingThrown -= HandleAutoSavePainting;
+        MuseumGameEvents.PaintingStaged -= HandleAutoSavePainting;
+        MuseumGameEvents.PaintingPickedUp -= HandleAutoSavePainting;
 
         if (Instance == this)
         {
@@ -51,15 +59,22 @@ public class MuseumSaveManager : MonoBehaviour
         Save();
     }
 
-    private void HandlePaintingChanged(InteractablePainting painting, PaintingMount mount)
+    private void HandleAutoSave(InteractablePainting painting, PaintingMount mount)
     {
-        if (autoSaveOnChange)
-        {
-            Save();
-        }
+        RequestAutoSave();
     }
 
-    private void HandleUndone(InteractablePainting painting, PaintingMount mount)
+    private void HandleAutoSaveUndone(InteractablePainting painting, PaintingMount mount)
+    {
+        RequestAutoSave();
+    }
+
+    private void HandleAutoSavePainting(InteractablePainting painting)
+    {
+        RequestAutoSave();
+    }
+
+    private void RequestAutoSave()
     {
         if (autoSaveOnChange)
         {

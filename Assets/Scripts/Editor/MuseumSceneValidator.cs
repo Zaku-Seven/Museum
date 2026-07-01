@@ -52,11 +52,21 @@ public static class MuseumSceneValidator
             warnings += WarnIfMissing<MuseumGameFlowController>(player, report, "MuseumGameFlowController");
             warnings += WarnIfMissing<MuseumAudioDirector>(player, report, "MuseumAudioDirector");
             warnings += WarnIfMissing<SettingsMenuController>(player, report, "SettingsMenuController");
+            warnings += WarnIfMissing<MainMenuController>(player, report, "MainMenuController");
+            warnings += WarnIfMissing<MuseumStatistics>(player, report, "MuseumStatistics");
+            warnings += WarnIfMissing<FootstepController>(player, report, "FootstepController");
         }
 
-        if (GameObject.Find("InteractionHUD")?.GetComponent<MuseumUiActions>() == null)
+        GameObject hudCanvas = GameObject.Find("InteractionHUD");
+        if (hudCanvas?.GetComponent<MuseumUiActions>() == null)
         {
             report.AppendLine("WARN: InteractionHUD missing MuseumUiActions (re-run Setup Museum Gameplay).");
+            warnings++;
+        }
+
+        if (Object.FindFirstObjectByType<ControlsHelpController>() == null)
+        {
+            report.AppendLine("WARN: ControlsHelpController missing (re-run Setup Museum Gameplay).");
             warnings++;
         }
 
@@ -65,6 +75,10 @@ public static class MuseumSceneValidator
         {
             report.AppendLine("WARN: No PaintingMount instances in scene.");
             warnings++;
+        }
+        else
+        {
+            warnings += ValidateMountSlots(mounts, report);
         }
 
         GallerySection[] sections = Object.FindObjectsByType<GallerySection>(FindObjectsSortMode.None);
@@ -108,6 +122,56 @@ public static class MuseumSceneValidator
         {
             Debug.Log(report.ToString());
         }
+    }
+
+    private static int ValidateMountSlots(PaintingMount[] mounts, StringBuilder report)
+    {
+        int warnings = 0;
+        for (int i = 0; i < mounts.Length; i++)
+        {
+            PaintingMount mount = mounts[i];
+            if (mount == null || !mount.HasSpecificSlot)
+            {
+                continue;
+            }
+
+            if (!TryFindPaintingId(mount.RequiredPaintingId, out _))
+            {
+                report.AppendLine(
+                    $"WARN: Mount {mount.name} requires painting id \"{mount.RequiredPaintingId}\" but no matching painting was found.");
+                warnings++;
+            }
+        }
+
+        return warnings;
+    }
+
+    private static bool TryFindPaintingId(string paintingId, out InteractablePainting painting)
+    {
+        painting = null;
+        if (string.IsNullOrEmpty(paintingId))
+        {
+            return false;
+        }
+
+        InteractablePainting[] paintings = Object.FindObjectsByType<InteractablePainting>(FindObjectsSortMode.None);
+        for (int i = 0; i < paintings.Length; i++)
+        {
+            InteractablePainting candidate = paintings[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            if (string.Equals(paintingId, candidate.PaintingId, System.StringComparison.OrdinalIgnoreCase)
+                || string.Equals(paintingId, candidate.SaveId, System.StringComparison.OrdinalIgnoreCase))
+            {
+                painting = candidate;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int RequireComponent<T>(GameObject target, StringBuilder report) where T : Component

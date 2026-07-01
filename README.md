@@ -41,6 +41,8 @@ only accepts a painting of its required wing:
 
 Filling every mount in a section completes its `GallerySection`: frames **glow blue**, a **center banner** announces completion (e.g. `Modern (South) wing complete!`), and the HUD progress line reads e.g. `Modern (North): 3/3 hung - done`.
 
+While carrying, the **wing guide** (top-left, green) shows how many open mounts remain for that wing.
+
 Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Impressionist (West)** = west. **Modern (North)** = original north-wall mounts (3 frames).
 
 ## Controls

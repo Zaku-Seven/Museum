@@ -228,6 +228,18 @@ public class ArtPickup : MonoBehaviour
         return $"Placing: \"{HeldPainting.PaintingTitle}\" ({activeStackIndex + 1}/{carryStack.Count}) · scroll to change";
     }
 
+    /// <summary>HUD hint for where to hang the active painting.</summary>
+    public string GetWingGuidanceLine()
+    {
+        if (!IsHolding || HeldPainting == null)
+        {
+            return string.Empty;
+        }
+
+        PaintingMount[] mounts = FindObjectsByType<PaintingMount>(FindObjectsSortMode.None);
+        return MuseumWingGuide.BuildGuidance(HeldPainting, mounts);
+    }
+
     private string BuildCarryPrompt(string action)
     {
         if (carryStack.Count <= 1)

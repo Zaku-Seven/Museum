@@ -35,6 +35,11 @@ public static class TutorialHints
         TryShowOnce("Throw", "Tip: Press Q to throw the active painting — aim at the sorting table to catch it.");
     }
 
+    public static void TryShowStagingHint()
+    {
+        TryShowOnce("Staging", "Tip: The sorting table keeps dropped paintings neat — pick them up anytime with E.");
+    }
+
     public static void TryShowCompleteHint()
     {
         TryShowOnce("MuseumWin", "The museum is open! Every wing is hung. Cozy work.");
@@ -42,7 +47,7 @@ public static class TutorialHints
 
     public static void ClearAllHints()
     {
-        string[] keys = { "Pickup", "WrongWing", "WrongSlot", "StackScroll", "Throw", "MuseumWin" };
+        string[] keys = { "Pickup", "WrongWing", "WrongSlot", "StackScroll", "Throw", "Staging", "MuseumWin" };
         for (int i = 0; i < keys.Length; i++)
         {
             PlayerPrefs.DeleteKey(Prefix + keys[i]);

@@ -19,6 +19,7 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text stagingText;
     [SerializeField] private Text tutorialText;
     [SerializeField] private Text objectiveText;
+    [SerializeField] private Text wingGuideText;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private Text winText;
 
@@ -103,6 +104,13 @@ public class InteractionHUD : MonoBehaviour
         {
             objectiveText.text = BuildObjectiveText();
             objectiveText.enabled = !string.IsNullOrEmpty(objectiveText.text);
+        }
+
+        if (wingGuideText != null)
+        {
+            string guide = artPickup.GetWingGuidanceLine();
+            wingGuideText.text = guide;
+            wingGuideText.enabled = !string.IsNullOrEmpty(guide);
         }
 
         if (stackText != null)

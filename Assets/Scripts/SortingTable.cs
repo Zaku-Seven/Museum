@@ -140,6 +140,14 @@ public class SortingTable : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
         }
 
+        InteractablePainting interactable = painting.GetComponent<InteractablePainting>();
+        if (interactable != null)
+        {
+            MuseumGameEvents.RaisePaintingStaged(interactable);
+            TutorialHints.TryShowStagingHint();
+            PlacementPopFeedback.Play(painting);
+        }
+
         return true;
     }
 

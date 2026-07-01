@@ -198,6 +198,31 @@ public class MuseumGameplayTests
     }
 
     [Test]
+    public void WingGuide_CountsAcceptingMounts()
+    {
+        var mountObject = new GameObject("TestMount");
+        var paintingObject = new GameObject("TestPainting");
+        try
+        {
+            PaintingMount mount = mountObject.AddComponent<PaintingMount>();
+            InteractablePainting painting = paintingObject.AddComponent<InteractablePainting>();
+            paintingObject.AddComponent<Rigidbody>();
+
+            SetPrivateEnum(mount, "requiredWing", GalleryWing.Modern);
+            SetPrivateEnum(painting, "wing", GalleryWing.Modern);
+
+            int count = MuseumWingGuide.CountAcceptingMounts(painting, new[] { mount });
+            Assert.AreEqual(1, count);
+            Assert.IsFalse(string.IsNullOrEmpty(MuseumWingGuide.BuildGuidance(painting, new[] { mount })));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mountObject);
+            Object.DestroyImmediate(paintingObject);
+        }
+    }
+
+    [Test]
     public void PlayerSettingsStore_ResetToDefaults_RestoresDefaults()
     {
         PlayerSettingsStore.MouseSensitivity = 7f;

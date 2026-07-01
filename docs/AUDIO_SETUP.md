@@ -19,6 +19,7 @@ All gameplay audio hooks are **null-safe** until you assign clips in the Inspect
 | Museum Win Clip | Entire museum complete |
 | Undo Clip | Undo last hang |
 | Throw Clip | Throw painting (Q / B) |
+| Stage Clip | Painting snaps onto sorting table |
 | Ui Click Clip | Menu button clicks (via `MuseumUiActions`) |
 
 4. On **Footstep Controller** (same Player), assign a **Footstep Clip** — plays while walking on the ground.
