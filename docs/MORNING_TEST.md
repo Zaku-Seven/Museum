@@ -1,6 +1,6 @@
-# Morning Test — Arcane Museum Feel (Night 1 + Night 2)
+# Morning Test — Arcane Museum Feel (Night 1–4)
 
-A ~10-minute human checklist. The cloud agent is **code-only** and cannot compile or enter Play mode.
+A ~15-minute human checklist. The cloud agent is **code-only** and cannot compile or enter Play mode.
 
 ## Setup
 
@@ -18,33 +18,42 @@ Or run individually:
 
 1. **Game → Setup Zero-to-One Prototype**
 2. **Game → Setup Art Pickup Test**
-3. **Game → Setup Museum Gameplay** — north section, HUD banner, pause overlay, aim highlighter
+3. **Game → Setup Museum Gameplay** — north section, HUD (banner, stack line, win overlay, tutorials), pause, aim highlighter, progress + save on Player
 4. **Game → Setup Gallery Wings**
 
-Re-running menus is safe (idempotent). If you had an old HUD canvas from Night 1, re-run **Setup Museum Gameplay** to add Banner + PausePanel (it upgrades in place).
+Re-running menus is safe (idempotent). Re-run **Setup Museum Gameplay** to upgrade an old HUD canvas (Banner, PausePanel, WinPanel, StackLabel, etc.).
+
+**Sanity check:** **Game → Validate Museum Scene** — should report 0 errors after full setup.
+
+**Edit-mode tests:** **Window → General → Test Runner → EditMode → Run All** (5 tests in `MuseumGameplayTests`).
 
 ## Play mode checklist
 
-1. Press **Play**. Expect: `+` crosshair, bottom-left progress, top hint (`Esc — pause …`), cursor locked.
+1. Press **Play**. Expect: `+` crosshair, bottom-left progress, top hint (includes scroll + right-click undo), cursor locked.
 2. **Floor highlight:** look at a floor painting (empty-handed) → canvas **subtly pulses**.
-3. **Pick up:** left-click a painting → instant snap to hands.
-4. **Valid mount:** carry matching art to an empty mount → frame tints **green**, prompt **"Click to place on wall"** → click → **scale pop** on hang; progress increments.
-5. **Wrong wing:** carry to wrong mount → frame **pulses red**, prompt **"This belongs in the [Wing] gallery"** → click does **not** place or drop.
-6. **Occupied mount:** grey frame tint, **"Gallery spot taken"**.
-7. **Section complete:** fill all 3 mounts in one section → **center banner** (`… wing complete!` ~4s), frames **glow blue**, progress shows `… - done`.
-8. **North wall:** progress includes **`Modern (North): X/3`** after Museum Gameplay (separate from `Modern (South)`).
-9. **Pause:** press **Esc** → dark overlay, cursor unlocks, movement/pickup stop → **Esc** again resumes.
-10. **Drop:** while holding, aim at empty space and click → painting drops.
+3. **Pick up:** press **E** on a painting → snaps to hands.
+4. **Stack:** pick up 2+ floor paintings with **E** → they fan to your right; **scroll wheel** changes which one is forward (label above prompt: `Placing: "…" (2/3) · scroll to change`).
+5. **Active item glow:** with 2+ in stack, the forward painting **pulses lightly** (MaterialPropertyBlock emission).
+6. **Valid mount:** carry matching art to an empty mount → frame tints **green** → **click** places the **active** stack item (not necessarily the last picked).
+7. **Wrong wing:** wrong mount → frame **pulses red**, prompt **"This belongs in the [Wing] gallery"** → click does **not** place or drop.
+8. **Occupied mount:** grey frame tint, **"Gallery spot taken"**.
+9. **Section complete:** fill all mounts in one section → **center banner** (~4s), frames **glow blue**, progress shows `… - done`.
+10. **Sorting table:** drop a painting on the center table → it **snaps to a grid**; bottom-right shows `Sorting table: N staged`.
+11. **Undo:** after hanging one, **right-click** → painting returns to your stack (mount clears).
+12. **Save/load:** hang a few paintings, stop Play, Play again → mounts restore (PlayerPrefs `MuseumMountSave_v1`).
+13. **Win state:** fill **every** section (all 4 wings) → **win overlay** appears, cursor unlocks, pickup stops.
+14. **Pause:** **Esc** → dark overlay, cursor unlocks → **Esc** resumes.
 
 ## Expected HUD prompts
 
 | Situation | Prompt |
 |-----------|--------|
-| Looking at floor painting | `Click to pick up "<title>"` |
-| Holding, valid empty mount | `Click to place on wall` |
+| Looking at floor painting | `E — pick up "<title>"` |
+| Holding, valid empty mount | `Click to place on wall` (with active title if stack > 1) |
 | Holding, wrong-wing mount | `This belongs in the Modern gallery` (etc.) |
 | Holding, occupied mount | `Gallery spot taken` |
 | Holding, not on a mount | `Click to drop` |
+| Stack > 1 | Bottom stack line: `Placing: "…" (n/N) · scroll to change` |
 
 ## Wing layout
 
@@ -55,24 +64,26 @@ Re-running menus is safe (idempotent). If you had an old HUD canvas from Night 1
 | Classical (East) | East | Gilded Saints, Marble Study, Old Masters |
 | Impressionist (West) | West | Garden Light, Rose Morning, Water Lilies |
 
-## Night 2 polish (verify)
+## Night 3 + 4 features (verify)
 
-- Mount aim highlights (green / red pulse / grey)
-- Floor painting pulse when viewed
-- Placement scale pop on hang
-- Section-complete center banner
-- Esc pause overlay
-- **Game → Setup Full Museum** one-click bootstrap
+- Scroll wheel stack selection (primary / forward item)
+- Right-click undo last wall placement
+- Sorting table grid snap + staged count HUD
+- One-shot tutorial tips (first pickup, wrong wing, scroll)
+- Museum win overlay when all sections complete
+- Mount save/load via `MuseumSaveManager`
+- **Game → Validate Museum Scene**
+- EditMode tests in Test Runner
 
 ## Known gaps
 
 - Agent did not compile/Play-test. Report Console errors.
 - Procedural materials may need re-run of setup if colors revert.
-- No audio yet. Stack carry / win screen not implemented.
-- `SortingTable` is visual-only (no snap-to-pile behavior).
+- No audio clips yet (events are wired in `MuseumGameEvents` for future SFX).
 
 ## Manual fixes if wiring is missing
 
-- **Banner / pause missing:** re-run **Setup Museum Gameplay** (upgrades existing `InteractionHUD` canvas).
-- **`MountAimHighlighter` missing:** confirm `PlayerCamera` has the component (Museum Gameplay adds it).
-- **Section not completing:** re-run **Setup Gallery Wings** or **Setup Museum Gameplay** for north section; check `GallerySection` mount lists in Inspector.
+- **Banner / pause / win missing:** re-run **Setup Museum Gameplay**.
+- **`MountAimHighlighter` missing:** confirm `PlayerCamera` has the component.
+- **No save/restore:** confirm `Player` has `MuseumSaveManager`.
+- **Section not completing:** re-run **Setup Gallery Wings**; check `GallerySection` mount lists in Inspector.

@@ -17,10 +17,12 @@ Or run individually on an empty scene:
 
 1. **Game → Setup Zero-to-One Prototype** — room, player, lighting
 2. **Game → Setup Art Pickup Test** — interactable layer, pickup, test painting
-3. **Game → Setup Museum Gameplay** — north-wall mounts + `GallerySection`, HUD (banner, pause, progress), aim highlights
-4. **Game → Setup Gallery Wings** — full sorting content: 3 wings, 9 wall mounts, 9 floor paintings, 3 sections
+3. **Game → Setup Museum Gameplay** — north-wall mounts + `GallerySection`, HUD (banner, pause, progress, win overlay, stack/staging lines), aim highlights, progress + save on Player
+4. **Game → Setup Gallery Wings** — full sorting content: 3 wings, 9 wall mounts, 9 floor paintings, 3 sections, sorting table
 
 - **Game → Fix Carry Settings** — reset hold point position
+- **Game → Validate Museum Scene** — read-only wiring check
+- **Game → Add Player Bean Visual** — optional capsule mesh on Player
 
 ## Gallery wings (sorting)
 
@@ -43,6 +45,10 @@ Wing layout: **Modern (South)** = south wall, **Classical (East)** = east, **Imp
 | WASD | Move |
 | Mouse | Look |
 | E | Pick up / add to stack (max 5, fans to your right) |
-| Left click | Place front stack item on wall / drop |
+| Scroll wheel | Change which stack item is forward (when carrying 2+) |
+| Left click | Place **active** stack item on wall / drop |
+| Right click | Undo last wall placement (returns painting to stack) |
 | Space | Jump |
 | Esc | Pause / resume (unlocks cursor, shows overlay) |
+
+When every gallery section is complete, a **win overlay** appears and pickup is disabled. Progress and mount assignments persist between sessions via `MuseumSaveManager` (PlayerPrefs).

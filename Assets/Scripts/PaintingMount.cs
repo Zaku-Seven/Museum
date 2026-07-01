@@ -84,6 +84,38 @@ public class PaintingMount : MonoBehaviour
 
         PlacementPopFeedback.Play(painting);
         NotifySectionChanged();
+
+        if (interactablePainting != null)
+        {
+            MuseumGameEvents.RaisePaintingPlaced(interactablePainting, this);
+        }
+    }
+
+    /// <summary>
+    /// Removes the hung painting for undo / take-down. Returns the painting, or null if empty.
+    /// </summary>
+    public InteractablePainting TakeDownPainting()
+    {
+        if (!isOccupied || Occupant == null)
+        {
+            return null;
+        }
+
+        InteractablePainting painting = Occupant;
+        Transform paintingTransform = painting.transform;
+        paintingTransform.SetParent(null, true);
+        painting.ClearMount();
+        ClearOccupant();
+
+        Rigidbody rb = paintingTransform.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.detectCollisions = true;
+        }
+
+        return painting;
     }
 
     /// <summary>

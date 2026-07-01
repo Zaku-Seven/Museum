@@ -354,6 +354,25 @@ public static class MuseumGameplaySetup
         bannerText.color = new Color(0.7f, 0.9f, 1f);
         bannerText.enabled = false;
 
+        Text stackText = EnsureUiText(canvasTransform, "StackLabel", defaultFont, 17, TextAnchor.LowerCenter,
+            anchorMin: new Vector2(0.5f, 0f), anchorMax: new Vector2(0.5f, 0f), pivot: new Vector2(0.5f, 0.5f),
+            anchoredPosition: new Vector2(0f, 118f), sizeDelta: new Vector2(700f, 28f));
+        stackText.color = new Color(0.9f, 0.95f, 1f);
+        stackText.enabled = false;
+
+        Text stagingText = EnsureUiText(canvasTransform, "StagingLabel", defaultFont, 16, TextAnchor.LowerRight,
+            anchorMin: new Vector2(1f, 0f), anchorMax: new Vector2(1f, 0f), pivot: new Vector2(1f, 0f),
+            anchoredPosition: new Vector2(-24f, 24f), sizeDelta: new Vector2(320f, 26f));
+        stagingText.color = new Color(0.8f, 0.85f, 0.95f);
+        stagingText.enabled = false;
+
+        Text tutorialText = EnsureUiText(canvasTransform, "TutorialTip", defaultFont, 17, TextAnchor.UpperCenter,
+            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+            anchoredPosition: new Vector2(0f, -52f), sizeDelta: new Vector2(760f, 48f));
+        tutorialText.color = new Color(1f, 0.95f, 0.75f);
+        tutorialText.enabled = false;
+
+        GameObject winPanel = EnsureWinPanel(canvasTransform, defaultFont, out Text winText);
         GameObject pausePanel = EnsurePausePanel(canvasTransform, defaultFont);
 
         GameObject cameraObject = GameObject.Find("PlayerCamera");
@@ -377,6 +396,11 @@ public static class MuseumGameplaySetup
         SetObjectReference(serializedHud, "progressText", progressText);
         SetObjectReference(serializedHud, "hintText", hintText);
         SetObjectReference(serializedHud, "bannerText", bannerText);
+        SetObjectReference(serializedHud, "stackText", stackText);
+        SetObjectReference(serializedHud, "stagingText", stagingText);
+        SetObjectReference(serializedHud, "tutorialText", tutorialText);
+        SetObjectReference(serializedHud, "winPanel", winPanel);
+        SetObjectReference(serializedHud, "winText", winText);
         serializedHud.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject playerObject = GameObject.Find("Player");
@@ -490,6 +514,56 @@ public static class MuseumGameplaySetup
         SerializedObject serializedHighlighter = new SerializedObject(highlighter);
         SetObjectReference(serializedHighlighter, "artPickup", artPickup);
         serializedHighlighter.ApplyModifiedPropertiesWithoutUndo();
+
+        GameObject playerObject = GameObject.Find("Player");
+        if (playerObject == null)
+        {
+            return;
+        }
+
+        if (playerObject.GetComponent<MuseumProgress>() == null)
+        {
+            playerObject.AddComponent<MuseumProgress>();
+        }
+
+        if (playerObject.GetComponent<MuseumSaveManager>() == null)
+        {
+            playerObject.AddComponent<MuseumSaveManager>();
+        }
+    }
+
+    private static GameObject EnsureWinPanel(Transform canvas, Font font, out Text winText)
+    {
+        Transform existing = canvas.Find("WinPanel");
+        if (existing != null)
+        {
+            winText = existing.Find("WinMessage")?.GetComponent<Text>();
+            return existing.gameObject;
+        }
+
+        GameObject panelObject = new GameObject("WinPanel");
+        panelObject.transform.SetParent(canvas, false);
+        RectTransform panelRect = panelObject.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        Image backdrop = panelObject.AddComponent<Image>();
+        backdrop.color = new Color(0.05f, 0.08f, 0.12f, 0.82f);
+
+        GameObject messageObject = CreateUiText(panelObject.transform, "WinMessage", font, 34, TextAnchor.MiddleCenter);
+        RectTransform messageRect = messageObject.GetComponent<RectTransform>();
+        messageRect.anchorMin = Vector2.zero;
+        messageRect.anchorMax = Vector2.one;
+        messageRect.offsetMin = Vector2.zero;
+        messageRect.offsetMax = Vector2.zero;
+        winText = messageObject.GetComponent<Text>();
+        winText.text = "Museum complete!\nEvery wing is hung. Cozy work.";
+        winText.color = new Color(0.85f, 0.95f, 1f);
+
+        panelObject.SetActive(false);
+        return panelObject;
     }
 
     private static void SetObjectReference(SerializedObject serializedObject, string propertyName, Object value)

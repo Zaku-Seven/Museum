@@ -1,23 +1,53 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Marks a floor staging zone where unsorted paintings are piled before being hung.
-/// For now this is a visual + trigger marker only (no scoring); it gives the room a
-/// readable "sorting in progress" staging area. The collider is a trigger so paintings
-/// dropped inside are never physically blocked.
-///
-/// Kept in the global namespace to match the rest of the project's scripts.
+/// Floor staging zone: dropped paintings snap to a neat grid on the table.
 /// </summary>
 [RequireComponent(typeof(BoxCollider))]
 public class SortingTable : MonoBehaviour
 {
+    private static readonly List<SortingTable> ActiveTables = new List<SortingTable>();
+
     [SerializeField] private string zoneLabel = "Sorting Table";
+    [SerializeField] private int gridColumns = 5;
+    [SerializeField] private float cellSpacingX = 0.65f;
+    [SerializeField] private float cellSpacingZ = 0.5f;
+    [SerializeField] private float surfaceHeight = 0.03f;
+
+    private readonly List<Transform> stagedItems = new List<Transform>();
 
     public string ZoneLabel => zoneLabel;
+    public int StagedCount => stagedItems.Count;
 
-    private void Reset()
+    public static int TotalStagedCount
     {
-        GetComponent<BoxCollider>().isTrigger = true;
+        get
+        {
+            int total = 0;
+            for (int i = 0; i < ActiveTables.Count; i++)
+            {
+                if (ActiveTables[i] != null)
+                {
+                    total += ActiveTables[i].StagedCount;
+                }
+            }
+
+            return total;
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (!ActiveTables.Contains(this))
+        {
+            ActiveTables.Add(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        ActiveTables.Remove(this);
     }
 
     private void Awake()
@@ -25,10 +55,103 @@ public class SortingTable : MonoBehaviour
         GetComponent<BoxCollider>().isTrigger = true;
     }
 
-    /// <summary>True if the given world position lies within this zone's collider bounds.</summary>
     public bool Contains(Vector3 worldPosition)
     {
         BoxCollider box = GetComponent<BoxCollider>();
         return box != null && box.bounds.Contains(worldPosition);
+    }
+
+    /// <summary>
+    /// If the painting is over this table, snap it to the next grid cell and lay it flat.
+    /// </summary>
+    public bool TryStagePainting(Transform painting)
+    {
+        if (painting == null || !Contains(painting.position))
+        {
+            return false;
+        }
+
+        UnregisterIfPresent(painting);
+        stagedItems.Add(painting);
+
+        painting.SetParent(transform, true);
+        int index = stagedItems.Count - 1;
+        painting.localPosition = GetGridLocalPosition(index);
+        painting.localRotation = Quaternion.identity;
+
+        Rigidbody rb = painting.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            rb.detectCollisions = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        return true;
+    }
+
+    public static bool TryStageOnAnyTable(Transform painting)
+    {
+        for (int i = 0; i < ActiveTables.Count; i++)
+        {
+            SortingTable table = ActiveTables[i];
+            if (table != null && table.TryStagePainting(painting))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void UnregisterIfPresent(Transform painting)
+    {
+        for (int i = 0; i < ActiveTables.Count; i++)
+        {
+            ActiveTables[i]?.RemoveStaged(painting);
+        }
+    }
+
+    private void RemoveStaged(Transform painting)
+    {
+        if (painting == null)
+        {
+            return;
+        }
+
+        int index = stagedItems.IndexOf(painting);
+        if (index < 0)
+        {
+            return;
+        }
+
+        stagedItems.RemoveAt(index);
+        ReflowGrid();
+    }
+
+    private void ReflowGrid()
+    {
+        for (int i = 0; i < stagedItems.Count; i++)
+        {
+            Transform item = stagedItems[i];
+            if (item == null)
+            {
+                continue;
+            }
+
+            item.SetParent(transform, true);
+            item.localPosition = GetGridLocalPosition(i);
+            item.localRotation = Quaternion.identity;
+        }
+    }
+
+    private Vector3 GetGridLocalPosition(int index)
+    {
+        int col = index % gridColumns;
+        int row = index / gridColumns;
+        float startX = -(gridColumns - 1) * cellSpacingX * 0.5f;
+        return new Vector3(startX + col * cellSpacingX, surfaceHeight, row * cellSpacingZ);
     }
 }

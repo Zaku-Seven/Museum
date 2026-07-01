@@ -3,16 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// First-person carry system for museum paintings.
-///
-/// Design (matches common Unity FPS "equip slot" patterns):
-/// - A <see cref="holdPoint"/> empty on the camera marks where the hands sit (position only, no tilt).
-/// - While carried, paintings stay <b>unparented</b> (kinematic RB) and their world pose is written each
-///   <see cref="LateUpdate"/> so they never lag behind movement and never fight the physics step.
-/// - Canvas rotation uses <see cref="Quaternion.FromToRotation"/> so floor paintings always face the camera.
-/// - Stack fans along <see cref="Camera.transform.right"/> in world space (readable deck to your right).
-///
-/// Input: <b>E</b> pick/add to stack · <b>Left click</b> place/drop the last picked item.
+/// First-person carry: E adds to stack, scroll selects primary item, click place/drop, right-click undo last hang.
 /// </summary>
 [RequireComponent(typeof(Camera))]
 public class ArtPickup : MonoBehaviour
@@ -23,18 +14,32 @@ public class ArtPickup : MonoBehaviour
 
     [Header("Carry Stack")]
     [SerializeField] private int maxStackSize = 5;
-    [Tooltip("World-space spacing between stacked items along camera right.")]
     [SerializeField] private float stackSlotSpacing = 0.16f;
-    [Tooltip("Slight push toward camera per stack slot so items do not z-fight.")]
     [SerializeField] private float stackForwardStep = 0.015f;
+    [SerializeField] private float activeItemForwardBoost = 0.08f;
+    [SerializeField] private float activeItemScaleBoost = 1.06f;
 
     private Camera playerCamera;
     private int interactableLayerMask;
     private readonly List<CarriedEntry> carryStack = new List<CarriedEntry>();
+    private readonly Stack<UndoRecord> placementUndoStack = new Stack<UndoRecord>();
+    private int activeStackIndex;
 
     public bool IsHolding => carryStack.Count > 0;
     public int CarryCount => carryStack.Count;
-    public InteractablePainting HeldPainting => carryStack.Count > 0 ? carryStack[carryStack.Count - 1].Painting : null;
+    public int ActiveStackIndex => activeStackIndex;
+
+    public InteractablePainting HeldPainting =>
+        carryStack.Count > 0 ? carryStack[activeStackIndex].Painting : null;
+
+    public Transform ActiveCarriedTransform =>
+        carryStack.Count > 0 ? carryStack[activeStackIndex].Transform : null;
+
+    private struct UndoRecord
+    {
+        public PaintingMount Mount;
+        public InteractablePainting Painting;
+    }
 
     private sealed class CarriedEntry
     {
@@ -42,40 +47,64 @@ public class ArtPickup : MonoBehaviour
         public InteractablePainting Painting;
         public Rigidbody Rigidbody;
         public Collider[] Colliders;
+        public Vector3 BaseLocalScale;
     }
 
     private void Awake()
     {
         playerCamera = GetComponent<Camera>();
         interactableLayerMask = LayerMask.GetMask("Interactable");
-
-        if (interactableLayerMask == 0)
-        {
-            Debug.LogWarning("ArtPickup: 'Interactable' layer not found.");
-        }
-
         EnsureHoldPointExists();
     }
 
     private void Update()
     {
+        if (MuseumProgress.Instance != null && MuseumProgress.Instance.IsMuseumComplete)
+        {
+            return;
+        }
+
         if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             TryPickupFromRaycast();
         }
 
+        HandleScrollStackSelection();
+
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && IsHolding)
         {
             HandleHeldClick();
         }
+
+        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            TryUndoLastPlacement();
+        }
     }
 
-    /// <summary>
-    /// Snap carried items after <see cref="FirstPersonController"/> moves the camera this frame.
-    /// </summary>
     private void LateUpdate()
     {
         ApplyCarryPoses();
+    }
+
+    private void HandleScrollStackSelection()
+    {
+        if (carryStack.Count <= 1 || Mouse.current == null)
+        {
+            return;
+        }
+
+        float scroll = Mouse.current.scroll.ReadValue().y;
+        if (scroll > 0.05f)
+        {
+            activeStackIndex = (activeStackIndex + 1) % carryStack.Count;
+            TutorialHints.TryShowStackScrollHint();
+        }
+        else if (scroll < -0.05f)
+        {
+            activeStackIndex = (activeStackIndex - 1 + carryStack.Count) % carryStack.Count;
+            TutorialHints.TryShowStackScrollHint();
+        }
     }
 
     public string GetInteractionPrompt()
@@ -132,6 +161,21 @@ public class ArtPickup : MonoBehaviour
         return string.Empty;
     }
 
+    public string GetActiveStackLabel()
+    {
+        if (!IsHolding || HeldPainting == null)
+        {
+            return string.Empty;
+        }
+
+        if (carryStack.Count <= 1)
+        {
+            return string.Empty;
+        }
+
+        return $"Placing: \"{HeldPainting.PaintingTitle}\" ({activeStackIndex + 1}/{carryStack.Count}) · scroll to change";
+    }
+
     private string BuildCarryPrompt(string action)
     {
         if (carryStack.Count <= 1)
@@ -140,7 +184,7 @@ public class ArtPickup : MonoBehaviour
         }
 
         string title = HeldPainting != null ? HeldPainting.PaintingTitle : "item";
-        return $"{action} ({title}, stack {carryStack.Count}/{maxStackSize})";
+        return $"{action} ({title}, {activeStackIndex + 1}/{carryStack.Count})";
     }
 
     public bool TryGetCenterRayHit(out RaycastHit hit)
@@ -176,6 +220,10 @@ public class ArtPickup : MonoBehaviour
                 {
                     PlaceActiveOnMount(mount);
                 }
+                else if (HeldPainting != null && mount.RequiredWing != HeldPainting.Wing)
+                {
+                    TutorialHints.TryShowWrongWingHint();
+                }
 
                 return;
             }
@@ -186,12 +234,15 @@ public class ArtPickup : MonoBehaviour
 
     private void AddToStack(Transform target)
     {
+        SortingTable.UnregisterIfPresent(target);
+
         var entry = new CarriedEntry
         {
             Transform = target,
             Rigidbody = target.GetComponent<Rigidbody>(),
             Colliders = target.GetComponentsInChildren<Collider>(),
-            Painting = target.GetComponent<InteractablePainting>()
+            Painting = target.GetComponent<InteractablePainting>(),
+            BaseLocalScale = target.localScale
         };
 
         if (entry.Painting != null && entry.Painting.CurrentMount != null)
@@ -200,7 +251,6 @@ public class ArtPickup : MonoBehaviour
             entry.Painting.ClearMount();
         }
 
-        // Unparent so carry pose is driven entirely by this script (standard FPS equip slot pattern).
         target.SetParent(null, true);
 
         foreach (Collider collider in entry.Colliders)
@@ -210,18 +260,28 @@ public class ArtPickup : MonoBehaviour
 
         SuspendRigidbody(entry.Rigidbody);
         carryStack.Add(entry);
+        activeStackIndex = carryStack.Count - 1;
         ApplyCarryPoses();
+
+        if (entry.Painting != null)
+        {
+            MuseumGameEvents.RaisePaintingPickedUp(entry.Painting);
+            TutorialHints.TryShowPickupHint();
+            if (carryStack.Count > 1)
+            {
+                TutorialHints.TryShowStackScrollHint();
+            }
+        }
     }
 
-    /// <summary>
-    /// Positions each stack slot in front of the hold point, fanned along camera right.
-    /// </summary>
     private void ApplyCarryPoses()
     {
         if (carryStack.Count == 0 || holdPoint == null)
         {
             return;
         }
+
+        activeStackIndex = Mathf.Clamp(activeStackIndex, 0, carryStack.Count - 1);
 
         Vector3 anchor = holdPoint.position;
         Vector3 right = playerCamera.transform.right;
@@ -230,22 +290,23 @@ public class ArtPickup : MonoBehaviour
 
         for (int i = 0; i < carryStack.Count; i++)
         {
-            Transform item = carryStack[i].Transform;
-            if (item == null)
+            CarriedEntry entry = carryStack[i];
+            if (entry.Transform == null)
             {
                 continue;
             }
 
-            item.SetPositionAndRotation(
-                anchor + right * (stackSlotSpacing * i) + forward * (stackForwardStep * i),
+            bool isActive = i == activeStackIndex;
+            float forwardExtra = isActive ? activeItemForwardBoost : 0f;
+            float scaleMul = isActive ? activeItemScaleBoost : 1f;
+
+            entry.Transform.SetPositionAndRotation(
+                anchor + right * (stackSlotSpacing * i) + forward * (stackForwardStep * i + forwardExtra),
                 faceCamera);
+            entry.Transform.localScale = entry.BaseLocalScale * scaleMul;
         }
     }
 
-    /// <summary>
-    /// Floor/wall paintings use Y as the thin axis when on the ground; map that axis toward the camera
-    /// so the canvas faces the player (not edge-on).
-    /// </summary>
     private Quaternion GetCarryWorldRotation()
     {
         Vector3 viewForward = playerCamera.transform.forward;
@@ -264,16 +325,24 @@ public class ArtPickup : MonoBehaviour
             return;
         }
 
-        CarriedEntry entry = carryStack[carryStack.Count - 1];
-        carryStack.RemoveAt(carryStack.Count - 1);
+        CarriedEntry entry = carryStack[activeStackIndex];
+        carryStack.RemoveAt(activeStackIndex);
 
         foreach (Collider collider in entry.Colliders)
         {
             collider.enabled = true;
         }
 
+        entry.Transform.localScale = entry.BaseLocalScale;
         RestoreRigidbody(entry.Rigidbody, kinematic: true, useGravity: false);
         mount.PlacePainting(entry.Transform, entry.Rigidbody);
+
+        if (entry.Painting != null)
+        {
+            placementUndoStack.Push(new UndoRecord { Mount = mount, Painting = entry.Painting });
+        }
+
+        ClampActiveIndex();
         ApplyCarryPoses();
     }
 
@@ -284,17 +353,59 @@ public class ArtPickup : MonoBehaviour
             return;
         }
 
-        CarriedEntry entry = carryStack[carryStack.Count - 1];
-        carryStack.RemoveAt(carryStack.Count - 1);
+        CarriedEntry entry = carryStack[activeStackIndex];
+        carryStack.RemoveAt(activeStackIndex);
 
         foreach (Collider collider in entry.Colliders)
         {
             collider.enabled = true;
         }
 
+        entry.Transform.localScale = entry.BaseLocalScale;
         RestoreRigidbody(entry.Rigidbody, kinematic: false, useGravity: true);
         entry.Transform.position += playerCamera.transform.forward * 0.25f;
+
+        if (!SortingTable.TryStageOnAnyTable(entry.Transform) && entry.Painting != null)
+        {
+            MuseumGameEvents.RaisePaintingDropped(entry.Painting);
+        }
+
+        ClampActiveIndex();
         ApplyCarryPoses();
+    }
+
+    private void TryUndoLastPlacement()
+    {
+        if (placementUndoStack.Count == 0 || carryStack.Count >= maxStackSize)
+        {
+            return;
+        }
+
+        UndoRecord record = placementUndoStack.Pop();
+        if (record.Mount == null || record.Painting == null || !record.Mount.IsOccupied)
+        {
+            return;
+        }
+
+        InteractablePainting takenDown = record.Mount.TakeDownPainting();
+        if (takenDown == null)
+        {
+            return;
+        }
+
+        AddToStack(takenDown.transform);
+        MuseumGameEvents.RaisePlacementUndone(takenDown, record.Mount);
+    }
+
+    private void ClampActiveIndex()
+    {
+        if (carryStack.Count == 0)
+        {
+            activeStackIndex = 0;
+            return;
+        }
+
+        activeStackIndex = Mathf.Clamp(activeStackIndex, 0, carryStack.Count - 1);
     }
 
     private bool IsInStack(Transform target)
@@ -324,7 +435,6 @@ public class ArtPickup : MonoBehaviour
             holdPoint = holdPointObject.transform;
         }
 
-        // Position-only rig: shifted right so the stack reads as a view-model in the lower-right.
         holdPoint.localPosition = new Vector3(0.42f, -0.2f, 0.58f);
         holdPoint.localRotation = Quaternion.identity;
     }

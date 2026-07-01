@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Displays a crosshair, context-sensitive prompt, per-wing progress line, completion banner,
-/// and optional hint text for the art pickup system.
+/// stack/staging info, one-shot tutorial tips, and the museum win overlay.
 /// </summary>
 public class InteractionHUD : MonoBehaviour
 {
@@ -15,16 +15,29 @@ public class InteractionHUD : MonoBehaviour
     [SerializeField] private Text progressText;
     [SerializeField] private Text hintText;
     [SerializeField] private Text bannerText;
+    [SerializeField] private Text stackText;
+    [SerializeField] private Text stagingText;
+    [SerializeField] private Text tutorialText;
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private Text winText;
 
     [Header("Hints")]
     [Tooltip("Constant hint shown at the top of the screen.")]
-    [SerializeField] private string hintMessage = "E — pick up / add to stack    ·    Click — place or drop    ·    Esc — pause";
+    [SerializeField] private string hintMessage =
+        "E — pick up / add to stack  ·  Scroll — change active item  ·  Click — place/drop  ·  Right-click — undo  ·  Esc — pause";
 
     [Header("Completion banner")]
     [SerializeField] private float bannerDuration = 4f;
 
+    [Header("Tutorial tips")]
+    [SerializeField] private float tutorialDuration = 5f;
+
+    [Header("Win overlay")]
+    [SerializeField] private string winMessage = "Museum complete!\nEvery wing is hung. Cozy work.";
+
     private static readonly StringBuilder ProgressBuilder = new StringBuilder();
     private float bannerTimer;
+    private float tutorialTimer;
 
     private void Awake()
     {
@@ -37,11 +50,15 @@ public class InteractionHUD : MonoBehaviour
     private void OnEnable()
     {
         GallerySection.OnSectionCompleted += HandleSectionCompleted;
+        MuseumGameEvents.MuseumCompleted += HandleMuseumCompleted;
+        TutorialHints.OnShowHint += HandleTutorialHint;
     }
 
     private void OnDisable()
     {
         GallerySection.OnSectionCompleted -= HandleSectionCompleted;
+        MuseumGameEvents.MuseumCompleted -= HandleMuseumCompleted;
+        TutorialHints.OnShowHint -= HandleTutorialHint;
     }
 
     private void Update()
@@ -57,7 +74,7 @@ public class InteractionHUD : MonoBehaviour
 
         if (crosshairText != null)
         {
-            crosshairText.enabled = true;
+            crosshairText.enabled = winPanel == null || !winPanel.activeSelf;
         }
 
         if (progressText != null)
@@ -73,7 +90,22 @@ public class InteractionHUD : MonoBehaviour
             hintText.enabled = !string.IsNullOrEmpty(hintMessage);
         }
 
+        if (stackText != null)
+        {
+            string stackLabel = artPickup.GetActiveStackLabel();
+            stackText.text = stackLabel;
+            stackText.enabled = !string.IsNullOrEmpty(stackLabel);
+        }
+
+        if (stagingText != null)
+        {
+            int staged = SortingTable.TotalStagedCount;
+            stagingText.text = staged > 0 ? $"Sorting table: {staged} staged" : string.Empty;
+            stagingText.enabled = staged > 0;
+        }
+
         UpdateBanner();
+        UpdateTutorialBanner();
     }
 
     private void HandleSectionCompleted(GallerySection section)
@@ -86,6 +118,36 @@ public class InteractionHUD : MonoBehaviour
         bannerText.text = $"{section.DisplayName} wing complete!";
         bannerText.enabled = true;
         bannerTimer = bannerDuration;
+    }
+
+    private void HandleMuseumCompleted()
+    {
+        TutorialHints.TryShowCompleteHint();
+
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+        }
+
+        if (winText != null)
+        {
+            winText.text = winMessage;
+        }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void HandleTutorialHint(string message)
+    {
+        if (tutorialText == null || string.IsNullOrEmpty(message))
+        {
+            return;
+        }
+
+        tutorialText.text = message;
+        tutorialText.enabled = true;
+        tutorialTimer = tutorialDuration;
     }
 
     private void UpdateBanner()
@@ -104,6 +166,25 @@ public class InteractionHUD : MonoBehaviour
         if (bannerTimer <= 0f)
         {
             bannerText.enabled = false;
+        }
+    }
+
+    private void UpdateTutorialBanner()
+    {
+        if (tutorialText == null || tutorialTimer <= 0f)
+        {
+            if (tutorialText != null && tutorialTimer <= 0f)
+            {
+                tutorialText.enabled = false;
+            }
+
+            return;
+        }
+
+        tutorialTimer -= Time.deltaTime;
+        if (tutorialTimer <= 0f)
+        {
+            tutorialText.enabled = false;
         }
     }
 

@@ -161,3 +161,26 @@ Agent: fill this in after each phase (see `NIGHT1_MASTER.md` → Progress protoc
 **Assumptions:** Highlights need URP Lit + `_EmissionColor` in MaterialPropertyBlock (standard URP). Pause does not set `Time.timeScale = 0` so glow/banner timers keep working. Placement pop uses `Time.deltaTime` (normal play only).
 
 **Cannot verify on VM:** highlight colors, pop timing, banner visibility — see updated `docs/MORNING_TEST.md`.
+
+---
+
+## 2026-07-01 Night 3 + 4 — Win state, stack select, staging, save, tests
+
+**Status:** done (code-only)
+
+**Delivered:**
+1. **Scroll wheel stack selection** — `ArtPickup`: when carrying 2+, mouse wheel cycles `activeStackIndex`; active item scales forward; HUD stack line + prompts show `(n/N)`.
+2. **Right-click undo** — last wall placement returns painting to stack; `PaintingMount.TakeDownPainting()`; `MuseumGameEvents.PlacementUndone`.
+3. **Win state** — `MuseumProgress` + `InteractionHUD` win overlay when all `GallerySection`s complete; pickup blocked after win.
+4. **Sorting table staging** — `SortingTable` grid snap on drop; `TotalStagedCount` on HUD bottom-right.
+5. **Tutorial hints** — `TutorialHints` one-shot PlayerPrefs tips (pickup, wrong wing, scroll); HUD tutorial banner.
+6. **Save/load** — `MuseumSaveManager` persists mount↔painting names in PlayerPrefs JSON.
+7. **Events** — `MuseumGameEvents` static hooks for SFX/UI extension.
+8. **Active carry highlight** — `MountAimHighlighter` pulses the forward stack item when count > 1.
+9. **Validator + tests** — `Game → Validate Museum Scene`; EditMode `MuseumGameplayTests` (CanAccept + section completion).
+
+**Setup menu updates:** `MuseumGameplaySetup` adds WinPanel, StackLabel, StagingLabel, TutorialTip; wires `MuseumProgress` + `MuseumSaveManager` on Player.
+
+**Assumptions:** Scroll uses Input System `Mouse.current.scroll`; save keys objects by `GameObject.name` (stable after setup menus). Undo stack is in-memory (not persisted across sessions).
+
+**Cannot verify on VM:** compile, Play mode, Test Runner — see `docs/MORNING_TEST.md`.

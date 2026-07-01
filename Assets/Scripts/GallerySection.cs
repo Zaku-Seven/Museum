@@ -108,6 +108,7 @@ public class GallerySection : MonoBehaviour
             IsComplete = true;
             ApplyEmission(glowColor * glowIntensity, true);
             OnSectionCompleted?.Invoke(this);
+            MuseumGameEvents.RaiseSectionCompleted(this);
         }
         else if (!complete && IsComplete)
         {

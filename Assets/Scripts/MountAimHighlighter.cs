@@ -2,7 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// Highlights what the player is aiming at: mount frames tint green/red when carrying a
-/// painting, and floor paintings get a subtle pulse when viewed empty-handed.
+/// painting, floor paintings get a subtle pulse when viewed empty-handed, and the active
+/// stack item gets a forward carry glow while holding multiple paintings.
 /// Uses <see cref="MaterialPropertyBlock"/> so base materials are never mutated.
 /// </summary>
 [RequireComponent(typeof(Camera))]
@@ -23,9 +24,16 @@ public class MountAimHighlighter : MonoBehaviour
     [SerializeField] private float floorHighlightIntensity = 0.35f;
     [SerializeField] private float floorPulseSpeed = 4f;
 
+    [Header("Active stack item (while carrying)")]
+    [SerializeField] private Color activeCarryColor = new Color(0.85f, 0.95f, 1f);
+    [SerializeField] private float activeCarryIntensity = 0.55f;
+    [SerializeField] private float activeCarryPulseSpeed = 5f;
+
     private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
     private readonly MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+    private readonly MaterialPropertyBlock carryPropertyBlock = new MaterialPropertyBlock();
     private Renderer highlightedRenderer;
+    private Renderer carryHighlightedRenderer;
     private HighlightMode activeMode;
 
     private enum HighlightMode
@@ -49,13 +57,15 @@ public class MountAimHighlighter : MonoBehaviour
     {
         if (artPickup == null)
         {
-            ClearHighlight();
+            ClearAllHighlights();
             return;
         }
 
+        UpdateActiveCarryHighlight();
+
         if (!artPickup.TryGetCenterRayHit(out RaycastHit hit))
         {
-            ClearHighlight();
+            ClearAimHighlight();
             return;
         }
 
@@ -68,36 +78,69 @@ public class MountAimHighlighter : MonoBehaviour
         UpdateFloorPaintingHighlight(hit);
     }
 
+    private void UpdateActiveCarryHighlight()
+    {
+        if (!artPickup.IsHolding || artPickup.CarryCount <= 1)
+        {
+            ClearCarryHighlight();
+            return;
+        }
+
+        Transform activeTransform = artPickup.ActiveCarriedTransform;
+        if (activeTransform == null)
+        {
+            ClearCarryHighlight();
+            return;
+        }
+
+        Renderer canvasRenderer = activeTransform.GetComponent<Renderer>();
+        if (canvasRenderer == null)
+        {
+            ClearCarryHighlight();
+            return;
+        }
+
+        if (carryHighlightedRenderer != canvasRenderer)
+        {
+            ClearCarryHighlight();
+            carryHighlightedRenderer = canvasRenderer;
+        }
+
+        float pulse = 0.7f + 0.3f * Mathf.Sin(Time.time * activeCarryPulseSpeed);
+        carryPropertyBlock.SetColor(EmissionColorId, activeCarryColor * (activeCarryIntensity * pulse));
+        canvasRenderer.SetPropertyBlock(carryPropertyBlock);
+    }
+
     private void UpdateMountHighlight(RaycastHit hit)
     {
         PaintingMount mount = hit.collider.GetComponentInParent<PaintingMount>();
         if (mount == null)
         {
-            ClearHighlight();
+            ClearAimHighlight();
             return;
         }
 
         Renderer frameRenderer = mount.GetComponentInChildren<Renderer>();
         if (frameRenderer == null)
         {
-            ClearHighlight();
+            ClearAimHighlight();
             return;
         }
 
         if (mount.IsOccupied)
         {
-            ApplyHighlight(frameRenderer, HighlightMode.MountOccupied, occupiedMountColor, pulse: false);
+            ApplyAimHighlight(frameRenderer, HighlightMode.MountOccupied, occupiedMountColor, pulse: false);
             return;
         }
 
         if (mount.CanAccept(artPickup.HeldPainting))
         {
-            ApplyHighlight(frameRenderer, HighlightMode.MountValid, validMountColor, pulse: false);
+            ApplyAimHighlight(frameRenderer, HighlightMode.MountValid, validMountColor, pulse: false);
             return;
         }
 
         float pulse = 0.55f + 0.45f * Mathf.Sin(Time.time * wrongPulseSpeed);
-        ApplyHighlight(frameRenderer, HighlightMode.MountWrong, wrongMountColor * pulse, pulse: true);
+        ApplyAimHighlight(frameRenderer, HighlightMode.MountWrong, wrongMountColor * pulse, pulse: true);
     }
 
     private void UpdateFloorPaintingHighlight(RaycastHit hit)
@@ -105,26 +148,26 @@ public class MountAimHighlighter : MonoBehaviour
         InteractablePainting painting = hit.collider.GetComponentInParent<InteractablePainting>();
         if (painting == null || painting.CurrentMount != null)
         {
-            ClearHighlight();
+            ClearAimHighlight();
             return;
         }
 
         Renderer canvasRenderer = painting.GetComponent<Renderer>();
         if (canvasRenderer == null)
         {
-            ClearHighlight();
+            ClearAimHighlight();
             return;
         }
 
         float pulse = 0.65f + 0.35f * Mathf.Sin(Time.time * floorPulseSpeed);
-        ApplyHighlight(canvasRenderer, HighlightMode.FloorPainting, floorHighlightColor * pulse, pulse: true);
+        ApplyAimHighlight(canvasRenderer, HighlightMode.FloorPainting, floorHighlightColor * pulse, pulse: true);
     }
 
-    private void ApplyHighlight(Renderer renderer, HighlightMode mode, Color color, bool pulse)
+    private void ApplyAimHighlight(Renderer renderer, HighlightMode mode, Color color, bool pulse)
     {
         if (highlightedRenderer != renderer || activeMode != mode)
         {
-            ClearHighlight();
+            ClearAimHighlight();
             highlightedRenderer = renderer;
             activeMode = mode;
         }
@@ -136,7 +179,7 @@ public class MountAimHighlighter : MonoBehaviour
         renderer.SetPropertyBlock(propertyBlock);
     }
 
-    private void ClearHighlight()
+    private void ClearAimHighlight()
     {
         if (highlightedRenderer != null)
         {
@@ -147,8 +190,23 @@ public class MountAimHighlighter : MonoBehaviour
         activeMode = HighlightMode.None;
     }
 
+    private void ClearCarryHighlight()
+    {
+        if (carryHighlightedRenderer != null)
+        {
+            carryHighlightedRenderer.SetPropertyBlock(null);
+            carryHighlightedRenderer = null;
+        }
+    }
+
+    private void ClearAllHighlights()
+    {
+        ClearAimHighlight();
+        ClearCarryHighlight();
+    }
+
     private void OnDisable()
     {
-        ClearHighlight();
+        ClearAllHighlights();
     }
 }
